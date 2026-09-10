@@ -1,0 +1,82 @@
+stage,component,artifact,status,pct,blocker,next_action,milestone
+1,System preparation,MT5 host prep (Windows roles/swap/power/firewall),N/A - MetaQuotes,-,-,Only if Path A,Path A only
+1,Platform install,mt5srvsetup.exe /install + .lic,N/A - MetaQuotes,-,-,Only if Path A,Path A only
+1,Cluster topology,"main trade(1) access(2) history(3) backup(4)",N/A - MetaQuotes,-,-,Only if Path A,Path A only
+1,Console commands,/start /stop /restart /info /config /config_main /gui /gui_main,N/A - MetaQuotes,-,-,Only if Path A,Path A only
+1,Your equivalent: cluster,infrastructure/cluster/,EMPTY,0,Empty __init__.py only,Defer (out of scope),-
+1,Your equivalent: backup/journal,none,MISSING,0,No WAL no snapshot no replay,Build event journal after M4,Deferred
+1,Your equivalent: console,cli/main.py (8 commands),STUBS,5,Every body is a comment,Implement seed + status,M2
+2,Admin bootstrap,first-admin creation (MT5 login 1000 pattern),MISSING,0,No Manager entity,Create Manager entity + bootstrap,M2
+2,Manager entity,core/domains/identity/,EMPTY,10,IManagerRepository port exists but no model,Build Manager + Rights bitmask,M2
+2,Roles / permissions,admin vs dealer vs manager vs read-only,ENUM ONLY,15,AccountType has MANAGER/DEALER only,Rights bitmask from ConfigManagers export,M2
+2,Client auth,api/routers/auth.py + auth_service.py,DONE,80,Hardcoded JWT secret,Move SECRET_KEY to env fail-fast,M5
+2,Admin auth,api/auth/admin_dependencies.py,INSECURE,30,Static ADMIN_API_KEY default + test asserts it,Replace with manager JWT + roles,M2
+2,2FA / rate limit / IP whitelist / token blacklist,infrastructure/security/,DONE,85,Not reachable (import chain),Verify after M0,-
+2,Certificates / extended auth,none,MISSING,0,Zero X.509 code,API TLS via reverse proxy only; defer client certs,M5
+3,Symbol entity,core/domains/instruments/symbol.py,PARTIAL,35,42 fields vs MT5 121,Add CurrencyProfit/CurrencyMargin + SwapRate per day + IE*/RE*,Deferred
+3,Symbol margin rates,core/domains/instruments/value_objects.py MarginRates,DONE,95,-,Matches MT5 16-field matrix,-
+3,Trading sessions / holidays,symbol.py + holiday.py + holiday_repository.py,DONE,70,No per-day swap; no server Time/EOD schedule,Add EOD schedule with swap+commission+interest order,Deferred
+3,Symbol repository,persistence/repositories/symbol_repository.py,DONE,70,Unreachable (db_models import fails),Verify after M0,M0
+3,Group entity,core/domains/accounts/group.py,PARTIAL,45,19 fields vs MT5 44 + Commissions(12+Tiers) + SymbolOverrides(65),Add PermissionsFlags/AuthMode/Limit*/Company*,Deferred
+3,Group symbol override,value_objects.py GroupSymbolOverride,PARTIAL,18,12 fields vs MT5 65,Add MarginMaintenance* half + StopsLevel/FreezeLevel + IE*/RE*,Deferred
+3,Commission,value_objects.py CommissionRule + CommissionTier,BROKEN,40,calculate_commission returns 0 or wrong value; return-in-loop applies only first rule; MT5 stacks rules,Fix discriminator + accumulate matching rules,M3
+3,Swap,value_objects.py SwapConfiguration,PARTIAL,50,No SwapRate{Sun..Sat}; swap_worker imports a non-existent module,Fix import then add per-day rates,M0
+3,Account entity,core/domains/accounts/account.py,DONE,85,-,Full stop-out state machine + FreeMarginMode,-
+3,Client entity,core/domains/accounts/client.py,DONE,70,-,-,-
+3,Account types enum,core/domains/accounts/enums.py,DONE,95,-,REAL/DEMO/PRELIMINARY/CONTEST/COVERAGE/MANAGER/DEALER,-
+3,CreateAccountHandler,none,MISSING,0,Does not exist,Build,M2
+3,CreateClientHandler,none,MISSING,0,Does not exist,Build,M2
+3,CreateGroupHandler,application/commands/create_group.py,BROKEN,20,Imports undefined GroupCreated + IGroupRepository; ConfigCache unreachable,Define events + port then fix,M0
+3,CreateSymbolHandler,none,MISSING,0,Does not exist,Build,M2
+3,Admin REST endpoints,api/routers/admin/,PARTIAL,25,GET only; no create/update for groups/symbols/accounts,Build CRUD,M2
+3,Data feeds,infrastructure/feeds/mock_feed.py,BROKEN,40,Quantizes to spread not tick_size,Quantize to symbol.tick_size,M3
+3,LP feed,infrastructure/feeds/lp_feed.py,STUB,5,NotImplementedError x2,Defer,Deferred
+3,LP gateways,infrastructure/gateways/,EMPTY,0,Empty __init__.py; ILiquidityGateway has no implementation,Build stub gateway for M4,M4
+3,Spreads / markup,none,MISSING,0,No pricing module anywhere (cf rabbittrix fx-pricing),Build spread+markup module,M4
+3,Leverage table,MarginProfile.leverage_default/max,PARTIAL,50,No leverage tiers table; ignores symbol max leverage,Use min(account/group/symbol) leverage,M3
+3,Config seeding,config/*.yaml + cli seed,BROKEN,0,YAML never loaded by any code; YAML schema does not match domain models,Write Pydantic schemas + loader + real seed,M2
+3,DB schema,schema definition x4,CONFLICT,0,"init.sql (UUID PK DECIMAL(5,4) 0.8 JSONB) vs db_models (name PK Numeric(6,2) 60 flat) vs alembic 001 vs domain (nested VO 0.8)",Collapse to db_models as single source of truth,M1
+3,Alembic migrations,alembic/versions/,BROKEN,10,migration.py has no revision/down_revision variables; 001 has stale symbol fields,Delete migration.py; autogenerate from models,M1
+4,Smart Order Router,core/domains/execution/router.py,PARTIAL,40,No 100% force-close tier; no client risk profile (TOXIC/PROFITABLE/RETAIL/PRO); stale auto-refresh comment,Add 100% tier + profiling,Deferred
+4,Routing rule model,execution/models.py RoutingRule,PARTIAL,25,No MT5 action taxonomy (delay ms/ticks clear SLTP reject-with-reason requote confirm cancel); no condition taxonomy (deviation-from-market points placed-by-expert day-of-week comment masks),Extend enums + conditions,Deferred
+4,Execution orchestrator,application/services/execution_orchestrator.py,UNWIRED,60,execution_subscriptions.py is imported by NOTHING,Wire into api/main.py startup,M4
+4,A-book execution,orchestrator._execute_a_book,BLOCKED,15,ILiquidityGateway has no implementation,Build stub gateway,M4
+4,B-book execution,orchestrator._execute_b_book,BLOCKED,35,IMatchingEngine has no implementation (infrastructure/engines empty),Build internal fill at bid/ask,M4
+4,Matching engine / CLOB,none,MISSING,0,No order book impl (OrderBook + BookLevel models exist unused),Copy matching-core orderbook/naive.rs shape,Deferred
+4,In-house ECN,orchestrator._execute_in_house,STUB,5,No CLOB no price-time priority no ECN symbol flag no provider model,Defer,Deferred
+4,Coverage / hedge accounts,coverage_account_repository.py + model,PARTIAL,40,Exposure is updated by B-book but nothing auto-hedges,Implement auto-hedge at 85% trigger,Deferred
+4,Dealer workflow,dealer_queue_service.py + manager routers,PARTIAL,50,No requote/confirm UI path; 30s timeout not timer-wheel based,Defer,Deferred
+4,Margin loop / tick pipeline,application/services/tick_margin_pipeline.py,DONE,75,O(N) DB round-trips per tick; ConfigCache unreachable; conversion rate lookup has no cross triangulation,Add cross-rate triangulation; use cache,M3
+4,Liquidation worker,application/workers/liquidation_worker.py,BROKEN+UNWIRED,30,Hardcodes conversion_rate=Decimal('1.0') so worst-loss-first is wrong; instantiated only in tests,Call real get_conversion_rate; wire at startup,M3+M4
+4,Liquidation service,core/domains/risk/liquidation_service.py,DONE,70,Depends on correct conversion rates,Verify after M3,M3
+4,Risk engine,core/domains/risk/engine.py,BROKEN,25,"Reads position.side/.average_price/.id (real: action/price_open/position_id); reads group.margin_call_level (real: group.margin.*); has_calculation_error never initialized; margin in percent vs thresholds in fractions; no cross triangulation; bare except swallows everything",Rewrite against current entities,M3
+4,Risk worker,application/services/risk_worker.py,DEAD CODE,10,Calls detect_margin_call/detect_stop_out which raise AttributeError; never instantiated,Delete or fix + wire,M3
+4,Risk service (pre-trade),application/services/risk_service.py,PARTIAL,60,Per-account asyncio.Lock exists and is correct; validate_order path untested (test fails on constructor drift),Fix tests then verify,M3
+4,Order creation,application/commands/create_order.py,BROKEN,40,"Market orders priced at Decimal('1.0'); margin committed inside lock but order committed outside it (no UoW) so failure strands margin; duplicates Group.calculate_margin inline",Fetch live tick; use UoW; call Group.calculate_margin,M3
+4,Record deal,application/commands/record_deal.py,BROKEN,40,UnitOfWork raises TypeError (repos constructed without session_factory) and never shares its session; co_varnames introspection hack,Fix UoW to inject shared session,M3
+4,Unit of Work,infrastructure/persistence/unit_of_work.py,BROKEN,10,SqlOrderRepository() missing required arg; repos open their own sessions,Pass session into repos,M3
+4,Cancel / modify order / modify deal / close position,application/commands/,PARTIAL,60,Same UoW + margin-unit issues; unreachable via import chain,Verify after M0+M3,M3
+X,DB hot path,application/cache/config_cache.py,UNREACHABLE,70,api/main.py cannot import (GroupCreated + get_di_container + IGroupRepository missing),Define missing symbols,M0
+X,DB cold path,infrastructure/persistence/,BROKEN,30,BigInteger not imported; DealModel/PositionModel duplicated with same __tablename__,Fix imports; merge duplicates,M0
+X,Event bus,infrastructure/messaging/redis_event_bus.py,DONE,70,Unreachable via import chain,Verify after M0,M0
+X,Event store / journal,infrastructure/persistence/event_store.py,THIN,25,4KB; no snapshot no replay no crash recovery,Defer (build after M4),Deferred
+X,ClickHouse time-series,infrastructure/persistence/clickhouse_*.py,PARTIAL,50,Test fails; never exercised end-to-end,Defer,Deferred
+X,Kafka / Zookeeper,ops/docker/docker-compose.dev.yml,UNUSED,0,In compose but referenced by no code,DELETE from compose,M5
+X,REST API edge,api/routers/,PARTIAL,55,api.main cannot import; manager/* mimics MT5 protocol names but is not an MT5 client,Decide Path A vs B; rename to own admin API,M0
+X,WebSocket,api/websockets/ + event_bridge,DONE,70,Unreachable via import chain,Verify after M0,M0
+X,Manager API (MT5 mimicry),api/routers/manager/ + api/schemas/manager/,MISDIRECTED,50,MT5 endpoint names but calls own handlers; no real MT5 connector anywhere in repo,Path A: replace with real MT5 client. Path B: delete and build own admin API,M2
+X,FIX API,api/fix/,EMPTY,0,Empty __init__.py,Defer,Deferred
+X,gRPC / node comms,api/grpc/,EMPTY,0,settings.yaml claims node_discovery: grpc,Defer; fix settings.yaml,Deferred
+X,TLS / certificates,none,MISSING,0,No TLS termination; CORS allow_origins=['*'] with allow_credentials=True,Reverse proxy (Caddy/Traefik) + fix CORS,M5
+X,Dockerfile,none,MISSING,0,Does not exist; compose has no app service,Write multi-stage Dockerfile + add api service,M5
+X,.env.example,none,MISSING,0,README references it; does not exist; alembic.ini hardcodes DB URL,Create + fail-fast on missing secrets,M5
+X,CI,none,MISSING,0,No .github/workflows,compileall + pytest --collect-only + ruff + mypy,M0
+X,Makefile,Makefile,PARTIAL,60,setup-dev chains 4 failing steps; test-e2e points at non-existent dir; --cov=broker-platform invalid,Fix targets,M5
+X,docker-compose,ops/docker/docker-compose.dev.yml,PARTIAL,50,No app service; init.sql mount conflicts with SQLAlchemy schema; Kafka unused,Fix,M5
+X,Logging,structured logging throughout,DONE,70,-,-,-
+X,Metrics / tracing,none,MISSING,0,No Prometheus no OTel,Defer,Deferred
+X,Tests,tests/ (10 modules),BROKEN,15,"10 collection errors from NameError: Any; after patching 7 imports: 12 failed 40 passed; 6 tests empty or assertion-free incl test_cross_currency_pnl_in_margin_loop whose body is 'pass' and reports PASSED; 8 fail on constructor drift",Fix imports then resync tests to domain,M0+M1
+X,Intelligence layer,intelligence/ (8 packages),EMPTY,0,All empty __init__.py,OUT OF SCOPE per your instruction,Deferred
+X,Backoffice / KYC,core/domains/backoffice/,EMPTY,0,Empty __init__.py,OUT OF SCOPE,Deferred
+X,Reports / statements,none,MISSING,0,-,OUT OF SCOPE,Deferred
+X,Line endings,core/domains/risk/engine.py,DEFECT,100,One bare CR at line ~214 (import-safe but byte-patchers will corrupt),Add .gitattributes + normalize,M0
