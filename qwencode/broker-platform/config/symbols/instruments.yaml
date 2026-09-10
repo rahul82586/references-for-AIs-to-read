@@ -1,0 +1,208 @@
+# Symbol Definitions
+
+forex_majors:
+  EURUSD:
+    name: "Euro vs US Dollar"
+    category: FOREX
+    base_currency: EUR
+    quote_currency: USD
+    precision: 5
+    tick_size: 0.00001
+    tick_value: 10
+    contract_size: 100000
+    margin_currency: USD
+    trading_hours:
+      open: "Sunday 22:00"
+      close: "Friday 22:00"
+      timezone: UTC
+    spreads:
+      default: 10
+      vip: 5
+    margins:
+      initial_percent: 1.0
+      maintenance_percent: 0.5
+    swaps:
+      long: -2.5
+      short: 0.8
+      
+  GBPUSD:
+    name: "British Pound vs US Dollar"
+    category: FOREX
+    base_currency: GBP
+    quote_currency: USD
+    precision: 5
+    tick_size: 0.00001
+    tick_value: 10
+    contract_size: 100000
+    margin_currency: USD
+    trading_hours:
+      open: "Sunday 22:00"
+      close: "Friday 22:00"
+      timezone: UTC
+    spreads:
+      default: 15
+      vip: 8
+    margins:
+      initial_percent: 1.0
+      maintenance_percent: 0.5
+    swaps:
+      long: -3.2
+      short: 0.5
+      
+  USDJPY:
+    name: "US Dollar vs Japanese Yen"
+    category: FOREX
+    base_currency: USD
+    quote_currency: JPY
+    precision: 3
+    tick_size: 0.001
+    tick_value: 1000
+    contract_size: 100000
+    margin_currency: USD
+    trading_hours:
+      open: "Sunday 22:00"
+      close: "Friday 22:00"
+      timezone: UTC
+    spreads:
+      default: 12
+      vip: 6
+    margins:
+      initial_percent: 1.0
+      maintenance_percent: 0.5
+    swaps:
+      long: 1.8
+      short: -4.5
+
+crypto_major:
+  BTCUSD:
+    name: "Bitcoin vs US Dollar"
+    category: CRYPTO
+    base_currency: BTC
+    quote_currency: USD
+    precision: 2
+    tick_size: 0.01
+    tick_value: 1
+    contract_size: 1
+    margin_currency: USD
+    trading_hours:
+      open: "24/7"
+      close: "24/7"
+      timezone: UTC
+    spreads:
+      default: 50
+      vip: 25
+    margins:
+      initial_percent: 10.0
+      maintenance_percent: 5.0
+    swaps:
+      long: -0.05
+      short: -0.05
+      
+  ETHUSD:
+    name: "Ethereum vs US Dollar"
+    category: CRYPTO
+    base_currency: ETH
+    quote_currency: USD
+    precision: 2
+    tick_size: 0.01
+    tick_value: 1
+    contract_size: 1
+    margin_currency: USD
+    trading_hours:
+      open: "24/7"
+      close: "24/7"
+      timezone: UTC
+    spreads:
+      default: 25
+      vip: 12
+    margins:
+      initial_percent: 10.0
+      maintenance_percent: 5.0
+    swaps:
+      long: -0.08
+      short: -0.08
+
+metals:
+  XAUUSD:
+    name: "Gold vs US Dollar"
+    category: METALS
+    base_currency: XAU
+    quote_currency: USD
+    precision: 2
+    tick_size: 0.01
+    tick_value: 1
+    contract_size: 100
+    margin_currency: USD
+    trading_hours:
+      open: "Sunday 22:00"
+      close: "Friday 22:00"
+      timezone: UTC
+    spreads:
+      default: 30
+      vip: 15
+    margins:
+      initial_percent: 2.0
+      maintenance_percent: 1.0
+    swaps:
+      long: -0.5
+      short: 0.2
+      
+  XAGUSD:
+    name: "Silver vs US Dollar"
+    category: METALS
+    base_currency: XAG
+    quote_currency: USD
+    precision: 3
+    tick_size: 0.001
+    tick_value: 1
+    contract_size: 5000
+    margin_currency: USD
+    trading_hours:
+      open: "Sunday 22:00"
+      close: "Friday 22:00"
+      timezone: UTC
+    spreads:
+      default: 50
+      vip: 25
+    margins:
+      initial_percent: 2.0
+      maintenance_percent: 1.0
+    swaps:
+      long: -0.8
+      short: 0.3
+
+energy:
+  USOIL:
+    name: "WTI Crude Oil"
+    category: ENERGY
+    base_currency: OIL
+    quote_currency: USD
+    precision: 2
+    tick_size: 0.01
+    tick_value: 10
+    contract_size: 1000
+    margin_currency: USD
+    trading_hours:
+      open: "Sunday 22:00"
+      close: "Friday 22:00"
+      timezone: UTC
+    spreads:
+      default: 40
+      vip: 20
+    margins:
+      initial_percent: 5.0
+      maintenance_percent: 2.5
+    swaps:
+      long: -0.15
+      short: 0.08
+
+holidays:
+  - date: "2024-01-01"
+    name: "New Year's Day"
+    markets_closed: ["FOREX", "METALS", "ENERGY"]
+  - date: "2024-12-25"
+    name: "Christmas Day"
+    markets_closed: ["FOREX", "METALS", "ENERGY"]
+  - date: "2024-12-26"
+    name: "Boxing Day"
+    markets_closed: ["FOREX", "METALS", "ENERGY"]

@@ -1,0 +1,65 @@
+# Global Platform Settings
+
+platform:
+  name: "Broker Platform"
+  version: "0.1.0"
+  environment: development
+  
+cluster:
+  enabled: true
+  node_discovery: grpc
+  sync_interval_seconds: 5
+  conflict_resolution: last_write_wins
+  
+matching_engine:
+  implementation: python  # python | rust
+  default_slippage_points: 2
+  max_order_size: 10000
+  min_order_size: 0.01
+  
+risk_management:
+  pre_trade_checks: true
+  post_trade_checks: true
+  margin_call_level: 0.8
+  stop_out_level: 0.5
+  max_leverage_default: 100
+  
+trading_hours:
+  timezone: UTC
+  weekend_close: "Friday 22:00"
+  weekend_open: "Sunday 22:00"
+  
+settlement:
+  eod_time: "23:59"
+  rollover_time: "22:00"
+  swap_calculation: daily
+  
+notifications:
+  email_enabled: false
+  sms_enabled: false
+  push_enabled: true
+  telegram_enabled: false
+  
+analytics:
+  timeseries_db: clickhouse  # clickhouse | timescaledb
+  retention_days: 365
+  bar_aggregations:
+    - "1m"
+    - "5m"
+    - "15m"
+    - "1h"
+    - "4h"
+    - "1d"
+    
+ai_agents:
+  enabled: false
+  llm_provider: openai
+  model: gpt-4-turbo-preview
+  temperature: 0.3
+  max_tokens: 1000
+  
+logging:
+  level: INFO
+  format: json
+  output: stdout
+  structured: true

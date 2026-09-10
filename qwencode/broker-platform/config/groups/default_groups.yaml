@@ -1,0 +1,156 @@
+# Default Group Templates
+
+# Real Trading Account Group
+real_standard:
+  name: "Real-Standard"
+  type: real
+  currency: USD
+  leverage_default: 100
+  leverage_max: 500
+  margin_call_level: 0.8
+  stop_out_level: 0.5
+  permissions:
+    allowed_symbols: ["FOREX:*", "METALS:*", "ENERGY:*"]
+    max_positions: 200
+    max_orders: 100
+    allow_hedging: true
+    allow_short_selling: true
+    allow_pending_orders: true
+  commissions:
+    - type: per_lot
+      symbol_group: "FOREX:*"
+      value: 3.5
+      currency: USD
+    - type: per_deal
+      symbol_group: "CRYPTO:*"
+      value: 0.1
+      percent: 0.05
+  swaps:
+    calculation_mode: points
+    rollover_time: "22:00"
+    triple_swap_day: Wednesday
+  routing:
+    default_mode: b_book
+    a_book_threshold_lots: 50
+    
+# Demo Account Group
+demo_standard:
+  name: "Demo-Standard"
+  type: demo
+  currency: USD
+  leverage_default: 100
+  leverage_max: 500
+  margin_call_level: 0.8
+  stop_out_level: 0.5
+  virtual_balance: 100000
+  permissions:
+    allowed_symbols: ["*"]
+    max_positions: 200
+    max_orders: 100
+    allow_hedging: true
+    allow_short_selling: true
+    allow_pending_orders: true
+  commissions: []
+  swaps:
+    calculation_mode: points
+    rollover_time: "22:00"
+  routing:
+    default_mode: simulation
+    
+# VIP High-Volume Trader
+vip_platinum:
+  name: "VIP-Platinum"
+  type: real
+  currency: USD
+  leverage_default: 200
+  leverage_max: 1000
+  margin_call_level: 0.7
+  stop_out_level: 0.4
+  permissions:
+    allowed_symbols: ["*"]
+    max_positions: 500
+    max_orders: 300
+    allow_hedging: true
+    allow_short_selling: true
+    allow_pending_orders: true
+    negative_balance_protection: false
+  commissions:
+    - type: per_lot
+      symbol_group: "FOREX:*"
+      value: 2.0
+      currency: USD
+    - type: percent
+      symbol_group: "CRYPTO:*"
+      percent: 0.03
+  swaps:
+    calculation_mode: percent
+    rollover_time: "22:00"
+  routing:
+    default_mode: a_book
+    lp_priority: ["LMAX", "Centroid", "Binance"]
+    
+# Contest Account
+contest_monthly:
+  name: "Contest-Monthly"
+  type: contest
+  currency: USD
+  leverage_default: 100
+  leverage_max: 100
+  virtual_balance: 10000
+  contest_duration_days: 30
+  permissions:
+    allowed_symbols: ["FOREX:EURUSD", "FOREX:GBPUSD", "FOREX:USDJPY"]
+    max_positions: 10
+    max_orders: 10
+    allow_hedging: false
+    allow_short_selling: true
+    allow_pending_orders: true
+    withdraw_allowed: false
+  commissions: []
+  swaps:
+    calculation_mode: disabled
+  routing:
+    default_mode: simulation
+    
+# Coverage (Hedge) Internal Account
+coverage_house:
+  name: "Coverage-House"
+  type: coverage
+  currency: USD
+  leverage_default: 1000
+  leverage_max: 1000
+  permissions:
+    allowed_symbols: ["*"]
+    max_positions: 10000
+    max_orders: 10000
+    allow_hedging: true
+    allow_short_selling: true
+    internal_only: true
+  commissions: []
+  swaps:
+    calculation_mode: disabled
+  routing:
+    default_mode: internal_hedge
+    
+# Preliminary (KYC Pending)
+preliminary_kyc:
+  name: "Preliminary-KYC"
+  type: preliminary
+  currency: USD
+  leverage_default: 0
+  leverage_max: 0
+  permissions:
+    allowed_symbols: []
+    max_positions: 0
+    max_orders: 0
+    allow_hedging: false
+    allow_short_selling: false
+    allow_pending_orders: false
+    deposit_allowed: false
+    trade_allowed: false
+    view_only: true
+  commissions: []
+  swaps:
+    calculation_mode: disabled
+  routing:
+    default_mode: none
