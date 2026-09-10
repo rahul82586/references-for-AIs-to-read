@@ -1,0 +1,156 @@
+name: import-gate
+
+# The whole point of this workflow: this repository reached a state where 10 of 10
+# test modules failed at *collection* because of nine one-line missing imports, and
+# nothing caught it. Every check below runs in seconds and every one of those defects
+# would have been caught by at least one of them.
+#
+# It is deliberately a GATE, not a linter: it must pass before merge, and it does not
+# try to enforce style beyond what prevents the tree from being unloadable.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" || pip install pytest pytest-asyncio hypothesis \
+            fastapi "pydantic>=2" sqlalchemy aiosqlite pyyaml redis PyJWT psutil pyotp \
+            argon2-cffi clickhouse-driver httpx
+
+      # 1. Syntax. Catches the bare-CR / paste-damage class of defect.
+      - name: Byte-compile every module
+        run: python -m compileall -q core application infrastructure api intelligence cli tests
+
+      # 2. Imports. Catches NameError-at-class-body, undefined symbols, and the
+      #    duplicate-definition shadowing that silently changed our repository ports.
+      - name: Import every module
+        run: |
+          python - <<'PY'
+          import pathlib, sys, importlib, traceback
+          root = pathlib.Path(".")
+          failures = []
+          modules = []
+          for path in sorted(root.rglob("*.py")):
+              if any(part in {".venv", "build", "dist", "__pycache__", "alembic"} for part in path.parts):
+                  continue
+              rel = path.relative_to(root).with_suffix("")
+              parts = list(rel.parts)
+              if parts[-1] == "__init__":
+                  parts = parts[:-1]
+              if not parts:
+                  continue
+              modules.append(".".join(parts))
+          for name in modules:
+              try:
+                  importlib.import_module(name)
+              except Exception as exc:
+                  failures.append(f"{name}: {type(exc).__name__}: {exc}")
+          print(f"imported {len(modules) - len(failures)}/{len(modules)} modules")
+          if failures:
+              print("\n".join(f"  FAIL {f}" for f in failures))
+              sys.exit(1)
+          PY
+
+      # 3. Collection. A test module that cannot be collected is a test that does not
+      #    exist, and a suite that reports "0 errors" while running nothing.
+      - name: Test collection
+        run: python -m pytest tests --collect-only -q -p no:cacheprovider
+
+      # 4. No duplicate top-level definitions. This is what let a stale PositionModel
+      #    with side/average_price shadow the MT5-accurate one, which is where
+      #    RiskEngine picked up attribute names the real entity does not have.
+      - name: No shadowed definitions
+        run: |
+          python - <<'PY'
+          import ast, pathlib, sys, collections
+          bad = []
+          for path in sorted(pathlib.Path(".").rglob("*.py")):
+              if any(p in {".venv", "build", "dist", "__pycache__", ".github", "alembic"} for p in path.parts):
+                  continue
+              try:
+                  tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+              except SyntaxError as exc:
+                  bad.append(f"{path}: SyntaxError {exc}")
+                  continue
+              counts = collections.Counter(
+                  n.name for n in tree.body
+                  if isinstance(n, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
+              )
+              for name, n in counts.items():
+                  if n > 1:
+                      bad.append(f"{path}: '{name}' defined {n} times (later one silently wins)")
+          if bad:
+              print("\n".join(f"  FAIL {b}" for b in bad))
+              sys.exit(1)
+          print("no shadowed top-level definitions")
+          PY
+
+      # 5. Ports vs implementations. A port method added without an implementation
+      #    makes the class uninstantiable, and DI wiring only discovers that at
+      #    startup - which is how SqlRoutingRuleRepository.delete blocked the CLI.
+      - name: Every repository implements its port
+        run: |
+          python - <<'PY'
+          import importlib, inspect, sys
+          from core.ports import interfaces as ports
+
+          PAIRS = [
+              ("SqlRoutingRuleRepository", "infrastructure.persistence.repositories.routing_rule_repository", "IRoutingRuleRepository"),
+              ("SqlCoverageAccountRepository", "infrastructure.persistence.repositories.coverage_account_repository", "ICoverageAccountRepository"),
+              ("SqlLedgerRepository", "infrastructure.persistence.repositories.ledger_repository", "ILedgerRepository"),
+              ("SqlOrderRepository", "infrastructure.persistence.repositories.order_repository", "IOrderRepository"),
+              ("SqlDealRepository", "infrastructure.persistence.repositories.deal_repository", "IDealRepository"),
+              ("SqlPositionRepository", "infrastructure.persistence.repositories.position_repository", "IPositionRepository"),
+              ("SqlAccountRepository", "infrastructure.persistence.repositories.account_repository", "IAccountRepository"),
+              ("SqlGroupRepository", "infrastructure.persistence.repositories.group_repository", "IGroupRepository"),
+              ("SqlSymbolRepository", "infrastructure.persistence.repositories.symbol_repository", "ISymbolRepository"),
+              ("SQLAlchemyHolidayRepository", "infrastructure.persistence.repositories.holiday_repository", "IHolidayRepository"),
+              ("SqlManagerRepository", "infrastructure.persistence.repositories.manager_repository", "IManagerRepository"),
+          ]
+          bad = []
+          for cls_name, module_name, port_name in PAIRS:
+              impl = getattr(importlib.import_module(module_name), cls_name)
+              port = getattr(ports, port_name)
+              # Inherited abstract methods do not appear in the subclass's own
+              # __abstractmethods__, so walk the MRO and subtract what it overrides.
+              required = set(port.__abstractmethods__)
+              for klass in impl.__mro__:
+                  required |= getattr(klass, "__abstractmethods__", set())
+              missing = sorted(required - set(impl.__dict__) - {"__abstractmethods__"})
+              if missing:
+                  bad.append(f"{cls_name} does not implement {port_name}: {missing}")
+          if bad:
+              print("\n".join(f"  FAIL {b}" for b in bad))
+              sys.exit(1)
+          print(f"all {len(PAIRS)} repositories implement their ports")
+          PY
+
+      # 6. MT5 wire contract. Guards the field tables against drift from the real
+      #    server schema, and the lossless round-trip guarantee.
+      - name: MT5 codec tests
+        run: python -m pytest tests/unit/infrastructure -q -p no:cacheprovider
+
+      # 7. Lint and types, non-blocking for now so the gate lands, but visible.
+      - name: Ruff (report only)
+        continue-on-error: true
+        run: pip install ruff && ruff check . --statistics
+
+      - name: Mypy on core/ (report only)
+        continue-on-error: true
+        run: pip install mypy && mypy core --ignore-missing-imports || true

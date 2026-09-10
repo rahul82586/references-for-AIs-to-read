@@ -1,0 +1,244 @@
+# Group templates - the MT5 rule engine.
+#
+# SCHEMA. Groups are nested, matching the domain value objects exactly. The loader
+# (infrastructure/config/loader.py) REJECTS unknown keys, so a typo fails at startup
+# rather than silently running on a default.
+#
+# UNITS. margin_call_level and stop_out_level are PERCENT, matching MT5
+# (MarginCall "50.00", MarginStopOut "30.00" for group real\real on a live server).
+# A value <= 1 is rejected as a fraction - that mistake is what let an account at 40%
+# margin level report no margin call and no stop-out.
+#
+# NAMES. MT5 group paths are backslash-separated and the prefix determines the account
+# type: real\, demo\, managers\, preliminary. account_type is derived from the prefix
+# when omitted.
+#
+# INHERITANCE. In symbol_overrides, a field set to `null` means "inherit from the base
+# symbol", which MT5 encodes as the string "default". Never write 0 for that: 0 is a
+# real margin rate, and would let a client open an unbounded position.
+
+real_standard:
+  name: "real\\real"
+  currency: USD
+  currency_digits: 2
+  server_id: 1
+  margin:
+    mode: RETAIL_HEDGED          # MT5 MarginMode 2, the common retail setting
+    margin_call_level: 50        # percent
+    stop_out_level: 30           # percent
+    stop_out_mode: PERCENT       # MT5 MarginSOMode 0
+    free_margin_mode: USE_PL     # MT5 MarginFreeMode 1
+    leverage_default: 100
+    leverage_max: 500
+  permissions:
+    allowed_symbols: ["FX\\*", "Metals\\*", "Energy\\*"]
+    max_positions: 200
+    max_orders: 100
+    allow_hedging: true
+    allow_short_selling: true
+    allow_pending_orders: true
+    deposit_allowed: true
+    withdraw_allowed: true
+    trade_allowed: true
+  commissions:
+    - name: "Forex"
+      symbol_pattern: "FX\\*"
+      type: VOLUME
+      value: 3.5                 # per lot, per side
+      currency: USD
+      min_value: 0
+  swaps:
+    calculation_mode: points
+    rollover_time: "22:00"
+    triple_swap_day: Wednesday   # MT5 Swap3Day 3 on a Sunday-first index
+    enable_swaps: true
+    swap_type: POINTS
+  routing:
+    default_mode: b_book
+    a_book_threshold_lots: 50
+    lp_priority: []
+  news_mode: FULL
+  is_active: true
+
+real_swap_free:
+  name: "real\\real-SF"
+  currency: USD
+  margin:
+    mode: RETAIL_HEDGED
+    margin_call_level: 50
+    stop_out_level: 30
+    stop_out_mode: PERCENT
+    free_margin_mode: USE_PL
+    leverage_default: 100
+    leverage_max: 500
+  permissions:
+    allowed_symbols: ["FX\\*"]
+    allow_hedging: true
+    allow_short_selling: true
+    allow_pending_orders: true
+    trade_allowed: true
+  swaps:
+    calculation_mode: disabled
+    enable_swaps: false
+    swap_type: POINTS
+    rollover_time: "22:00"
+    triple_swap_day: Wednesday
+  routing:
+    default_mode: b_book
+  is_active: true
+
+vip_platinum:
+  name: "real\\real-A"
+  currency: USD
+  margin:
+    mode: RETAIL_HEDGED
+    margin_call_level: 70
+    stop_out_level: 40
+    stop_out_mode: PERCENT
+    free_margin_mode: USE_PL
+    leverage_default: 200
+    leverage_max: 1000
+  permissions:
+    allowed_symbols: ["*"]
+    max_positions: 500
+    max_orders: 300
+    allow_hedging: true
+    allow_short_selling: true
+    allow_pending_orders: true
+    negative_balance_protection: false
+    trade_allowed: true
+  commissions:
+    - name: "Forex VIP"
+      symbol_pattern: "FX\\*"
+      type: VOLUME
+      value: 2.0
+      currency: USD
+      min_value: 0
+  routing:
+    default_mode: a_book
+    lp_priority: ["LMAX", "Centroid"]
+  is_active: true
+
+demo_standard:
+  name: "demo\\Standard"
+  currency: USD
+  margin:
+    # MT5's real demo groups run far tighter than retail: the live export has
+    # MarginCall 10.00 / MarginStopOut 1.00 for demo\Standard.
+    mode: RETAIL_HEDGED
+    margin_call_level: 10
+    stop_out_level: 1
+    stop_out_mode: PERCENT
+    free_margin_mode: USE_PL
+    leverage_default: 100
+    leverage_max: 500
+  permissions:
+    allowed_symbols: ["*"]
+    max_positions: 200
+    max_orders: 100
+    allow_hedging: true
+    allow_short_selling: true
+    allow_pending_orders: true
+    trade_allowed: true
+  swaps:
+    calculation_mode: points
+    rollover_time: "22:00"
+    triple_swap_day: Wednesday
+    enable_swaps: true
+  routing:
+    default_mode: simulation
+  is_active: true
+
+contest_monthly:
+  name: "demo\\Challenge"
+  currency: USD
+  account_type: CONTEST
+  margin:
+    mode: RETAIL
+    margin_call_level: 50
+    stop_out_level: 30
+    stop_out_mode: PERCENT
+    free_margin_mode: USE_PL
+    leverage_default: 100
+    leverage_max: 100
+  permissions:
+    allowed_symbols: ["FX\\Forex\\EURUSD", "FX\\Forex\\GBPUSD", "FX\\Forex\\USDJPY"]
+    max_positions: 10
+    max_orders: 10
+    allow_hedging: false
+    allow_short_selling: true
+    allow_pending_orders: true
+    withdraw_allowed: false
+    trade_allowed: true
+  swaps:
+    calculation_mode: disabled
+    enable_swaps: false
+    rollover_time: "22:00"
+    triple_swap_day: Wednesday
+  routing:
+    default_mode: simulation
+  is_active: true
+
+# The broker's own hedging account. MT5 keeps residual B-book exposure here and the
+# auto-hedge trigger at 85% of the NOP limit moves flow to an LP instead.
+coverage_house:
+  name: "coverage\\house"
+  account_type: COVERAGE
+  currency: USD
+  margin:
+    mode: RETAIL_HEDGED
+    margin_call_level: 50
+    stop_out_level: 30
+    stop_out_mode: PERCENT
+    free_margin_mode: USE_PL
+    leverage_default: 1000
+    leverage_max: 1000
+  permissions:
+    allowed_symbols: ["*"]
+    max_positions: 10000
+    max_orders: 10000
+    allow_hedging: true
+    internal_only: true
+    trade_allowed: true
+  swaps:
+    calculation_mode: disabled
+    enable_swaps: false
+    rollover_time: "22:00"
+    triple_swap_day: Wednesday
+  routing:
+    default_mode: internal_hedge
+  is_active: true
+
+# KYC-pending accounts. MT5 has a real `preliminary` group and the live export uses it:
+# everything off, view-only, no deposits.
+preliminary_kyc:
+  name: "preliminary"
+  account_type: PRELIMINARY
+  currency: USD
+  margin:
+    mode: RETAIL
+    margin_call_level: 50
+    stop_out_level: 30
+    stop_out_mode: PERCENT
+    free_margin_mode: USE_PL
+    leverage_default: 0
+    leverage_max: 0
+  permissions:
+    allowed_symbols: []
+    max_positions: 0
+    max_orders: 0
+    allow_hedging: false
+    allow_short_selling: false
+    allow_pending_orders: false
+    deposit_allowed: false
+    withdraw_allowed: false
+    trade_allowed: false
+    view_only: true
+  swaps:
+    calculation_mode: disabled
+    enable_swaps: false
+    rollover_time: "22:00"
+    triple_swap_day: Wednesday
+  routing:
+    default_mode: none
+  is_active: true

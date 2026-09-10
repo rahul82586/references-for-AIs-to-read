@@ -1,0 +1,40 @@
+# --- Appended by M0: DI container accessor -------------------------------
+# _container is a plain dict keyed by string, but api/main.py resolves by port
+# type. This view bridges the two without rewriting every call site, and it fails
+# loudly on an unregistered port so a mis-wired server cannot start half-configured.
+
+_PORT_TO_KEY: dict = {}
+
+
+class _ContainerView:
+    """Read-only, resolve()-style view over the process-wide provider dict."""
+
+    def __init__(self, providers: dict) -> None:
+        self._providers = providers
+
+    def resolve(self, port: Any, key: Optional[str] = None) -> Any:
+        lookup = key or _PORT_TO_KEY.get(port) or getattr(port, "__name__", str(port))
+        if lookup not in self._providers:
+            raise KeyError(
+                f"no provider registered for {lookup!r}; "
+                f"available: {sorted(self._providers)}"
+            )
+        return self._providers[lookup]
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self._providers.get(key, default)
+
+    def __contains__(self, key: str) -> bool:
+        return key in self._providers
+
+
+def register_port_keys(mapping: dict) -> None:
+    """Map port classes to container keys, e.g. {IGroupRepository: 'group_repo'}."""
+    _PORT_TO_KEY.update(mapping)
+
+
+def get_di_container() -> Any:
+    """Return the process-wide DI container as a resolve()-capable view."""
+    return _ContainerView(_container)
+
+

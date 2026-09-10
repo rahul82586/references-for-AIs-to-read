@@ -1,0 +1,27 @@
+# Normalise line endings in the working tree, keep LF in the repository.
+#
+# Why this file exists: the tree is currently mixed. Most files are CRLF (they were
+# authored on Windows), but AI-assisted patches have inserted LF-only lines into CRLF
+# files, and core/domains/risk/engine.py contains a bare CR mid-file at the
+# detect_margin_call / detect_stop_out boundary. Python's universal-newline handling
+# absorbs that at import time, but any tool doing byte-level patching will corrupt the
+# file, and every diff touching those regions is polluted by phantom whole-file changes.
+* text=auto eol=lf
+
+*.py    text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.toml  text eol=lf
+*.ini   text eol=lf
+*.sql   text eol=lf
+*.md    text eol=lf
+*.sh    text eol=lf
+
+# MT5 Administrator exports are UTF-16LE and must never be treated as text, or git
+# will mangle them and the lossless round-trip guarantee breaks.
+*.lic   binary
+*.dat   binary
+*.idx   binary
+*.pfx   binary
+*.png   binary
+*.jpg   binary
