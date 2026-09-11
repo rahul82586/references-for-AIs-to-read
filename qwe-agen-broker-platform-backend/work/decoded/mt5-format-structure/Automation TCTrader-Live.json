@@ -1,0 +1,1647 @@
+{
+ "Server": [
+  {
+   "ConfigAutomation": [
+    {
+     "ID": "132442819585378492",
+     "ParentID": "0",
+     "Name": "Server Performance",
+     "Flags": "2",
+     "Trigger": "0",
+     "TimeStart": "0",
+     "TimeExpire": "0",
+     "TimeWeekdays": "0",
+     "TimeMonths": "0",
+     "TimeMonthDays": "0",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [],
+     "Actions": []
+    },
+    {
+     "ID": "132442140259474306",
+     "ParentID": "132442819585378492",
+     "Name": "High Total CPU usage Alert",
+     "Flags": "0",
+     "Trigger": "6001",
+     "TimeStart": "1599747288",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "2001",
+       "Rule": "2",
+       "ValueInt": "0",
+       "ValueUInt": "70",
+       "ValueFloat": "0.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "2",
+       "Name": "Send SMS to Admin",
+       "Params": [
+        {
+         "Param": "103",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "+15678901234"
+        },
+        {
+         "Param": "104",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "#SERVER_PUBLIC_NAME#: #SERVER_NAME# has #MONITOR_CPU#% CPU usage"
+        }
+       ]
+      },
+      {
+       "Action": "3",
+       "Name": "Send Email to Admin",
+       "Params": [
+        {
+         "Param": "153",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "admin@broker.com"
+        },
+        {
+         "Param": "155",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "High Total CPU usage"
+        },
+        {
+         "Param": "154",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Your Mail Server"
+        },
+        {
+         "Param": "156",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><p><font face=\"Tahoma\" size=\"2\">#SERVER_PUBLIC_NAME#: #SERVER_NAME# has #MONITOR_CPU#% CPU usage</font></p><p><br></p></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442142831803738",
+     "ParentID": "132442819585378492",
+     "Name": "High Process CPU usage Alert",
+     "Flags": "0",
+     "Trigger": "6001",
+     "TimeStart": "1599747690",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "3002",
+       "Rule": "0",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "0.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      },
+      {
+       "Condition": "2002",
+       "Rule": "2",
+       "ValueInt": "1599751357",
+       "ValueUInt": "50",
+       "ValueFloat": "0.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "2",
+       "Name": "Send SMS to Admin",
+       "Params": [
+        {
+         "Param": "103",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "+15678901234"
+        },
+        {
+         "Param": "104",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "#SERVER_PUBLIC_NAME#: #SERVER_NAME# has #MONITOR_CPU_PROCESS#% process CPU usage"
+        }
+       ]
+      },
+      {
+       "Action": "3",
+       "Name": "Send Email to Admin",
+       "Params": [
+        {
+         "Param": "153",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "admin@broker.com"
+        },
+        {
+         "Param": "155",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "ALERT High MainTrade server CPU usage!"
+        },
+        {
+         "Param": "154",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Your Mail Server"
+        },
+        {
+         "Param": "156",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><p><font face=\"Tahoma\" size=\"2\">SERVER_PUBLIC_NAME#: #SERVER_NAME# has #MONITOR_CPU_PROCESS#% process CPU usage</font></p><p><font face=\"Tahoma\" size=\"2\"></font></p></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442812150501459",
+     "ParentID": "132442819585378492",
+     "Name": "Low Total Free Memory",
+     "Flags": "0",
+     "Trigger": "6001",
+     "TimeStart": "1599814644",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "2004",
+       "Rule": "4",
+       "ValueInt": "0",
+       "ValueUInt": "3072",
+       "ValueFloat": "0.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "1",
+       "Name": "Low Total Free Memory Internal mail",
+       "Params": [
+        {
+         "Param": "51",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "53",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Low Total Free Memory"
+        },
+        {
+         "Param": "54",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><p><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\">#SERVER_PUBLIC_NAME#: #SERVER_NAME# has #MONITOR_MEMORY_FREE# Mb free memory</font></font></p></body></html>"
+        }
+       ]
+      },
+      {
+       "Action": "3",
+       "Name": "Low Total Free Memory mail",
+       "Params": [
+        {
+         "Param": "151",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "155",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Low Total Free Memory"
+        },
+        {
+         "Param": "154",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Your Mail Server"
+        },
+        {
+         "Param": "156",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\"><p><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\">#SERVER_PUBLIC_NAME#: #SERVER_NAME# has #MONITOR_MEMORY_FREE# Mb free memory<br></font></font></p></font><p><br></p></font></font></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442813122442805",
+     "ParentID": "132442819585378492",
+     "Name": "Low Free Disk Space",
+     "Flags": "0",
+     "Trigger": "6001",
+     "TimeStart": "1599814845",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "2006",
+       "Rule": "4",
+       "ValueInt": "0",
+       "ValueUInt": "30000",
+       "ValueFloat": "0.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "1",
+       "Name": "Low Free Disk Space internal mail",
+       "Params": [
+        {
+         "Param": "51",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "53",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Low Free Disk Space"
+        },
+        {
+         "Param": "54",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><font face=\"Tahoma\" size=\"2\"><p>#SERVER_PUBLIC_NAME#: #SERVER_NAME# has #MONITOR_DISK_FREE# Mb free disk space</p><p><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\"><br></font></font></p></font><font face=\"Tahoma\" size=\"2\"></font></body></html>"
+        }
+       ]
+      },
+      {
+       "Action": "3",
+       "Name": "Low Free Disk Space mail",
+       "Params": [
+        {
+         "Param": "151",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "155",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Low Free Disk Space internal mail"
+        },
+        {
+         "Param": "154",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Your Mail Server"
+        },
+        {
+         "Param": "156",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\"><p>#SERVER_PUBLIC_NAME#: #SERVER_NAME# has #MONITOR_DISK_FREE# Mb free disk space</p><p><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\"><br></font></font></p></font></font></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442817543115034",
+     "ParentID": "132442819585378492",
+     "Name": "Low Disk Read Speed",
+     "Flags": "0",
+     "Trigger": "6001",
+     "TimeStart": "1599815249",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "2007",
+       "Rule": "4",
+       "ValueInt": "0",
+       "ValueUInt": "20",
+       "ValueFloat": "0.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "1",
+       "Name": "Low Disk Read Speed internal mail",
+       "Params": [
+        {
+         "Param": "51",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "53",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Low Disk Read Speed"
+        },
+        {
+         "Param": "54",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><p><font face=\"Tahoma\" size=\"2\">ALERT!</font></p><p><font face=\"Tahoma\" size=\"2\">Disk Read Speed lower than 20 MB\\sec.<font face=\"Tahoma\" size=\"2\"><br>P<font face=\"Tahoma\" size=\"2\">lease check your server.</font></font></font></p></body></html>"
+        }
+       ]
+      },
+      {
+       "Action": "3",
+       "Name": "Low Disk Read Speed mail",
+       "Params": [
+        {
+         "Param": "151",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "155",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Low Disk Read Speed"
+        },
+        {
+         "Param": "154",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Your Mail Server"
+        },
+        {
+         "Param": "156",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><font face=\"Tahoma\" size=\"2\"><p><font face=\"Tahoma\" size=\"2\">ALERT!</font></p><p><font face=\"Tahoma\" size=\"2\">Disk Read Speed lower than 20 MB\\sec.<font face=\"Tahoma\" size=\"2\"><br>P<font face=\"Tahoma\" size=\"2\">lease check your server.</font></font></font></p></font><p><br></p><font face=\"Tahoma\" size=\"2\"></font></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442818688895829",
+     "ParentID": "132442819585378492",
+     "Name": "Low Disk Write Speed",
+     "Flags": "0",
+     "Trigger": "6001",
+     "TimeStart": "1599815394",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "2008",
+       "Rule": "4",
+       "ValueInt": "0",
+       "ValueUInt": "20",
+       "ValueFloat": "0.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "1",
+       "Name": "Low Disk Write Speed internal mail",
+       "Params": [
+        {
+         "Param": "51",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "53",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Low Disk Write Speed"
+        },
+        {
+         "Param": "54",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><font face=\"Tahoma\" size=\"2\"><p><font face=\"Tahoma\" size=\"2\">ALERT!</font></p><p><font face=\"Tahoma\" size=\"2\">Disk&nbsp;Write Speed lower than 20 MB\\sec.<br><font face=\"Tahoma\" size=\"2\">Please check&nbsp;your server.</font></font></p></font></body></html>"
+        }
+       ]
+      },
+      {
+       "Action": "3",
+       "Name": "Low Disk Write Speed mail",
+       "Params": [
+        {
+         "Param": "151",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "155",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Low Disk Write Speed"
+        },
+        {
+         "Param": "154",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Your Mail Server"
+        },
+        {
+         "Param": "156",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\"><p><font face=\"Tahoma\" size=\"2\">ALERT!</font></p><p><font face=\"Tahoma\" size=\"2\">Disk&nbsp;Write Speed lower than 20 MB\\sec.<br><font face=\"Tahoma\" size=\"2\">Please check&nbsp;your server.</font></font></p></font><p><br></p></font><p><br></p></font></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442828264909786",
+     "ParentID": "132442819585378492",
+     "Name": "Disk queue is high",
+     "Flags": "0",
+     "Trigger": "6001",
+     "TimeStart": "1599816299",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "2009",
+       "Rule": "3",
+       "ValueInt": "0",
+       "ValueUInt": "2",
+       "ValueFloat": "0.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "1",
+       "Name": "Disk queue is high internal mail",
+       "Params": [
+        {
+         "Param": "51",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "53",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Disk queue is high"
+        },
+        {
+         "Param": "54",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><p><font face=\"Tahoma\" size=\"2\">ALERT!</font></p><p><font face=\"Tahoma\" size=\"2\">Disk queue is high.<br>P<font face=\"Tahoma\" size=\"2\">lease check disk performance.</font></font></p></body></html>"
+        }
+       ]
+      },
+      {
+       "Action": "3",
+       "Name": "Disk queue is high mail",
+       "Params": [
+        {
+         "Param": "151",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "155",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Disk queue is high"
+        },
+        {
+         "Param": "154",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Your Mail Server"
+        },
+        {
+         "Param": "156",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\"><p><font face=\"Tahoma\" size=\"2\">ALERT!</font></p><p><font face=\"Tahoma\" size=\"2\">Disk queue is high.<br>P<font face=\"Tahoma\" size=\"2\">lease check disk performance.</font></font></p></font><p><br></p></font></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442829711317349",
+     "ParentID": "132442819585378492",
+     "Name": "Possible DDoS attack",
+     "Flags": "0",
+     "Trigger": "6001",
+     "TimeStart": "1599816434",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "2011",
+       "Rule": "2",
+       "ValueInt": "0",
+       "ValueUInt": "100",
+       "ValueFloat": "0.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "1",
+       "Name": "Possible DDoS Attack internal mail",
+       "Params": [
+        {
+         "Param": "51",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "53",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Possible DDoS Attack"
+        },
+        {
+         "Param": "54",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><p><font face=\"Tahoma\" size=\"2\">ALERT!</font></p><p><font face=\"Tahoma\" size=\"2\">Last minute Blocked Connections &gt; 100. P<font face=\"Tahoma\" size=\"2\">ossible DDoS Attack. <br>Please check your connections and Access Server Journal.</font></font></p></body></html>"
+        }
+       ]
+      },
+      {
+       "Action": "3",
+       "Name": "Possible DDoS Attack mail",
+       "Params": [
+        {
+         "Param": "151",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "155",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Possible DDoS Attack"
+        },
+        {
+         "Param": "154",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Your Mail Server"
+        },
+        {
+         "Param": "156",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\"><p><font face=\"Tahoma\" size=\"2\">ALERT!</font></p><p><font face=\"Tahoma\" size=\"2\">Last minute Blocked Connections &gt; 100. P<font face=\"Tahoma\" size=\"2\">ossible DDoS Attack. <br>Please check your connections and Access Server Journal.</font></font></p><font face=\"Tahoma\" size=\"2\"></font></font><p><br></p></font></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442830872346649",
+     "ParentID": "132442819585378492",
+     "Name": "High Retransmit",
+     "Flags": "0",
+     "Trigger": "6001",
+     "TimeStart": "1599816578",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "2015",
+       "Rule": "2",
+       "ValueInt": "0",
+       "ValueUInt": "5",
+       "ValueFloat": "0.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "1",
+       "Name": "High Retransmits internal mail",
+       "Params": [
+        {
+         "Param": "51",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "53",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "High Retransmits"
+        },
+        {
+         "Param": "54",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><font face=\"Tahoma\" size=\"2\"><p><font face=\"Tahoma\" size=\"2\">ALERT!</font></p><p><font face=\"Tahoma\" size=\"2\">#SERVER_PUBLIC_NAME#: #SERVER_NAME# has retransmits&nbsp;&gt; 5%, possible network malunction. <br>P<font face=\"Tahoma\" size=\"2\">lease check network performance and settings.</font></font></p></font><p><br></p></body></html>"
+        }
+       ]
+      },
+      {
+       "Action": "3",
+       "Name": "High Retransmit mail",
+       "Params": [
+        {
+         "Param": "151",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1000"
+        },
+        {
+         "Param": "155",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "High Retransmit"
+        },
+        {
+         "Param": "154",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Your Mail Server"
+        },
+        {
+         "Param": "156",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><font face=\"Tahoma\" size=\"2\"><font face=\"Tahoma\" size=\"2\"><p><font face=\"Tahoma\" size=\"2\">ALERT!</font></p><p><font face=\"Tahoma\" size=\"2\">Retransmits&nbsp;&gt; 5%, possible network malfunction. <br>P<font face=\"Tahoma\" size=\"2\">lease check network performance and settings.</font></font></p></font><p><br></p></font></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "133215271945129669",
+     "ParentID": "132442819585378492",
+     "Name": "Restart",
+     "Flags": "1",
+     "Trigger": "0",
+     "TimeStart": "1677024000",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "6",
+     "EventPauseHours": "6",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [],
+     "Actions": [
+      {
+       "Action": "6001",
+       "Name": "Main",
+       "Params": [
+        {
+         "Param": "701",
+         "ParamInt": "0",
+         "ParamUInt": "1",
+         "ParamFloat": "0.00000000",
+         "ParamPack": ""
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "133646130584214453",
+     "ParentID": "132442819585378492",
+     "Name": "Restart gateway",
+     "Flags": "0",
+     "Trigger": "0",
+     "TimeStart": "1720146909",
+     "TimeExpire": "1720147012",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [],
+     "Actions": [
+      {
+       "Action": "6003",
+       "Name": "Restart gateway",
+       "Params": [
+        {
+         "Param": "801",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "oneZero MT5 Gateway"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442831074488216",
+     "ParentID": "0",
+     "Name": "Marketing",
+     "Flags": "2",
+     "Trigger": "0",
+     "TimeStart": "0",
+     "TimeExpire": "0",
+     "TimeWeekdays": "0",
+     "TimeMonths": "0",
+     "TimeMonthDays": "0",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [],
+     "Actions": []
+    },
+    {
+     "ID": "132442166973277164",
+     "ParentID": "132442831074488216",
+     "Name": "Change password after first login for real accounts",
+     "Flags": "0",
+     "Trigger": "1002",
+     "TimeStart": "1599750050",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "1002",
+       "Rule": "0",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "0.00000000",
+       "ValueString": "real\\*",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "1009",
+       "Name": "Change password after first login",
+       "Params": []
+      }
+     ]
+    },
+    {
+     "ID": "132442171782208979",
+     "ParentID": "132442831074488216",
+     "Name": "Check KYC for new preliminary account from USA",
+     "Flags": "0",
+     "Trigger": "2001",
+     "TimeStart": "1599750298",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "1002",
+       "Rule": "0",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "0.00000000",
+       "ValueString": "preliminary",
+       "OrId": "0"
+      },
+      {
+       "Condition": "1003",
+       "Rule": "0",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "0.00000000",
+       "ValueString": "USA",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "1",
+       "Name": "Check KYC new preliminary account",
+       "Params": [
+        {
+         "Param": "52",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "managers\\support"
+        },
+        {
+         "Param": "53",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Check KYC new preliminary account"
+        },
+        {
+         "Param": "54",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><p><font face=\"Tahoma\" size=\"2\">New Preliminary Account registered.</font></p><p><font face=\"Tahoma\" size=\"2\">Check KYC report for new preliminary account of #USERNAME# (#LOGIN#)</font></p></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442176921982421",
+     "ParentID": "132442831074488216",
+     "Name": "Bonus after first deposit for UAE clients",
+     "Flags": "0",
+     "Trigger": "3002",
+     "TimeStart": "1599750873",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "1003",
+       "Rule": "0",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "0.00000000",
+       "ValueString": "UAE",
+       "OrId": "0"
+      },
+      {
+       "Condition": "1013",
+       "Rule": "2",
+       "ValueInt": "1599754563",
+       "ValueUInt": "0",
+       "ValueFloat": "2000.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "1",
+       "Name": "Send Message",
+       "Params": [
+        {
+         "Param": "53",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Thank you"
+        },
+        {
+         "Param": "54",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><p><font face=\"Tahoma\" size=\"2\">Dear #USERNAME#,</font></p><p><font face=\"Tahoma\" size=\"2\">Thank you for your first deposit.</font></p><p><font face=\"Tahoma\" size=\"2\">Please accept additional bonus of 200 USD!</font></p><font face=\"Tahoma\" size=\"2\"><p><font face=\"Tahoma\" size=\"2\">Best Regards,<br><font face=\"Tahoma\" size=\"2\">ABC Broker</font></font></p></font></body></html>"
+        }
+       ]
+      },
+      {
+       "Action": "1",
+       "Name": "Bonus for new client",
+       "Params": [
+        {
+         "Param": "51",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1005"
+        },
+        {
+         "Param": "53",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Bonus for new client"
+        },
+        {
+         "Param": "54",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><p><font face=\"Tahoma\" size=\"2\">New client from UAE made big deposit and got bonus of 200 USD.</font></p><p><font face=\"Tahoma\" size=\"2\">Current client's balance is&nbsp;#BALANCE#.</font></p></body></html>"
+        }
+       ]
+      },
+      {
+       "Action": "2002",
+       "Name": "Bonus",
+       "Params": [
+        {
+         "Param": "451",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "200.00000000",
+         "ParamPack": ""
+        },
+        {
+         "Param": "452",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "bonus for big deposit"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442179204909704",
+     "ParentID": "132442831074488216",
+     "Name": "Christmas Bonus for deposits from rich clients",
+     "Flags": "0",
+     "Trigger": "3001",
+     "TimeStart": "1606780800",
+     "TimeExpire": "1894924800",
+     "TimeWeekdays": "127",
+     "TimeMonths": "2049",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "1002",
+       "Rule": "0",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "0.00000000",
+       "ValueString": "real\\*",
+       "OrId": "0"
+      },
+      {
+       "Condition": "1013",
+       "Rule": "2",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "10000.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "2002",
+       "Name": "Christmas bonus",
+       "Params": [
+        {
+         "Param": "451",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "500.00000000",
+         "ParamPack": ""
+        },
+        {
+         "Param": "452",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Christmas bonus"
+        }
+       ]
+      },
+      {
+       "Action": "0",
+       "Name": "Message about Christmas bonus",
+       "Params": [
+        {
+         "Param": "2",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Dear #USERNAME#,\r\n\r\nPlease accept Christmas bonus of 500 USD. Thank you for staying with us.\r\n\r\nBest Regards,\r\nABC Broker"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442183798585026",
+     "ParentID": "132442831074488216",
+     "Name": "Send special offer on Withdrawal",
+     "Flags": "0",
+     "Trigger": "3003",
+     "TimeStart": "1599751803",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "1013",
+       "Rule": "4",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "10.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "3",
+       "Name": "Message Special offer",
+       "Params": [
+        {
+         "Param": "155",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Special Offer on deposit"
+        },
+        {
+         "Param": "154",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Your Mail Server"
+        },
+        {
+         "Param": "156",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><p><font face=\"Tahoma\" size=\"2\">Dear #USERNAME#,</font></p><p><font face=\"Tahoma\" size=\"2\">You&nbsp;will get additional bonus if you come back and&nbsp;make another deposit.<br><br></font></p><p><font face=\"Tahoma\" size=\"2\">Best Regards,<br><font face=\"Tahoma\" size=\"2\">ABC Broker</font></font></p></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442831348844313",
+     "ParentID": "0",
+     "Name": "Trading",
+     "Flags": "2",
+     "Trigger": "0",
+     "TimeStart": "0",
+     "TimeExpire": "0",
+     "TimeWeekdays": "0",
+     "TimeMonths": "0",
+     "TimeMonthDays": "0",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [],
+     "Actions": []
+    },
+    {
+     "ID": "132442158638328422",
+     "ParentID": "132442831348844313",
+     "Name": "Price Gap - Restart datafeed",
+     "Flags": "0",
+     "Trigger": "5001",
+     "TimeStart": "1599749132",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [],
+     "Actions": [
+      {
+       "Action": "6002",
+       "Name": "Restart DataFeed",
+       "Params": [
+        {
+         "Param": "751",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "MetaTrader 5 Feeder"
+        }
+       ]
+      },
+      {
+       "Action": "3",
+       "Name": "Price Gap - Data Feeds Restarted",
+       "Params": [
+        {
+         "Param": "151",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "1"
+        },
+        {
+         "Param": "155",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Price Gap - Data Feeds Restarted"
+        },
+        {
+         "Param": "154",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Your Mail Server"
+        },
+        {
+         "Param": "156",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "<html><head><meta name=\"GENERATOR\" content=\"MSHTML 11.00.10570.1001\"></head><body><p><font face=\"Tahoma\" size=\"2\">ALERT!</font></p><p><font face=\"Tahoma\" size=\"2\">Data Feeds Restarted after Price Gaps. Please check data feeds settings and journals, as well as&nbsp;quotes history.</font></p></body></html>"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442195027429590",
+     "ParentID": "132442831348844313",
+     "Name": "Futures Expired - Close all positions",
+     "Flags": "0",
+     "Trigger": "0",
+     "TimeStart": "1599752845",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "0",
+       "Rule": "0",
+       "ValueInt": "1609455600",
+       "ValueUInt": "0",
+       "ValueFloat": "0.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "3001",
+       "Name": "Close Positions",
+       "Params": [
+        {
+         "Param": "556",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "real\\*"
+        },
+        {
+         "Param": "551",
+         "ParamInt": "0",
+         "ParamUInt": "3",
+         "ParamFloat": "0.00000000",
+         "ParamPack": ""
+        },
+        {
+         "Param": "552",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "Futures\\#SP500"
+        },
+        {
+         "Param": "553",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "1.23450000",
+         "ParamPack": ""
+        },
+        {
+         "Param": "554",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "expiration"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442210636434416",
+     "ParentID": "132442831348844313",
+     "Name": "Disable trading with no money",
+     "Flags": "0",
+     "Trigger": "1001",
+     "TimeStart": "1599753844",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "1002",
+       "Rule": "0",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "0.00000000",
+       "ValueString": "real\\*",
+       "OrId": "0"
+      },
+      {
+       "Condition": "1013",
+       "Rule": "4",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "1.00000000",
+       "ValueString": "",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "1003",
+       "Name": "Disable trading ",
+       "Params": []
+      }
+     ]
+    },
+    {
+     "ID": "132442214008390643",
+     "ParentID": "132442831348844313",
+     "Name": "Gap Started - Change trade parameters",
+     "Flags": "0",
+     "Trigger": "5001",
+     "TimeStart": "1599754807",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "1002",
+       "Rule": "0",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "0.00000000",
+       "ValueString": "real\\*",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "5001",
+       "Name": "Change group parameters",
+       "Params": [
+        {
+         "Param": "851",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "{\r\n\"Group\" : \"real\\\\real\",\r\n\"TradeFlags\" : \"151\",\r\n\"MarginCall\" : \"80\",\r\n\"MarginStopOut\" : \"80\"\r\n}"
+        }
+       ]
+      },
+      {
+       "Action": "5002",
+       "Name": "Change symbol settings",
+       "Params": [
+        {
+         "Param": "901",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "{\r\n\"Symbol\" : \"EURUSD\",\r\n\"TradeMode\" : \"3\",\r\n\"TradeFlags\" : \"2\",\r\n\"Spread\" : \"20\"\r\n}"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "132442215143405249",
+     "ParentID": "132442831348844313",
+     "Name": "Gap finished - Restore trade parameters",
+     "Flags": "0",
+     "Trigger": "5002",
+     "TimeStart": "1599755003",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [
+      {
+       "Condition": "1002",
+       "Rule": "0",
+       "ValueInt": "0",
+       "ValueUInt": "0",
+       "ValueFloat": "0.00000000",
+       "ValueString": "real\\*",
+       "OrId": "0"
+      }
+     ],
+     "Actions": [
+      {
+       "Action": "5001",
+       "Name": "Restore trade parameters",
+       "Params": [
+        {
+         "Param": "851",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "{\r\n\"Group\" : \"real\\\\real\"\r\n}"
+        }
+       ]
+      },
+      {
+       "Action": "5002",
+       "Name": "Restore symbol settings",
+       "Params": [
+        {
+         "Param": "901",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "{\r\n\"Symbol\" : \"EURUSD\"\r\n}"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "133590435158368283",
+     "ParentID": "0",
+     "Name": "Spread",
+     "Flags": "2",
+     "Trigger": "0",
+     "TimeStart": "0",
+     "TimeExpire": "0",
+     "TimeWeekdays": "0",
+     "TimeMonths": "0",
+     "TimeMonthDays": "0",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [],
+     "Actions": []
+    },
+    {
+     "ID": "133590434536926661",
+     "ParentID": "133590435158368283",
+     "Name": "Spread wide",
+     "Flags": "1",
+     "Trigger": "0",
+     "TimeStart": "1714610520",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [],
+     "Actions": [
+      {
+       "Action": "5002",
+       "Name": "Spread",
+       "Params": [
+        {
+         "Param": "901",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "{\r\n\"Symbol\" : \"NZDUSD\",\r\n\"Spread\" : \"50\"\r\n}"
+        },
+        {
+         "Param": "902",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "{\r\n\"Symbol\" : \"\",\r\n\"Path\" : \"FX\\\\Forex\\\\NZDUSD\",\r\n\"ISIN\" : \"\",\r\n\"CFI\" : \"\",\r\n\"Category\" : \"\",\r\n\"Exchange\" : \"\",\r\n\"Description\" : \"New Zealand Dollar vs US Dollar\",\r\n\"International\" : \"\",\r\n\"Sector\" : \"12\",\r\n\"Industry\" : \"0\",\r\n\"Country\" : \"\",\r\n\"Basis\" : \"\",\r\n\"Source\" : \"\",\r\n\"Page\" : \"\",\r\n\"CurrencyBase\" : \"NZD\",\r\n\"CurrencyBaseDigits\" : \"2\",\r\n\"CurrencyProfit\" : \"USD\",\r\n\"CurrencyProfitDigits\" : \"2\",\r\n\"CurrencyMargin\" : \"NZD\",\r\n\"CurrencyMarginDigits\" : \"2\",\r\n\"Color\" : \"4278190080\",\r\n\"ColorBackground\" : \"14204888\",\r\n\"Digits\" : \"5\",\r\n\"Point\" : \"0.00001000\",\r\n\"Multiply\" : \"100000.00000000\",\r\n\"TickFlags\" : \"1\",\r\n\"TickBookDepth\" : \"0\",\r\n\"TickChartMode\" : \"0\",\r\n\"SubscriptionsDelay\" : \"15\",\r\n\"FilterSoft\" : \"665\",\r\n\"FilterSoftTicks\" : \"1\",\r\n\"FilterHard\" : \"16000\",\r\n\"FilterHardTicks\" : \"1\",\r\n\"FilterDiscard\" : \"320000\",\r\n\"FilterSpreadMax\" : \"0\",\r\n\"FilterSpreadMin\" : \"0\",\r\n\"FilterGap\" : \"0\",\r\n\"FilterGapTicks\" : \"0\",\r\n\"TradeMode\" : \"4\",\r\n\"TradeFlags\" : \"2\",\r\n\"CalcMode\" : \"0\",\r\n\"ExecMode\" : \"2\",\r\n\"GTCMode\" : \"0\",\r\n\"FillFlags\" : \"2\",\r\n\"ExpirFlags\" : \"15\",\r\n\"OrderFlags\" : \"127\",\r\n\"Spread\" : \"0\",\r\n\"SpreadBalance\" : \"0\",\r\n\"SpreadDiff\" : \"0\",\r\n\"SpreadDiffBalance\" : \"0\",\r\n\"TickValue\" : \"0.00000000\",\r\n\"TickSize\" : \"0.00000\",\r\n\"ContractSize\" : \"100000.00000000\",\r\n\"StopsLevel\" : \"0\",\r\n\"FreezeLevel\" : \"0\",\r\n\"QuotesTimeout\" : \"180\",\r\n\"VolumeMin\" : \"100\",\r\n\"VolumeMinExt\" : \"1000000\",\r\n\"VolumeMax\" : \"1000000\",\r\n\"VolumeMaxExt\" : \"10000000000\",\r\n\"VolumeStep\" : \"100\",\r\n\"VolumeStepExt\" : \"1000000\",\r\n\"VolumeLimit\" : \"0\",\r\n\"VolumeLimitExt\" : \"0\",\r\n\"MarginFlags\" : \"0\",\r\n\"MarginInitial\" : \"0.00000000\",\r\n\"MarginMaintenance\" : \"0.00000000\",\r\n\"MarginInitialBuy\" : \"1.00000000\",\r\n\"MarginInitialSell\" : \"1.00000000\",\r\n\"MarginInitialBuyLimit\" : \"0.00000000\",\r\n\"MarginInitialSellLimit\" : \"0.00000000\",\r\n\"MarginInitialBuyStop\" : \"0.00000000\",\r\n\"MarginInitialSellStop\" : \"0.00000000\",\r\n\"MarginInitialBuyStopLimit\" : \"0.00000000\",\r\n\"MarginInitialSellStopLimit\" : \"0.00000000\",\r\n\"MarginMaintenanceBuy\" : \"1.00000000\",\r\n\"MarginMaintenanceSell\" : \"1.00000000\",\r\n\"MarginMaintenanceBuyLimit\" : \"0.00000000\",\r\n\"MarginMaintenanceSellLimit\" : \"0.00000000\",\r\n\"MarginMaintenanceBuyStop\" : \"0.00000000\",\r\n\"MarginMaintenanceSellStop\" : \"0.00000000\",\r\n\"MarginMaintenanceBuyStopLimit\" : \"0.00000000\",\r\n\"MarginMaintenanceSellStopLimit\" : \"0.00000000\",\r\n\"MarginLiquidity\" : \"0.00000000\",\r\n\"MarginHedged\" : \"0.00000000\",\r\n\"MarginCurrency\" : \"0.00000000\",\r\n\"SwapMode\" : \"1\",\r\n\"SwapLong\" : \"-2.02000000\",\r\n\"SwapShort\" : \"-2.13000000\",\r\n\"SwapFlags\" : \"0\",\r\n\"Swap3Day\" : \"5\",\r\n\"SwapYearDay\" : \"360\",\r\n\"SwapRateSunday\" : \"0.00000000\",\r\n\"SwapRateMonday\" : \"1.00000000\",\r\n\"SwapRateTuesday\" : \"1.00000000\",\r\n\"SwapRateWednesday\" : \"1.00000000\",\r\n\"SwapRateThursday\" : \"1.00000000\",\r\n\"SwapRateFriday\" : \"3.00000000\",\r\n\"SwapRateSaturday\" : \"0.00000000\",\r\n\"TimeStart\" : \"0\",\r\n\"TimeExpiration\" : \"0\",\r\n\"SessionsQuotes\" : [\r\n[],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[]\r\n],\r\n\"SessionsTrades\" : [\r\n[],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[]\r\n],\r\n\"REFlags\" : \"0\",\r\n\"RETimeout\" : \"7\",\r\n\"IECheckMode\" : \"0\",\r\n\"IETimeout\" : \"7\",\r\n\"IESlipProfit\" : \"2\",\r\n\"IESlipLosing\" : \"2\",\r\n\"IEVolumeMax\" : \"0\",\r\n\"IEVolumeMaxExt\" : \"0\",\r\n\"PriceSettle\" : \"0.00000\",\r\n\"PriceLimitMax\" : \"0.00000\",\r\n\"PriceLimitMin\" : \"0.00000\",\r\n\"PriceStrike\" : \"0.00000\",\r\n\"OptionMode\" : \"0\",\r\n\"FaceValue\" : \"0.00\",\r\n\"AccruedInterest\" : \"0.00\",\r\n\"SpliceType\" : \"0\",\r\n\"SpliceTimeType\" : \"0\",\r\n\"SpliceTimeDays\" : \"0\"\r\n}\r\n"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": "133590752003682153",
+     "ParentID": "133590435158368283",
+     "Name": "Spread normal",
+     "Flags": "1",
+     "Trigger": "0",
+     "TimeStart": "1714633920",
+     "TimeExpire": "0",
+     "TimeWeekdays": "127",
+     "TimeMonths": "4095",
+     "TimeMonthDays": "2147483647",
+     "EventPauseMinutes": "0",
+     "EventPauseHours": "0",
+     "EventPauseDays": "0",
+     "EventRepeats": "0",
+     "Conditions": [],
+     "Actions": [
+      {
+       "Action": "5002",
+       "Name": "Spread",
+       "Params": [
+        {
+         "Param": "901",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "{\r\n\"Symbol\" : \"NZDUSD\",\r\n\"TickBookDepth\" : \"0\",\r\n\"Spread\" : \"0\"\r\n}"
+        },
+        {
+         "Param": "902",
+         "ParamInt": "0",
+         "ParamUInt": "0",
+         "ParamFloat": "0.00000000",
+         "ParamPack": "{\r\n\"Symbol\" : \"\",\r\n\"Path\" : \"FX\\\\Forex\\\\NZDUSD\",\r\n\"ISIN\" : \"\",\r\n\"CFI\" : \"\",\r\n\"Category\" : \"\",\r\n\"Exchange\" : \"\",\r\n\"Description\" : \"New Zealand Dollar vs US Dollar\",\r\n\"International\" : \"\",\r\n\"Sector\" : \"12\",\r\n\"Industry\" : \"0\",\r\n\"Country\" : \"\",\r\n\"Basis\" : \"\",\r\n\"Source\" : \"\",\r\n\"Page\" : \"\",\r\n\"CurrencyBase\" : \"NZD\",\r\n\"CurrencyBaseDigits\" : \"2\",\r\n\"CurrencyProfit\" : \"USD\",\r\n\"CurrencyProfitDigits\" : \"2\",\r\n\"CurrencyMargin\" : \"NZD\",\r\n\"CurrencyMarginDigits\" : \"2\",\r\n\"Color\" : \"4278190080\",\r\n\"ColorBackground\" : \"14204888\",\r\n\"Digits\" : \"5\",\r\n\"Point\" : \"0.00001000\",\r\n\"Multiply\" : \"100000.00000000\",\r\n\"TickFlags\" : \"1\",\r\n\"TickBookDepth\" : \"32\",\r\n\"TickChartMode\" : \"0\",\r\n\"SubscriptionsDelay\" : \"15\",\r\n\"FilterSoft\" : \"665\",\r\n\"FilterSoftTicks\" : \"1\",\r\n\"FilterHard\" : \"16000\",\r\n\"FilterHardTicks\" : \"1\",\r\n\"FilterDiscard\" : \"320000\",\r\n\"FilterSpreadMax\" : \"0\",\r\n\"FilterSpreadMin\" : \"0\",\r\n\"FilterGap\" : \"0\",\r\n\"FilterGapTicks\" : \"0\",\r\n\"TradeMode\" : \"4\",\r\n\"TradeFlags\" : \"2\",\r\n\"CalcMode\" : \"0\",\r\n\"ExecMode\" : \"2\",\r\n\"GTCMode\" : \"0\",\r\n\"FillFlags\" : \"2\",\r\n\"ExpirFlags\" : \"15\",\r\n\"OrderFlags\" : \"127\",\r\n\"Spread\" : \"50\",\r\n\"SpreadBalance\" : \"0\",\r\n\"SpreadDiff\" : \"0\",\r\n\"SpreadDiffBalance\" : \"0\",\r\n\"TickValue\" : \"0.00000000\",\r\n\"TickSize\" : \"0.00000\",\r\n\"ContractSize\" : \"100000.00000000\",\r\n\"StopsLevel\" : \"0\",\r\n\"FreezeLevel\" : \"0\",\r\n\"QuotesTimeout\" : \"180\",\r\n\"VolumeMin\" : \"100\",\r\n\"VolumeMinExt\" : \"1000000\",\r\n\"VolumeMax\" : \"1000000\",\r\n\"VolumeMaxExt\" : \"10000000000\",\r\n\"VolumeStep\" : \"100\",\r\n\"VolumeStepExt\" : \"1000000\",\r\n\"VolumeLimit\" : \"0\",\r\n\"VolumeLimitExt\" : \"0\",\r\n\"MarginFlags\" : \"0\",\r\n\"MarginInitial\" : \"0.00000000\",\r\n\"MarginMaintenance\" : \"0.00000000\",\r\n\"MarginInitialBuy\" : \"1.00000000\",\r\n\"MarginInitialSell\" : \"1.00000000\",\r\n\"MarginInitialBuyLimit\" : \"0.00000000\",\r\n\"MarginInitialSellLimit\" : \"0.00000000\",\r\n\"MarginInitialBuyStop\" : \"0.00000000\",\r\n\"MarginInitialSellStop\" : \"0.00000000\",\r\n\"MarginInitialBuyStopLimit\" : \"0.00000000\",\r\n\"MarginInitialSellStopLimit\" : \"0.00000000\",\r\n\"MarginMaintenanceBuy\" : \"1.00000000\",\r\n\"MarginMaintenanceSell\" : \"1.00000000\",\r\n\"MarginMaintenanceBuyLimit\" : \"0.00000000\",\r\n\"MarginMaintenanceSellLimit\" : \"0.00000000\",\r\n\"MarginMaintenanceBuyStop\" : \"0.00000000\",\r\n\"MarginMaintenanceSellStop\" : \"0.00000000\",\r\n\"MarginMaintenanceBuyStopLimit\" : \"0.00000000\",\r\n\"MarginMaintenanceSellStopLimit\" : \"0.00000000\",\r\n\"MarginLiquidity\" : \"0.00000000\",\r\n\"MarginHedged\" : \"0.00000000\",\r\n\"MarginCurrency\" : \"0.00000000\",\r\n\"SwapMode\" : \"1\",\r\n\"SwapLong\" : \"-2.02000000\",\r\n\"SwapShort\" : \"-2.13000000\",\r\n\"SwapFlags\" : \"0\",\r\n\"Swap3Day\" : \"5\",\r\n\"SwapYearDay\" : \"360\",\r\n\"SwapRateSunday\" : \"0.00000000\",\r\n\"SwapRateMonday\" : \"1.00000000\",\r\n\"SwapRateTuesday\" : \"1.00000000\",\r\n\"SwapRateWednesday\" : \"1.00000000\",\r\n\"SwapRateThursday\" : \"1.00000000\",\r\n\"SwapRateFriday\" : \"3.00000000\",\r\n\"SwapRateSaturday\" : \"0.00000000\",\r\n\"TimeStart\" : \"0\",\r\n\"TimeExpiration\" : \"0\",\r\n\"SessionsQuotes\" : [\r\n[],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[]\r\n],\r\n\"SessionsTrades\" : [\r\n[],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[{\r\n\"Open\" : \"0\",\r\n\"Close\" : \"1440\"\r\n}\r\n],\r\n[]\r\n],\r\n\"REFlags\" : \"0\",\r\n\"RETimeout\" : \"7\",\r\n\"IECheckMode\" : \"0\",\r\n\"IETimeout\" : \"7\",\r\n\"IESlipProfit\" : \"2\",\r\n\"IESlipLosing\" : \"2\",\r\n\"IEVolumeMax\" : \"0\",\r\n\"IEVolumeMaxExt\" : \"0\",\r\n\"PriceSettle\" : \"0.00000\",\r\n\"PriceLimitMax\" : \"0.00000\",\r\n\"PriceLimitMin\" : \"0.00000\",\r\n\"PriceStrike\" : \"0.00000\",\r\n\"OptionMode\" : \"0\",\r\n\"FaceValue\" : \"0.00\",\r\n\"AccruedInterest\" : \"0.00\",\r\n\"SpliceType\" : \"0\",\r\n\"SpliceTimeType\" : \"0\",\r\n\"SpliceTimeDays\" : \"0\"\r\n}\r\n"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

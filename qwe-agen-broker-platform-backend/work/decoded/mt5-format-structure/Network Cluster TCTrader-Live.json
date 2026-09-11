@@ -1,0 +1,332 @@
+{
+ "Server": [
+  {
+   "ConfigNetwork": [
+    {
+     "Type": "0",
+     "Name": "Main Trade Server",
+     "Address": "5.75.204.160:441",
+     "AddressIPv6": "",
+     "Login": "1",
+     "PasswordHash": "C517E6D7933B4E085D934606E2014803",
+     "Adapter": "Red Hat VirtIO Ethernet Adapter",
+     "ServiceTime": "227",
+     "Adapters": [
+      "Red Hat VirtIO Ethernet Adapter"
+     ],
+     "Latitude": "51.29930000",
+     "Longitude": "9.49100000",
+     "Addresses": [
+      "5.75.204.160"
+     ],
+     "Binds": [
+      {
+       "Address": "0.0.0.0:441"
+      }
+     ],
+     "Points": [
+      {
+       "Address": "5.75.204.160:441"
+      }
+     ],
+     "TradeServer": {
+      "DemoMode": "1",
+      "DemoPeriod": "30",
+      "OvernightTime": "1439",
+      "OvernightMode": "0",
+      "OvernighPrevTime": "1787097599",
+      "OvernightLastTime": "1787183999",
+      "OvernightDays": "7998",
+      "OvermonthMode": "0",
+      "OvermonthPrevTime": "1782863999",
+      "OvermonthLastTime": "1785542399",
+      "TotalUsers": "11",
+      "TotalUsersReal": "3",
+      "TotalUsersAPI": "0",
+      "TotalDeals": "120865",
+      "TotalOrders": "0",
+      "TotalOrdersHistory": "31",
+      "TotalPositions": "3",
+      "LoginsRange": [
+       {
+        "From": "1000",
+        "To": "1000000",
+        "UsedFrom": "1000",
+        "UsedTo": "400036"
+       }
+      ],
+      "OrdersRange": [
+       {
+        "From": "1",
+        "To": "100000000",
+        "UsedFrom": "45900429",
+        "UsedTo": "45900654"
+       }
+      ],
+      "DealsRange": [
+       {
+        "From": "1",
+        "To": "100000000",
+        "UsedFrom": "2",
+        "UsedTo": "124039"
+       }
+      ]
+     },
+     "FailoverMode": "0",
+     "FailoverTime": "180",
+     "ServerState": {
+      "Version": "500",
+      "Build": "3550",
+      "BuildDate": "16 Dec 2022",
+      "SysOsName": "Windows Server 2019 Standard on KVM",
+      "SysLastBoot": "1787241247",
+      "SysBits": "64",
+      "SysConnection": "1",
+      "SysOsLastUpdate": "1787137640",
+      "SysOsVersion": "1000",
+      "SysOsBuild": "17763",
+      "SysOsFlags": "3",
+      "SysNetDriverDate": "1708819200",
+      "SysBsodCount": "0",
+      "SysBsodLast": "0",
+      "SysDate": "1510358400",
+      "SysCpuName": "AMD EPYC",
+      "SysCpuNumber": "4",
+      "SysCpuFreqMax": "2445",
+      "SysCpuFreqMin": "0",
+      "SysMemoryTotal": "7999",
+      "SysMemoryFree": "3108",
+      "SysMemoryCritical": "200",
+      "SysHddSize": "155700",
+      "SysHddFree": "9602",
+      "SysHddCritical": "8192",
+      "SysHddReadSpeed": "1600",
+      "SysHddReadCritical": "30",
+      "SysHddWriteSpeed": "1422",
+      "SysHddWriteCritical": "15",
+      "PerfConnectsMax": "3",
+      "PerfConnectsCritical": "10000",
+      "PerfCpuMax": "78",
+      "PerfCpuCritical": "30",
+      "PerfMemoryMin": "2672",
+      "PerfMemoryCritical": "200",
+      "PerfMemBlockMin": "2672",
+      "PerfMemBlockCritical": "100",
+      "PerfNetworkMax": "45",
+      "PerfNetworkCritical": "102400",
+      "PerfSocketsMax": "44",
+      "PerfSocketsCritical": "20000",
+      "ProblemDevices": [
+       {
+        "Name": "",
+        "Class": "",
+        "Problem": "28"
+       }
+      ]
+     },
+     "ServerData": {
+      "UpdateLastTime": "1786855621",
+      "UpdateBuild": "0",
+      "UpdateAttempts": "1"
+     }
+    },
+    {
+     "Type": "2",
+     "Name": "History Server",
+     "Address": "5.75.204.160:442",
+     "AddressIPv6": "",
+     "Login": "3",
+     "PasswordHash": "8E7DECCD3EF0C2FF7C2BBAB8319251CA",
+     "Adapter": "Red Hat VirtIO Ethernet Adapter",
+     "ServiceTime": "227",
+     "Adapters": [
+      "Red Hat VirtIO Ethernet Adapter"
+     ],
+     "Latitude": "51.29930000",
+     "Longitude": "9.49100000",
+     "Addresses": [
+      "5.75.204.160"
+     ],
+     "Binds": [
+      {
+       "Address": "0.0.0.0:442"
+      }
+     ],
+     "Points": [
+      {
+       "Address": "5.75.204.160:442"
+      }
+     ],
+     "HistoryServer": {
+      "DatafeedTimeout": "10",
+      "NewsMaxCount": "16384"
+     },
+     "FailoverMode": "0",
+     "FailoverTime": "180",
+     "ServerState": {
+      "Version": "500",
+      "Build": "3550",
+      "BuildDate": "16 Dec 2022",
+      "SysOsName": "Windows Server 2019 Standard on KVM",
+      "SysLastBoot": "1787241254",
+      "SysBits": "64",
+      "SysConnection": "1652",
+      "SysOsLastUpdate": "1787137640",
+      "SysOsVersion": "1000",
+      "SysOsBuild": "17763",
+      "SysOsFlags": "3",
+      "SysNetDriverDate": "1708819200",
+      "SysBsodCount": "0",
+      "SysBsodLast": "0",
+      "SysDate": "1510358400",
+      "SysCpuName": "AMD EPYC",
+      "SysCpuNumber": "4",
+      "SysCpuFreqMax": "2445",
+      "SysCpuFreqMin": "0",
+      "SysMemoryTotal": "7999",
+      "SysMemoryFree": "2935",
+      "SysMemoryCritical": "200",
+      "SysHddSize": "155700",
+      "SysHddFree": "9602",
+      "SysHddCritical": "8192",
+      "SysHddReadSpeed": "1406",
+      "SysHddReadCritical": "30",
+      "SysHddWriteSpeed": "1219",
+      "SysHddWriteCritical": "15",
+      "PerfConnectsMax": "5",
+      "PerfConnectsCritical": "10000",
+      "PerfCpuMax": "83",
+      "PerfCpuCritical": "30",
+      "PerfMemoryMin": "2672",
+      "PerfMemoryCritical": "200",
+      "PerfMemBlockMin": "2672",
+      "PerfMemBlockCritical": "100",
+      "PerfNetworkMax": "45",
+      "PerfNetworkCritical": "102400",
+      "PerfSocketsMax": "44",
+      "PerfSocketsCritical": "20000",
+      "ProblemDevices": [
+       {
+        "Name": "",
+        "Class": "",
+        "Problem": "28"
+       }
+      ]
+     },
+     "ServerData": {
+      "UpdateLastTime": "1787201221",
+      "UpdateBuild": "0",
+      "UpdateAttempts": "1"
+     }
+    },
+    {
+     "Type": "3",
+     "Name": "Access Server",
+     "Address": "5.75.204.160:443",
+     "AddressIPv6": "",
+     "Login": "2",
+     "PasswordHash": "B470E4B44CE98B96B7156DED1B48261C",
+     "Adapter": "Red Hat VirtIO Ethernet Adapter",
+     "ServiceTime": "227",
+     "Adapters": [
+      "Red Hat VirtIO Ethernet Adapter"
+     ],
+     "Latitude": "51.29930000",
+     "Longitude": "9.49100000",
+     "Addresses": [
+      "5.75.204.160"
+     ],
+     "Binds": [
+      {
+       "Address": "5.75.204.160:443"
+      }
+     ],
+     "Points": [
+      {
+       "Address": "5.75.204.160:443"
+      }
+     ],
+     "AccessServer": {
+      "Priority": "0",
+      "AntifloodEnable": "1",
+      "AntifloodConnects": "100",
+      "AntifloodErrors": "10",
+      "NewsMaxCount": "16384",
+      "BalancingConnections": "3",
+      "BalancingPriority": "0",
+      "AccessMask": "63",
+      "AccessFlags": "0",
+      "Servers": [],
+      "HostedServer": {
+       "Id": "0",
+       "Location": "",
+       "Price": "0.00",
+       "Currency": "",
+       "Geo": {
+        "Latitude": "0.00000000",
+        "Longitude": "0.00000000"
+       },
+       "AddressIPv4": "",
+       "AddressIPv6": ""
+      }
+     },
+     "ServerState": {
+      "Version": "500",
+      "Build": "3550",
+      "BuildDate": "16 Dec 2022",
+      "SysOsName": "Windows Server 2019 Standard on KVM",
+      "SysLastBoot": "1787241247",
+      "SysBits": "64",
+      "SysConnection": "1651",
+      "SysOsLastUpdate": "1787137640",
+      "SysOsVersion": "1000",
+      "SysOsBuild": "17763",
+      "SysOsFlags": "3",
+      "SysNetDriverDate": "1708819200",
+      "SysBsodCount": "0",
+      "SysBsodLast": "0",
+      "SysDate": "1510358400",
+      "SysCpuName": "AMD EPYC",
+      "SysCpuNumber": "4",
+      "SysCpuFreqMax": "2445",
+      "SysCpuFreqMin": "0",
+      "SysMemoryTotal": "7999",
+      "SysMemoryFree": "3056",
+      "SysMemoryCritical": "200",
+      "SysHddSize": "155700",
+      "SysHddFree": "9602",
+      "SysHddCritical": "4096",
+      "SysHddReadSpeed": "1422",
+      "SysHddReadCritical": "30",
+      "SysHddWriteSpeed": "1523",
+      "SysHddWriteCritical": "15",
+      "PerfConnectsMax": "3",
+      "PerfConnectsCritical": "10000",
+      "PerfCpuMax": "79",
+      "PerfCpuCritical": "30",
+      "PerfMemoryMin": "2672",
+      "PerfMemoryCritical": "200",
+      "PerfMemBlockMin": "2672",
+      "PerfMemBlockCritical": "100",
+      "PerfNetworkMax": "45",
+      "PerfNetworkCritical": "102400",
+      "PerfSocketsMax": "44",
+      "PerfSocketsCritical": "20000",
+      "ProblemDevices": [
+       {
+        "Name": "",
+        "Class": "",
+        "Problem": "28"
+       }
+      ]
+     },
+     "ServerData": {
+      "UpdateLastTime": "1786855620",
+      "UpdateBuild": "0",
+      "UpdateAttempts": "1"
+     }
+    }
+   ]
+  }
+ ]
+}

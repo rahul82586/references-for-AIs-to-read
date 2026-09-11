@@ -1,0 +1,333 @@
+{
+ "Server": [
+  {
+   "ConfigGateways": [
+    {
+     "Name": "MetaTrader 5 Gateway",
+     "Module": "MetaTrader5Gateway64.exe",
+     "GatewayServer": "127.0.0.1:16387",
+     "GatewayLogin": "1",
+     "GatewayPassword": "enqat6",
+     "TradingServer": "87.239.190.101:1950",
+     "TradingLogin": "373542",
+     "TradingPassword": "+919812230847Demo$",
+     "Enable": "1",
+     "Flags": "0",
+     "TransactionsCollectDays": "0",
+     "ID": "1",
+     "Gateway": "MT5GWTMT5",
+     "AccountSummary": "0",
+     "TimeoutReconnect": "1",
+     "TimeoutSleep": "60",
+     "AttemptsSleep": "5",
+     "State": {
+      "SysConnection": "0",
+      "SysLastTime": "1787241257",
+      "Company": "",
+      "Issuer": "",
+      "TickStatsCount": "0",
+      "TicksCount": "0",
+      "BooksCount": "0",
+      "TradeAverageTime": "0",
+      "TradeRequestsCount": "0",
+      "BytesReceived": "0",
+      "BytesSent": "0",
+      "StateFlags": "0"
+     },
+     "Params": [
+      {
+       "Type": "0",
+       "Name": "Trading Calendar Holidays",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Max Price Deviation",
+       "Value": "50"
+      },
+      {
+       "Type": "0",
+       "Name": "Limit Orders Coverage Mode",
+       "Value": "Market"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Time Original",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Last Price Markup",
+       "Value": "Yes"
+      },
+      {
+       "Type": "0",
+       "Name": "Symbols Path",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Symbols Update",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Calculate Hedged Margin",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Calculate Hedged Margin Rate",
+       "Value": "2.0"
+      },
+      {
+       "Type": "0",
+       "Name": "News Enable",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Certificate Path",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Certificate Password",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Selftitled Translations",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "News Category",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Delay",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Tickstats Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Ticks Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Books Sample",
+       "Value": "0"
+      }
+     ],
+     "Symbols": [
+      "*"
+     ],
+     "Groups": [],
+     "Translates": []
+    },
+    {
+     "Name": "FT MT5 Gateway",
+     "Module": "FTMT5Gateway64.exe",
+     "GatewayServer": "127.0.0.1:16389",
+     "GatewayLogin": "2",
+     "GatewayPassword": "fvc7ey",
+     "TradingServer": "127.0.0.1:40001",
+     "TradingLogin": "100",
+     "TradingPassword": "default",
+     "Enable": "1",
+     "Flags": "2",
+     "TransactionsCollectDays": "0",
+     "ID": "2",
+     "Gateway": "MT5GWTFTI",
+     "AccountSummary": "0",
+     "TimeoutReconnect": "1",
+     "TimeoutSleep": "60",
+     "AttemptsSleep": "5",
+     "State": {
+      "SysConnection": "1",
+      "SysLastTime": "1787241317",
+      "Company": "",
+      "Issuer": "",
+      "TickStatsCount": "0",
+      "TicksCount": "0",
+      "BooksCount": "0",
+      "TradeAverageTime": "0",
+      "TradeRequestsCount": "0",
+      "BytesReceived": "0",
+      "BytesSent": "0",
+      "StateFlags": "0"
+     },
+     "Params": [
+      {
+       "Type": "0",
+       "Name": "Quotes Delay",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Tickstats Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Ticks Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Books Sample",
+       "Value": "0"
+      }
+     ],
+     "Symbols": [
+      "*"
+     ],
+     "Groups": [
+      "*"
+     ],
+     "Translates": []
+    },
+    {
+     "Name": "MetaTrader 5 Gateway clone",
+     "Module": "MetaTrader5Gateway64.exe",
+     "GatewayServer": "127.0.0.1:16388",
+     "GatewayLogin": "3",
+     "GatewayPassword": "g5ktnx",
+     "TradingServer": "5.75.204.160:443",
+     "TradingLogin": "4546",
+     "TradingPassword": "Test0987@",
+     "Enable": "1",
+     "Flags": "0",
+     "TransactionsCollectDays": "0",
+     "ID": "3",
+     "Gateway": "MT5GWTMT5",
+     "AccountSummary": "0",
+     "TimeoutReconnect": "1",
+     "TimeoutSleep": "60",
+     "AttemptsSleep": "5",
+     "State": {
+      "SysConnection": "1",
+      "SysLastTime": "1787241315",
+      "Company": "MetaQuotes Ltd.",
+      "Issuer": "thawte SHA256 Code Signing CA",
+      "TickStatsCount": "0",
+      "TicksCount": "0",
+      "BooksCount": "0",
+      "TradeAverageTime": "0",
+      "TradeRequestsCount": "0",
+      "BytesReceived": "14121",
+      "BytesSent": "1347",
+      "StateFlags": "0"
+     },
+     "Params": [
+      {
+       "Type": "0",
+       "Name": "Trading Calendar Holidays",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Max Price Deviation",
+       "Value": "50"
+      },
+      {
+       "Type": "0",
+       "Name": "Limit Orders Coverage Mode",
+       "Value": "Market"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Time Original",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Last Price Markup",
+       "Value": "Yes"
+      },
+      {
+       "Type": "0",
+       "Name": "Symbols Path",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Symbols Update",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Calculate Hedged Margin",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Calculate Hedged Margin Rate",
+       "Value": "2.0"
+      },
+      {
+       "Type": "0",
+       "Name": "News Enable",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Certificate Path",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Certificate Password",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Selftitled Translations",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "News Category",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Delay",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Tickstats Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Ticks Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Books Sample",
+       "Value": "0"
+      }
+     ],
+     "Symbols": [
+      "*"
+     ],
+     "Groups": [
+      "*",
+      "real\\*"
+     ],
+     "Translates": []
+    }
+   ]
+  }
+ ]
+}

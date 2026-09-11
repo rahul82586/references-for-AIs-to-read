@@ -1,0 +1,32 @@
+{
+ "Server": [
+  {
+   "ConfigFirewall": [
+    {
+     "IPFrom": "172.26.0.0",
+     "IPTo": "172.26.255.255",
+     "Action": "2",
+     "Comment": ""
+    },
+    {
+     "IPFrom": "87.106.157.232",
+     "IPTo": "87.106.157.232",
+     "Action": "2",
+     "Comment": "DB"
+    },
+    {
+     "IPFrom": "162.55.222.194",
+     "IPTo": "162.55.222.194",
+     "Action": "2",
+     "Comment": ""
+    },
+    {
+     "IPFrom": "171.50.169.254",
+     "IPTo": "171.50.169.254",
+     "Action": "2",
+     "Comment": "Krish"
+    }
+   ]
+  }
+ ]
+}

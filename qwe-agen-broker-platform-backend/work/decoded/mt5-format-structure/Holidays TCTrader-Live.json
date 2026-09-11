@@ -1,0 +1,22 @@
+{
+ "Server": [
+  {
+   "ConfigHolidays": [
+    {
+     "Mode": "1",
+     "Year": "0",
+     "Month": "12",
+     "Day": "25",
+     "From": "0",
+     "To": "0",
+     "Description": "Chismax",
+     "Symbols": [
+      {
+       "Path": "*"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

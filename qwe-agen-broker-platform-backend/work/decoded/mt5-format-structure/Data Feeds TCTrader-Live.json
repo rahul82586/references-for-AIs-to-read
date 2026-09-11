@@ -1,0 +1,292 @@
+{
+ "Server": [
+  {
+   "ConfigFeeders": [
+    {
+     "Feeder": "Feeder",
+     "Module": "MetaTrader5Feeder64.exe",
+     "GatewayServer": "127.0.0.1:16384",
+     "GatewayLogin": "1",
+     "GatewayPassword": "frg1rl",
+     "FeedServer": "172.26.102.15:443",
+     "FeedLogin": "4008",
+     "FeedPassword": "Passwd!123",
+     "Enable": "1",
+     "Mode": "1",
+     "TimeoutReconnect": "1",
+     "TimeoutSleep": "60",
+     "AttemptsSleep": "5",
+     "ID": "1",
+     "State": {
+      "SysConnection": "0",
+      "SysLastTime": "1731238380",
+      "Company": "",
+      "Issuer": "",
+      "TickStatsCount": "0",
+      "TicksCount": "0",
+      "BooksCount": "0",
+      "NewsCount": "0",
+      "BytesReceived": "0",
+      "BytesSent": "0",
+      "StateFlags": "0"
+     },
+     "Params": [
+      {
+       "Type": "0",
+       "Name": "Quotes Time Original",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Selftitled Translations",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Symbols Path",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Symbols Update",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "News Category",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Delay",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Tickstats Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Ticks Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Books Sample",
+       "Value": "0"
+      }
+     ],
+     "Symbols": [
+      "*"
+     ],
+     "Translates": [
+      {
+       "Source": "*",
+       "Symbol": "*!",
+       "BidMarkup": "0",
+       "AskMarkup": "0",
+       "Digits": "0"
+      }
+     ]
+    },
+    {
+     "Feeder": "Weltrade",
+     "Module": "MetaTrader5Feeder64.exe",
+     "GatewayServer": "127.0.0.1:16385",
+     "GatewayLogin": "2",
+     "GatewayPassword": "fate0e",
+     "FeedServer": "198.244.167.27:443",
+     "FeedLogin": "34013091",
+     "FeedPassword": "nX5)Gf#7",
+     "Enable": "1",
+     "Mode": "1",
+     "TimeoutReconnect": "1",
+     "TimeoutSleep": "60",
+     "AttemptsSleep": "5",
+     "ID": "2",
+     "State": {
+      "SysConnection": "0",
+      "SysLastTime": "1738329779",
+      "Company": "",
+      "Issuer": "",
+      "TickStatsCount": "0",
+      "TicksCount": "0",
+      "BooksCount": "0",
+      "NewsCount": "0",
+      "BytesReceived": "0",
+      "BytesSent": "0",
+      "StateFlags": "0"
+     },
+     "Params": [
+      {
+       "Type": "0",
+       "Name": "Quotes Delay",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Tickstats Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Ticks Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Books Sample",
+       "Value": "0"
+      }
+     ],
+     "Symbols": [
+      "*"
+     ],
+     "Translates": []
+    },
+    {
+     "Feeder": "MetaTrader 5 Feeder",
+     "Module": "MetaTrader5Feeder64.exe",
+     "GatewayServer": "127.0.0.1:16386",
+     "GatewayLogin": "3",
+     "GatewayPassword": "el2hrn",
+     "FeedServer": "87.239.190.101:1950",
+     "FeedLogin": "373542",
+     "FeedPassword": "+919812230847Demo$",
+     "Enable": "1",
+     "Mode": "1",
+     "TimeoutReconnect": "1",
+     "TimeoutSleep": "60",
+     "AttemptsSleep": "5",
+     "ID": "3",
+     "State": {
+      "SysConnection": "0",
+      "SysLastTime": "0",
+      "Company": "",
+      "Issuer": "",
+      "TickStatsCount": "0",
+      "TicksCount": "0",
+      "BooksCount": "0",
+      "NewsCount": "0",
+      "BytesReceived": "0",
+      "BytesSent": "0",
+      "StateFlags": "0"
+     },
+     "Params": [
+      {
+       "Type": "0",
+       "Name": "Quotes Time Original",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Selftitled Translations",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "Symbols Path",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Symbols Update",
+       "Value": "No"
+      },
+      {
+       "Type": "0",
+       "Name": "News Category",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Delay",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Tickstats Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Ticks Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Books Sample",
+       "Value": "0"
+      }
+     ],
+     "Symbols": [
+      "*"
+     ],
+     "Translates": []
+    },
+    {
+     "Feeder": "MetaTrader 5 UniFeeder",
+     "Module": "UniFeeder64.exe",
+     "GatewayServer": "127.0.0.1:16390",
+     "GatewayLogin": "5",
+     "GatewayPassword": "4swyib",
+     "FeedServer": "localhost:2222",
+     "FeedLogin": "localhost",
+     "FeedPassword": "Rahul1234@",
+     "Enable": "1",
+     "Mode": "1",
+     "TimeoutReconnect": "1",
+     "TimeoutSleep": "60",
+     "AttemptsSleep": "5",
+     "ID": "4",
+     "State": {
+      "SysConnection": "1",
+      "SysLastTime": "1787243680",
+      "Company": "",
+      "Issuer": "",
+      "TickStatsCount": "0",
+      "TicksCount": "0",
+      "BooksCount": "0",
+      "NewsCount": "0",
+      "BytesReceived": "314",
+      "BytesSent": "1476",
+      "StateFlags": "0"
+     },
+     "Params": [
+      {
+       "Type": "0",
+       "Name": "News Category",
+       "Value": ""
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Delay",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Tickstats Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Ticks Sample",
+       "Value": "0"
+      },
+      {
+       "Type": "0",
+       "Name": "Quotes Books Sample",
+       "Value": "0"
+      }
+     ],
+     "Symbols": [
+      "*",
+      "Crypto-Currency\\Crypto Majors\\BTCUSD"
+     ],
+     "Translates": []
+    }
+   ]
+  }
+ ]
+}

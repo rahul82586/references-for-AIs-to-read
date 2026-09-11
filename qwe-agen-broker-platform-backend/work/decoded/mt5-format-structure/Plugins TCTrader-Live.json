@@ -1,0 +1,74 @@
+{
+ "Server": [
+  {
+   "ConfigPlugins": [
+    {
+     "Name": "ConfigPlugin",
+     "Server": "1",
+     "Module": "ConfigPluginMT5.x64.dll",
+     "Enable": "1",
+     "Flags": "0",
+     "Params": [
+      {
+       "Type": "0",
+       "Name": "Server name",
+       "Value": "Live"
+      }
+     ]
+    },
+    {
+     "Name": "FXConnect",
+     "Server": "1",
+     "Module": "FXConnect.Plugin.MT5.x64.dll",
+     "Enable": "1",
+     "Flags": "0",
+     "Params": []
+    },
+    {
+     "Name": "Dynamic Margin",
+     "Server": "1",
+     "Module": "DynamicMargin.dll",
+     "Enable": "1",
+     "Flags": "0",
+     "Params": [
+      {
+       "Type": "0",
+       "Name": "syncOnCfgChanges",
+       "Value": "false"
+      },
+      {
+       "Type": "0",
+       "Name": "appId",
+       "Value": "800"
+      },
+      {
+       "Type": "0",
+       "Name": "manager",
+       "Value": "2000"
+      },
+      {
+       "Type": "0",
+       "Name": "checkTimer",
+       "Value": "60"
+      },
+      {
+       "Type": "0",
+       "Name": "profileCheckTimer",
+       "Value": "60"
+      },
+      {
+       "Type": "0",
+       "Name": "sleepUpdateTimeout",
+       "Value": "5"
+      },
+      {
+       "Type": "0",
+       "Name": "deleteStops",
+       "Value": "true"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
