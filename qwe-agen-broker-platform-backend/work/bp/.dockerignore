@@ -1,0 +1,22 @@
+# Build context hygiene: keep the image small and secrets out.
+.git
+.github
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+htmlcov/
+.venv/
+venv/
+*.db
+*.sqlite
+logs/
+docs/_build/
+ops/docker/*.tar.gz
