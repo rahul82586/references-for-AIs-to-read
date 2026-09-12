@@ -1,0 +1,1 @@
+{"version":3,"file":"ClientsPage.d.ts","sourceRoot":"","sources":["../../../../src/browser/modules/clients/ClientsPage.tsx"],"names":[],"mappings":"AACA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AA2B/B,UAAU,KAAK;IACX,UAAU,CAAC,EAAE,UAAU,GAAG,SAAS,GAAG,UAAU,GAAG,aAAa,CAAC;CACpE;AAED,wBAAgB,WAAW,CAAC,EAAE,UAAuB,EAAE,EAAE,KAAK,GAAG,KAAK,CAAC,YAAY,CA66BlF"}
