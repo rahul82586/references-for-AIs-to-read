@@ -1,0 +1,1 @@
+{"version":3,"file":"BulkEditBanner.d.ts","sourceRoot":"","sources":["../../../../../src/browser/modules/symbols/modal/BulkEditBanner.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AAE/B,UAAU,mBAAmB;IACzB,KAAK,EAAE,MAAM,CAAC;CACjB;AAED,wBAAgB,cAAc,CAAC,EAAE,KAAK,EAAE,EAAE,mBAAmB,GAAG,KAAK,CAAC,YAAY,CAcjF"}
