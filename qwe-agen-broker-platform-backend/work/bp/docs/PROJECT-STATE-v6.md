@@ -308,12 +308,25 @@ GitHub HEAD *is* `e361299`; `d13a981` returns 422 and `work/patches/` 404s — s
 the bundle's only extra commit is the bundle file itself. All 14 M15 artifacts
 were verified present in the clone. **Nothing was lost.**
 
-**Session 6 handover state:** steps 5, 6 and 7 are all committed. `fd1b512`
-(step 5) and `dd27011` (step 6) are **pushed to GitHub and CI is green on
-`dd2701138`**; step 7 plus the docs are committed locally on top. A fresh bundle
-is at `work/patches/repo-full-history.bundle`. Note the earlier bundle commit
-`fe37bac` was never pushed — it is a 5.7 MB binary and GitHub HEAD stops at
-`dd27011`, which is harmless but worth knowing.
+**Session 6 handover state:** steps 5, 6 and 7 are all committed.
+
+* **On GitHub already:** `fd1b512` (step 5), `dd27011` (step 6). CI is green on
+  `dd2701138`.
+* **To push:** `ba9505b` (step 7 — the manager plane) and `987255d` (stop
+  tracking bundles). Two commits.
+* A verified bundle is at `work/patches/repo-full-history.bundle` (5.49 MB,
+  "records a complete history", clone-tested: 56 commits, every step-5/6/7 file
+  present).
+
+**Bundles are now gitignored, deliberately.** `git bundle create --all` includes
+every committed object, so a committed bundle contains the previous bundle and
+the file doubles each milestone — measured 5.7 MB → 11.4 MB, which reaches
+GitHub's 100 MB hard limit in about five milestones and bloats every clone
+forever. An earlier attempt committed one (`fe37bac`); it was never pushed, so
+that 5.7 MB blob was rewritten out of the branch rather than published, and
+`987255d` records why. The bundle is still created and verified at the end of
+every milestone — it just is not tracked. What survives a dead sandbox is
+`git push`, which is protocol rule 1.
 
 **Next session: paste THIS file + `docs/M16-REPORT.md` +
 `docs/IDENTITY-BUILD-PLAN.md`, then start at plan step 8** — the read queries and
