@@ -44,12 +44,23 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from core.domains.accounts.enums import (
+    # pre-existing
     AccountType,
     FreeMarginMode,
     MarginMode,
     NewsMode,
     StopOutMode,
     TradeFlags,
+    # step 5: the ConfigGroups enums the 27 newly-declared fields are typed with
+    AuthMode,
+    AuthOTPMode,
+    HistoryLimit,
+    MailMode,
+    MarginFreeProfitMode,
+    PermissionsFlags,
+    ReportsFlags,
+    ReportsMode,
+    TransferMode,
 )
 from core.domains.accounts.group import Group
 from core.domains.accounts.value_objects import (
@@ -141,6 +152,34 @@ def _enum(enum_cls: Any, raw: Any, fallback: Any) -> Any:
             return enum_cls(int(raw))
         except (ValueError, TypeError):
             return fallback
+
+
+def _flag(flag_cls: Any, raw: Any):
+    """Coerce a wire int into an IntFlag, tolerating bits the enum lacks.
+
+    Unlike _enum, an unknown bit must NOT be dropped: ConfigGroups flag fields
+    are exported verbatim and a live server can carry a bit this SDK version
+    does not name. IntFlag keeps unnamed bits in the value, so the re-export
+    stays byte-identical - the same tolerance ManagerRightsMask has for the
+    unassigned indices 68/69.
+    """
+    try:
+        return flag_cls(int(raw or 0))
+    except (TypeError, ValueError):
+        return flag_cls(0)
+
+
+def _enum_value(value: Any, default: int = 0) -> int:
+    """The wire int for an enum member, an int, or None.
+
+    Step 5 gave 27 ConfigGroups fields typed SDK enums. The codec's INT/FLAGS
+    kinds want a plain int, so this is the single unwrap point - accepting an
+    already-int value too, because a group can arrive from YAML config or from
+    an API body where nobody has wrapped it.
+    """
+    if value is None:
+        return default
+    return _int(getattr(value, "value", value), default)
 
 
 def _int(value: Any, default: int = 0) -> int:
@@ -293,6 +332,34 @@ def _group_domain_record(group: Group) -> Dict[str, Any]:
         "limit_orders": _int(group.limit_orders, 0),
         "limit_symbols": _int(group.limit_symbols, 0),
         "limit_positions": _int(group.limit_positions, 0),
+        # --- the 27 fields that used to be quarantined (step 5) -------------
+        # Enum members carry MT5's own int values, so .value IS the wire int.
+        "permissions_flags": int(group.permissions_flags or 0),
+        "auth_mode": _enum_value(group.auth_mode, 0),
+        "auth_password_min": _int(group.auth_password_min, 8),
+        "auth_otp_mode": _enum_value(group.auth_otp_mode, 0),
+        "company": group.company or "",
+        "company_page": group.company_page or "",
+        "company_email": group.company_email or "",
+        "company_support_page": group.company_support_page or "",
+        "company_support_email": group.company_support_email or "",
+        "company_catalog": group.company_catalog or "",
+        "company_deposit_url": group.company_deposit_url or "",
+        "company_withdrawal_url": group.company_withdrawal_url or "",
+        "reports_mode": _enum_value(group.reports_mode, 0),
+        "reports_flags": int(group.reports_flags or 0),
+        "reports_email": group.reports_email or "",
+        "news_category": group.news_category or "",
+        "news_langs": list(group.news_langs or []),
+        "mail_mode": _enum_value(group.mail_mode, 0),
+        "trade_transfer_mode": _enum_value(group.trade_transfer_mode, 0),
+        "trade_interestrate": _dec(group.trade_interestrate),
+        "trade_virtual_credit": _dec(group.trade_virtual_credit),
+        "demo_leverage": _int(group.demo_leverage, 0),
+        "demo_deposit": _dec(group.demo_deposit),
+        "demo_trades_clean": _int(group.demo_trades_clean, 0),
+        "limit_history": _enum_value(group.limit_history, 0),
+        "limit_positions_volume": _dec(group.limit_positions_volume),
         "margin": {
             "mode": _wire(mt5enums.MARGIN_MODE_TO_MT5, margin.mode, 0),
             "flags": _int(margin.flags, 0),
@@ -303,6 +370,7 @@ def _group_domain_record(group: Group) -> Dict[str, Any]:
             # PERCENT. MT5 writes "50.00" / "30.00"; never 0.8 / 0.5.
             "margin_call_level": margin.margin_call_level,
             "stop_out_level": margin.stop_out_level,
+            "free_profit_mode": _enum_value(margin.free_profit_mode, 0),
         },
         "commissions": [
             {
@@ -556,23 +624,56 @@ def margin_account_type_value(account_type: Any) -> str:
 #: overwrite on top of an imported baseline.
 _GROUP_OWNED_WIRE_KEYS = frozenset(
     {
+        # Step 5: the Group ENTITY now declares every scalar ConfigGroups field,
+        # so every scalar is domain-owned and must be overlaid from the columns
+        # on export - otherwise an edit made through our own API would be masked
+        # by the imported baseline. Only the two NESTED arrays stay baseline-
+        # owned: CommissionRule models 4 of MT5's 12 commission fields and
+        # GroupSymbolOverride 11 of 64 override fields, so rebuilding those from
+        # the domain would drop everything else, and unlike a scalar the domain
+        # cannot tell "unchanged" from "deliberately set to the same value".
         "Group",
         "Server",
+        "PermissionsFlags",
+        "AuthMode",
+        "AuthPasswordMin",
+        "AuthOTPMode",
+        "Company",
+        "CompanyPage",
+        "CompanyEmail",
+        "CompanySupportPage",
+        "CompanySupportEmail",
+        "CompanyCatalog",
+        "CompanyDepositURL",
+        "CompanyWithdrawalURL",
         "Currency",
         "CurrencyDigits",
+        "ReportsMode",
+        "ReportsFlags",
+        "ReportsEmail",
         "NewsMode",
+        "NewsCategory",
+        "NewsLangs",
+        "MailMode",
         "TradeFlags",
+        "TradeTransferMode",
+        "TradeInterestrate",
+        "TradeVirtualCredit",
         "MarginMode",
         "MarginFlags",
         "MarginSOMode",
         "MarginFreeMode",
         "MarginCall",
         "MarginStopOut",
+        "MarginFreeProfitMode",
+        "DemoLeverage",
+        "DemoDeposit",
+        "DemoTradesClean",
+        "LimitHistory",
         "LimitOrders",
         "LimitSymbols",
         "LimitPositions",
-        "Commissions",
-        "Symbols",
+        "LimitPositionsVolume",
     }
 )
 
@@ -636,8 +737,14 @@ def group_mt5_record(row: GroupModel) -> Dict[str, Any]:
         "LimitOrders": str(_int(row.limit_orders, 0)),
         "LimitSymbols": str(_int(row.limit_symbols, 0)),
         "LimitPositions": str(_int(row.limit_positions, 0)),
-        "LimitPositionsVolume": str(
-            row.limit_positions_volume if row.limit_positions_volume is not None else 0
+        # Scale-aware, like every other decimal here. This one used to be a bare
+        # str() because LimitPositionsVolume was NOT a domain-owned key - the
+        # imported baseline supplied "0.00" and the column was never consulted.
+        # Step 5 made it owned, so the column now wins, and a Numeric(20,8) zero
+        # stringifies as "0E-8": the same number, a different byte string, and a
+        # broken byte-identical re-export. _scaled restores the wire's own scale.
+        "LimitPositionsVolume": _scaled(
+            row.limit_positions_volume, "LimitPositionsVolume", scales, "0"
         ),
         "Commissions": _loads(row.commissions_json, []),
         "Symbols": _loads(row.symbol_overrides_json, []),
@@ -767,9 +874,46 @@ def db_to_group(model: GroupModel) -> Group:
             leverage_max=_int(margin_json.get("leverage_max", model.leverage_max), 500),
             margin_hedged=_dec(margin_json.get("margin_hedged"), "0"),
             flags=_int(margin_json.get("flags", model.margin_flags), 0),
+            free_profit_mode=_enum(
+                MarginFreeProfitMode,
+                domain.get("margin", {}).get("free_profit_mode"),
+                MarginFreeProfitMode.PL,
+            ),
         ),
         commissions=commissions,
         symbol_overrides=overrides,
+        # --- the 27, read back from the reconstructed wire record ----------
+        # `domain` comes from record_to_domain(group_mt5_record(model)), so
+        # these are the COLUMNS' values, not a stale quarantine: an edit made
+        # through our own API is what comes back.
+        permissions_flags=_flag(PermissionsFlags, domain.get("permissions_flags")),
+        auth_mode=_enum(AuthMode, domain.get("auth_mode"), AuthMode.STANDARD),
+        auth_password_min=_int(domain.get("auth_password_min"), 8),
+        auth_otp_mode=_enum(AuthOTPMode, domain.get("auth_otp_mode"), AuthOTPMode.DISABLED),
+        company=str(domain.get("company") or ""),
+        company_page=str(domain.get("company_page") or ""),
+        company_email=str(domain.get("company_email") or ""),
+        company_support_page=str(domain.get("company_support_page") or ""),
+        company_support_email=str(domain.get("company_support_email") or ""),
+        company_catalog=str(domain.get("company_catalog") or ""),
+        company_deposit_url=str(domain.get("company_deposit_url") or ""),
+        company_withdrawal_url=str(domain.get("company_withdrawal_url") or ""),
+        reports_mode=_enum(ReportsMode, domain.get("reports_mode"), ReportsMode.DISABLED),
+        reports_flags=_flag(ReportsFlags, domain.get("reports_flags")),
+        reports_email=str(domain.get("reports_email") or ""),
+        news_category=str(domain.get("news_category") or ""),
+        news_langs=list(domain.get("news_langs") or []),
+        mail_mode=_enum(MailMode, domain.get("mail_mode"), MailMode.DISABLED),
+        trade_transfer_mode=_enum(
+            TransferMode, domain.get("trade_transfer_mode"), TransferMode.DISABLED
+        ),
+        trade_interestrate=_dec(domain.get("trade_interestrate")),
+        trade_virtual_credit=_dec(domain.get("trade_virtual_credit")),
+        demo_leverage=_int(domain.get("demo_leverage"), 0),
+        demo_deposit=_dec(domain.get("demo_deposit")),
+        demo_trades_clean=_int(domain.get("demo_trades_clean"), 0),
+        limit_history=_enum(HistoryLimit, domain.get("limit_history"), HistoryLimit.ALL),
+        limit_positions_volume=_dec(domain.get("limit_positions_volume")),
         trade_flags=TradeFlags(_int(model.trade_flags, 0)),
         limit_orders=_int(model.limit_orders, 200),
         limit_positions=_int(model.limit_positions, 200),

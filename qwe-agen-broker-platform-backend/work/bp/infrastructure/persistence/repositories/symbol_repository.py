@@ -14,6 +14,45 @@ class SqlSymbolRepository(ISymbolRepository):
     def __init__(self, session_factory):
         self.session_factory = session_factory
 
+    #: Columns that only an MT5 IMPORT can write. The domain cannot express them:
+    #: mt5_source is the original wire record, mt5_scale the decimal scale each
+    #: field arrived with, and mt5_extra the fields no entity models. save() goes
+    #: through group_to_db(entity), which has no baseline to pass, so a full-row
+    #: merge used to NULL all three - and with them the 392/392 byte-identical
+    #: re-export guarantee for that group. This is defect D18: the same class as
+    #: D8b/D15, a value written in one place and blanked from another.
+    _IMPORT_OWNED_COLUMNS = ("mt5_source", "mt5_scale", "mt5_extra")
+
+    async def _carry_import_owned(self, session, model):
+        """Copy the import-owned columns off the stored row onto `model`.
+
+        Read-modify-write inside the SAME session, so nothing races. A group that
+        was created natively has no baseline and gains nothing here - correct,
+        because there is nothing to preserve.
+        """
+        from sqlalchemy import select as _select
+
+        result = await session.execute(
+            _select(type(model)).where(type(model).name == model.name)
+        )
+        existing = result.scalar_one_or_none()
+        if existing is None:
+            return model
+        for col in self._IMPORT_OWNED_COLUMNS:
+            stored = getattr(existing, col, None)
+            if col == "mt5_extra":
+                # Merge, do not replace: the entity may legitimately carry new
+                # quarantine of its own, and the stored row may hold fields the
+                # entity never saw. Stored values win on conflict - they came
+                # from a real server.
+                merged = dict(getattr(model, col, None) or {})
+                merged.update(stored or {})
+                setattr(model, col, merged)
+            elif stored is not None and not getattr(model, col, None):
+                setattr(model, col, stored)
+        return model
+
+
     async def get_symbol(self, name: str) -> Optional[Symbol]:
         async with self.session_factory() as session:
             result = await session.execute(
@@ -49,6 +88,7 @@ class SqlSymbolRepository(ISymbolRepository):
     async def save(self, symbol: Symbol) -> Symbol:
         async with self.session_factory() as session:
             model = symbol_to_db(symbol)
+            await self._carry_import_owned(session, model)
             await session.merge(model)
             await session.commit()
             return symbol

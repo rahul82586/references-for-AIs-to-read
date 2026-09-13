@@ -120,4 +120,12 @@ class ClientModel(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
+    # --- migration 009_identity_plane: the IMTClient fields the KYC plane needs.
+    # Declared together with the entity fields and both mapper directions.
+    middle_name = Column(String(128), nullable=False, default="", server_default="")
+    state = Column(String(64), nullable=False, default="", server_default="")
+    id_number = Column(String(128), nullable=False, default="", server_default="")
+    lead_source = Column(String(128), nullable=False, default="", server_default="")
+    lead_campaign = Column(String(128), nullable=False, default="", server_default="")
+
     mt5_extra = Column(JSONB, nullable=False, default=dict)

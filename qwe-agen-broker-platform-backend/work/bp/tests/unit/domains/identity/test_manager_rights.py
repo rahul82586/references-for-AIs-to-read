@@ -12,6 +12,8 @@ import pytest
 
 from core.domains.identity.rights import (
     DEFAULT_NEW_ACCOUNT_RIGHTS,
+    MT5_USER_RIGHT_ALL,
+    MT5_USER_RIGHT_DEFAULT,
     RIGHTS_COUNT,
     ManagerRightsMask,
     UnknownRightError,
@@ -140,7 +142,48 @@ def test_user_right_values_are_mt5s():
     assert UserRight.RESET_PASS.value == 0x400
     assert UserRight.TECHNICAL.value == 0x10000
     assert UserRight.EXCLUDE_REPORTS.value == 0x20000
-    assert DEFAULT_NEW_ACCOUNT_RIGHTS == (UserRight.ENABLED | UserRight.PASSWORD)
+
+
+def test_user_right_default_is_the_sdks_not_a_guess():
+    """Pin USER_RIGHT_DEFAULT and USER_RIGHT_ALL to Include.md's own expressions.
+
+    Step 5 corrected this: ACCOUNT-GROUP-CREATION-SPEC §6 asserted the creation
+    default was ENABLED|PASSWORD (0x3), which was written before Include.md was
+    read member by member. The SDK says
+
+        USER_RIGHT_DEFAULT = ENABLED|PASSWORD|TRAILING|EXPERT|REPORTS
+
+    - exactly the five boxes MT5's Limits tab shows ticked on a fresh account.
+    The old value silently stripped trailing stops, Expert Advisors and daily
+    reports from every account this platform created. The magic numbers below
+    are computed from the SDK's member list, not retyped, so this test fails if
+    either the enum or the constant drifts.
+    """
+    sdk_default = 0x1 | 0x2 | 0x20 | 0x40 | 0x100
+    assert int(MT5_USER_RIGHT_DEFAULT) == sdk_default == 0x163
+    assert MT5_USER_RIGHT_DEFAULT == (
+        UserRight.ENABLED
+        | UserRight.PASSWORD
+        | UserRight.TRAILING
+        | UserRight.EXPERT
+        | UserRight.REPORTS
+    )
+    assert DEFAULT_NEW_ACCOUNT_RIGHTS is MT5_USER_RIGHT_DEFAULT or (
+        DEFAULT_NEW_ACCOUNT_RIGHTS == MT5_USER_RIGHT_DEFAULT
+    )
+
+    # USER_RIGHT_ALL deliberately OMITS USER_RIGHT_OBSOLETE (0x80).
+    sdk_all = (
+        0x1 | 0x2 | 0x4 | 0x8 | 0x10 | 0x20 | 0x40 | 0x100 | 0x200 | 0x400
+        | 0x800 | 0x2000 | 0x4000 | 0x8000 | 0x10000 | 0x20000
+    )
+    assert int(MT5_USER_RIGHT_ALL) == sdk_all == 0x3EF7F
+    assert UserRight.OBSOLETE not in MT5_USER_RIGHT_ALL
+    # Every named member except OBSOLETE is grantable through ALL.
+    for member in UserRight:
+        if member is UserRight.OBSOLETE or member.value == 0:
+            continue
+        assert member in MT5_USER_RIGHT_ALL, member.name
 
 
 def test_user_right_flag_round_trip_and_refusal():

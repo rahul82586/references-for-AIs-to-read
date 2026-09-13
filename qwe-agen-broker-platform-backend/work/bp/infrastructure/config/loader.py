@@ -28,6 +28,7 @@ whole point.
 
 from __future__ import annotations
 
+import logging
 import pathlib
 from dataclasses import fields as dataclass_fields
 from decimal import Decimal, InvalidOperation
@@ -35,7 +36,18 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import yaml
 
+logger = logging.getLogger(__name__)
+
 from core.domains.accounts.enums import (
+    AuthMode,
+    AuthOTPMode,
+    HistoryLimit,
+    MailMode,
+    MarginFreeProfitMode,
+    PermissionsFlags,
+    ReportsFlags,
+    ReportsMode,
+    TransferMode,
     AccountType,
     FreeMarginMode,
     MarginMode,
@@ -806,84 +818,197 @@ def _assert_unique(names: Sequence[str], message: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def groups_from_mt5(path: Any) -> List[Tuple[Group, Dict[str, Any], Dict[str, int], Dict[str, Any]]]:
-    """Import groups from a real MT5 Administrator export.
+def _enum_from_wire(cls: Any, raw: Any, mt5_name: str) -> Any:
+    """Coerce a wire int into an SDK enum, refusing to pretend on a miss.
 
-    Returns ``(group, mt5_extra, mt5_scale, mt5_source)`` per group. Pass the last three
-    to ``group_to_db`` so the row can be re-exported field-identically - our Group
-    models 17 of MT5's 44 ConfigGroups fields, and the other 27 must survive.
+    An out-of-range value means our transcription of Include.md is older than the
+    server that produced the file. That is worth knowing, so it is logged with the
+    field name and the raw value rather than swallowed - and the enum's 0 member
+    is used, because MT5's own enums all start their valid range at 0 and a
+    guessed member would be worse than a logged default. Every one of the 20 live
+    reference groups imports without hitting this; the fixture test asserts it.
+    """
+    try:
+        return cls(int(raw or 0))
+    except (ValueError, TypeError):
+        logger.warning(
+            "ConfigGroups.%s carries %r, outside %s's transcribed range; "
+            "using %s and keeping the raw value in mt5_extra",
+            mt5_name, raw, cls.__name__, cls(0).name,
+        )
+        return cls(0)
+
+
+def _flag_from_wire(cls: Any, raw: Any, mt5_name: str) -> Any:
+    """Coerce a wire int into an IntFlag, KEEPING bits the enum does not name.
+
+    Unlike _enum_from_wire this never loses information: IntFlag retains unknown
+    bits in its value, so a server that sets a flag this SDK version does not
+    document still re-exports byte-identically. Same tolerance ManagerRightsMask
+    has for the unassigned manager-right indices 68/69.
+    """
+    return cls(int(raw or 0))
+
+
+def _dec_or_zero(raw: Any) -> Decimal:
+    try:
+        return Decimal(str(raw if raw is not None else 0))
+    except (InvalidOperation, ValueError, TypeError):
+        logger.warning("ConfigGroups decimal field carries %r; using 0", raw)
+        return Decimal(0)
+
+
+def group_from_mt5_record(
+    raw: Dict[str, Any]
+) -> Tuple[Group, Dict[str, Any], Dict[str, int], Dict[str, Any]]:
+    """Build a domain Group from ONE ConfigGroups wire record.
+
+    Returns ``(group, mt5_extra, mt5_scale, mt5_source)``. This is the single
+    place an MT5 group becomes a domain object: ``groups_from_mt5`` loops over it
+    and the round-trip tests call it directly. Extracted in step 5 because a
+    second, hand-rolled copy of this logic had drifted inside the test suite - it
+    built a partial Group, and the moment the entity started owning all 42 scalar
+    ConfigGroups fields those dataclass defaults silently overwrote the server's
+    real values. One builder, so the importer and its tests cannot disagree.
+
+    Every scalar ConfigGroups field the SDK defines is carried onto the entity.
+    Omitting one lets its default reach the column and then the export - which is
+    how TradeFlags 215 once came back as 15, and defect D18 for the whole group.
     """
     from infrastructure.persistence.config_mappers import split_mt5_record
 
-    payload = decode_file(path)
-    out = []
-    for raw in records(payload, "ConfigGroups"):
-        dom, extra, scale = split_mt5_record(raw, fieldmap.GROUP_FIELDS)
-        margin = dom.get("margin") or {}
-        account_type = mt5enums.account_type_from_group_path(dom["name"]) or AccountType.REAL
+    dom, extra, scale = split_mt5_record(raw, fieldmap.GROUP_FIELDS)
+    margin = dom.get("margin") or {}
+    account_type = mt5enums.account_type_from_group_path(dom["name"]) or AccountType.REAL
 
-        commissions: List[CommissionRule] = []
-        for entry in dom.get("commissions") or []:
-            tiers = entry.get("tiers") or []
-            first = tiers[0] if tiers else {}
-            commissions.append(
-                CommissionRule(
-                    name=entry.get("name") or "",
-                    symbol_pattern=entry.get("symbol_pattern") or "*",
-                    currency=entry.get("currency") or "USD",
-                    value=first.get("rate") or Decimal(0),
-                    min_value=first.get("min_value") or Decimal(0),
-                )
+    commissions: List[CommissionRule] = []
+    for entry in dom.get("commissions") or []:
+        tiers = entry.get("tiers") or []
+        first = tiers[0] if tiers else {}
+        commissions.append(
+            CommissionRule(
+                name=entry.get("name") or "",
+                symbol_pattern=entry.get("symbol_pattern") or "*",
+                currency=entry.get("currency") or "USD",
+                value=first.get("rate") or Decimal(0),
+                min_value=first.get("min_value") or Decimal(0),
             )
-
-        overrides: List[GroupSymbolOverride] = []
-        for entry in dom.get("symbol_overrides") or []:
-            overrides.append(
-                GroupSymbolOverride(
-                    symbol_pattern=entry.get("symbol_pattern") or "*",
-                    # Everything else stays None, i.e. INHERIT. Most MT5 overrides are
-                    # the "default" sentinel, and turning that into 0 would replace
-                    # "inherit the margin rate" with "the margin rate is zero".
-                )
-            )
-
-        # Carry every field the domain owns. Omitting one lets the dataclass default
-        # overwrite the server's real value on export - which is how TradeFlags 215 came
-        # back as 15, and how LimitPositions/LimitSymbols came back as 200/100 when the
-        # server had 0 (unlimited).
-        group = Group(
-            name=dom["name"],
-            server_id=_int(dom.get("server_id"), "mt5", "Server", 1),
-            account_type=account_type,
-            trade_flags=_int(dom.get("trade_flags"), "mt5", "TradeFlags", 0),
-            currency_digits=_int(dom.get("currency_digits"), "mt5", "CurrencyDigits", 2),
-            currency=dom.get("currency") or "USD",
-            margin=MarginProfile(
-                mode=mt5enums.MARGIN_MODE_FROM_MT5.get(
-                    _int(margin.get("mode"), "mt5", "MarginMode", 0), MarginMode.RETAIL
-                ),
-                margin_call_level=margin.get("margin_call_level") or Decimal(50),
-                stop_out_level=margin.get("stop_out_level") or Decimal(30),
-                stop_out_mode=mt5enums.STOP_OUT_MODE_FROM_MT5.get(
-                    _int(margin.get("stop_out_mode"), "mt5", "MarginSOMode", 0),
-                    StopOutMode.PERCENT,
-                ),
-                free_margin_mode=mt5enums.FREE_MARGIN_MODE_FROM_MT5.get(
-                    _int(margin.get("free_margin_mode"), "mt5", "MarginFreeMode", 1),
-                    FreeMarginMode.USE_PL,
-                ),
-            ),
-            commissions=commissions,
-            symbol_overrides=overrides,
-            news_mode=mt5enums.NEWS_MODE_FROM_MT5.get(
-                _int(dom.get("news_mode"), "mt5", "NewsMode", 2), NewsMode.FULL
-            ),
-            limit_orders=_int(dom.get("limit_orders"), "mt5", "LimitOrders", 0),
-            limit_positions=_int(dom.get("limit_positions"), "mt5", "LimitPositions", 0),
-            limit_symbols=_int(dom.get("limit_symbols"), "mt5", "LimitSymbols", 0),
         )
-        out.append((group, extra, scale, raw))
-    return out
+
+    overrides: List[GroupSymbolOverride] = []
+    for entry in dom.get("symbol_overrides") or []:
+        overrides.append(
+            GroupSymbolOverride(
+                symbol_pattern=entry.get("symbol_pattern") or "*",
+                # Everything else stays None, i.e. INHERIT. Most MT5 overrides are
+                # the "default" sentinel, and turning that into 0 would replace
+                # "inherit the margin rate" with "the margin rate is zero".
+            )
+        )
+
+    # Carry every field the domain owns. Omitting one lets the dataclass default
+    # overwrite the server's real value on export - which is how TradeFlags 215 came
+    # back as 15, and how LimitPositions/LimitSymbols came back as 200/100 when the
+    # server had 0 (unlimited).
+    group = Group(
+        name=dom["name"],
+        server_id=_int(dom.get("server_id"), "mt5", "Server", 1),
+        account_type=account_type,
+        trade_flags=_int(dom.get("trade_flags"), "mt5", "TradeFlags", 0),
+        currency_digits=_int(dom.get("currency_digits"), "mt5", "CurrencyDigits", 2),
+        currency=dom.get("currency") or "USD",
+        margin=MarginProfile(
+            mode=mt5enums.MARGIN_MODE_FROM_MT5.get(
+                _int(margin.get("mode"), "mt5", "MarginMode", 0), MarginMode.RETAIL
+            ),
+            margin_call_level=margin.get("margin_call_level") or Decimal(50),
+            stop_out_level=margin.get("stop_out_level") or Decimal(30),
+            stop_out_mode=mt5enums.STOP_OUT_MODE_FROM_MT5.get(
+                _int(margin.get("stop_out_mode"), "mt5", "MarginSOMode", 0),
+                StopOutMode.PERCENT,
+            ),
+            free_margin_mode=mt5enums.FREE_MARGIN_MODE_FROM_MT5.get(
+                _int(margin.get("free_margin_mode"), "mt5", "MarginFreeMode", 1),
+                FreeMarginMode.USE_PL,
+            ),
+            free_profit_mode=_enum_from_wire(
+                MarginFreeProfitMode,
+                margin.get("free_profit_mode"),
+                "MarginFreeProfitMode",
+            ),
+        ),
+        commissions=commissions,
+        symbol_overrides=overrides,
+        news_mode=mt5enums.NEWS_MODE_FROM_MT5.get(
+            _int(dom.get("news_mode"), "mt5", "NewsMode", 2), NewsMode.FULL
+        ),
+        limit_orders=_int(dom.get("limit_orders"), "mt5", "LimitOrders", 0),
+        limit_positions=_int(dom.get("limit_positions"), "mt5", "LimitPositions", 0),
+        limit_symbols=_int(dom.get("limit_symbols"), "mt5", "LimitSymbols", 0),
+        # --- step 5: the other 27 ConfigGroups fields -------------------
+        # The entity now OWNS these, so the import must populate them. If it
+        # does not, the dataclass default is written to the column and then
+        # overlaid on export, silently replacing the server's real value -
+        # exactly the failure the comment above already warns about for
+        # TradeFlags, and defect D18 for the group as a whole.
+        permissions_flags=_flag_from_wire(
+            PermissionsFlags, dom.get("permissions_flags"), "PermissionsFlags"
+        ),
+        auth_mode=_enum_from_wire(AuthMode, dom.get("auth_mode"), "AuthMode"),
+        auth_password_min=_int(
+            dom.get("auth_password_min"), "mt5", "AuthPasswordMin", 8
+        ),
+        auth_otp_mode=_enum_from_wire(
+            AuthOTPMode, dom.get("auth_otp_mode"), "AuthOTPMode"
+        ),
+        company=str(dom.get("company") or ""),
+        company_page=str(dom.get("company_page") or ""),
+        company_email=str(dom.get("company_email") or ""),
+        company_support_page=str(dom.get("company_support_page") or ""),
+        company_support_email=str(dom.get("company_support_email") or ""),
+        company_catalog=str(dom.get("company_catalog") or ""),
+        company_deposit_url=str(dom.get("company_deposit_url") or ""),
+        company_withdrawal_url=str(dom.get("company_withdrawal_url") or ""),
+        reports_mode=_enum_from_wire(
+            ReportsMode, dom.get("reports_mode"), "ReportsMode"
+        ),
+        reports_flags=_flag_from_wire(
+            ReportsFlags, dom.get("reports_flags"), "ReportsFlags"
+        ),
+        reports_email=str(dom.get("reports_email") or ""),
+        news_category=str(dom.get("news_category") or ""),
+        news_langs=list(dom.get("news_langs") or []),
+        mail_mode=_enum_from_wire(MailMode, dom.get("mail_mode"), "MailMode"),
+        trade_transfer_mode=_enum_from_wire(
+            TransferMode, dom.get("trade_transfer_mode"), "TradeTransferMode"
+        ),
+        trade_interestrate=_dec_or_zero(dom.get("trade_interestrate")),
+        trade_virtual_credit=_dec_or_zero(dom.get("trade_virtual_credit")),
+        demo_leverage=_int(dom.get("demo_leverage"), "mt5", "DemoLeverage", 0),
+        demo_deposit=_dec_or_zero(dom.get("demo_deposit")),
+        demo_trades_clean=_int(
+            dom.get("demo_trades_clean"), "mt5", "DemoTradesClean", 0
+        ),
+        limit_history=_enum_from_wire(
+            HistoryLimit, dom.get("limit_history"), "LimitHistory"
+        ),
+        limit_positions_volume=_dec_or_zero(dom.get("limit_positions_volume")),
+    )
+
+    return group, extra, scale, raw
+
+
+def groups_from_mt5(path: Any) -> List[Tuple[Group, Dict[str, Any], Dict[str, int], Dict[str, Any]]]:
+    """Import every group from a real MT5 Administrator export.
+
+    Returns ``(group, mt5_extra, mt5_scale, mt5_source)`` per group. Pass the last
+    three to ``group_to_db`` so the row re-exports field-identically: the entity
+    now models all 42 scalar ConfigGroups fields, but MT5's nested Commissions
+    (12 fields each, we model 4) and Symbols (64 each, we model 11) arrays still
+    need the imported baseline.
+    """
+    payload = decode_file(path)
+    return [group_from_mt5_record(raw) for raw in records(payload, "ConfigGroups")]
 
 
 def symbols_from_mt5(path: Any) -> List[Tuple[Symbol, Dict[str, Any], Dict[str, int], Dict[str, Any]]]:

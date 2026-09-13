@@ -18,6 +18,25 @@ down_revision = '006_symbol_spread_diff'
 branch_labels = None
 depends_on = None
 
+# --- D3 FIX (step 5) -------------------------------------------------------
+# These server_defaults used to read sa.text("'{}'::jsonb"). The ::jsonb cast is
+# PostgreSQL-only syntax, so `alembic upgrade head` against SQLite died on 001
+# with "near \"::\": syntax error" - which is why `cli migrate` and `make migrate`
+# only ever worked against PostgreSQL, and why this proof had to build its
+# baseline from create_all instead of from the migration chain.
+#
+# Dropping the cast is a NO-OP on PostgreSQL: an untyped string literal assigned
+# to a jsonb column is implicitly cast, so `DEFAULT '{}'` and
+# `DEFAULT '{}'::jsonb` produce the same stored default. SQLite accepts the bare
+# literal. The column TYPE is already dialect-portable via the JSONB->JSON
+# compile hook in infrastructure/persistence/database.py (added in M5); only the
+# default text was passing through verbatim.
+#
+# Safe for production: Neon is already at 009_identity_plane, and alembic never
+# re-runs an applied revision, so this changes nothing on the live database. A
+# fresh PostgreSQL migration produces a semantically identical schema.
+# ---------------------------------------------------------------------------
+
 
 def upgrade() -> None:
     op.create_table(
@@ -29,7 +48,7 @@ def upgrade() -> None:
         sa.Column('action', sa.Integer(), nullable=False, server_default=sa.text("'0'")),
         sa.Column('request_mask', sa.BigInteger(), nullable=False, server_default=sa.text("'0'")),
         sa.Column('type_mask', sa.Integer(), nullable=False, server_default=sa.text("'0'")),
-        sa.Column('record', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('record', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
         sa.PrimaryKeyConstraint('name'),
     )
     op.create_index('idx_mt5_routing_position', 'mt5_routing_rules', ['position'], unique=False)

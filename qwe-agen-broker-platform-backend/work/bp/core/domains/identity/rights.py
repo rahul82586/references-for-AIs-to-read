@@ -400,9 +400,52 @@ class UserRight(IntFlag):
         return int(self.value)
 
 
-#: What a brand-new account gets before any Limits/Account tab is touched
-#: (ACCOUNT-GROUP-CREATION-SPEC §6: default ENABLED | PASSWORD).
-DEFAULT_NEW_ACCOUNT_RIGHTS = UserRight.ENABLED | UserRight.PASSWORD
+#: Include.md, IMTUser::EnUsersRights, verbatim:
+#:     USER_RIGHT_DEFAULT = USER_RIGHT_ENABLED | USER_RIGHT_PASSWORD |
+#:                          USER_RIGHT_TRAILING | USER_RIGHT_EXPERT |
+#:                          USER_RIGHT_REPORTS
+#: i.e. 0x167. These five are exactly the boxes MT5's Limits tab shows ticked on a
+#: fresh account (Enable this account / Allow to change password / Enable trailing
+#: stops / Enable Expert Advisors / Enable daily reports).
+#:
+#: CORRECTION, step 5: ACCOUNT-GROUP-CREATION-SPEC §6 said the default was
+#: ENABLED | PASSWORD (0x3). That was a guess made before Include.md was read
+#: member by member, and it is wrong - it silently strips trailing stops, EAs and
+#: daily reports from every account this platform creates. The SDK constant wins.
+MT5_USER_RIGHT_DEFAULT = (
+    UserRight.ENABLED
+    | UserRight.PASSWORD
+    | UserRight.TRAILING
+    | UserRight.EXPERT
+    | UserRight.REPORTS
+)
+
+#: USER_RIGHT_ALL from the same enum, built by OR-ing the NAMED members the SDK
+#: lists rather than by writing a magic number - the SDK's own USER_RIGHT_ALL
+#: deliberately OMITS USER_RIGHT_OBSOLETE (0x80), which is easy to get wrong by
+#: hand. Never a creation default; it is the "every grantable bit" mask.
+MT5_USER_RIGHT_ALL = (
+    UserRight.ENABLED
+    | UserRight.PASSWORD
+    | UserRight.TRADE_DISABLED
+    | UserRight.INVESTOR
+    | UserRight.CONFIRMED
+    | UserRight.TRAILING
+    | UserRight.EXPERT
+    | UserRight.REPORTS
+    | UserRight.READONLY
+    | UserRight.RESET_PASS
+    | UserRight.OTP_ENABLED
+    | UserRight.SPONSORED_HOSTING
+    | UserRight.API_ENABLED
+    | UserRight.PUSH_NOTIFICATION
+    | UserRight.TECHNICAL
+    | UserRight.EXCLUDE_REPORTS
+)
+
+#: What a brand-new account gets before any Limits/Account tab is touched.
+#: Alias kept so existing callers and the plan's wording still resolve.
+DEFAULT_NEW_ACCOUNT_RIGHTS = MT5_USER_RIGHT_DEFAULT
 
 
 @dataclass(frozen=True)

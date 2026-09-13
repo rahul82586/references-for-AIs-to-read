@@ -5,7 +5,21 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 import uuid
 
-from .enums import AccountType, CommissionType, TradeFlags, NewsMode
+from .enums import (
+    AccountType,
+    AuthMode,
+    AuthOTPMode,
+    CommissionType,
+    HistoryLimit,
+    MailMode,
+    MarginFreeProfitMode,
+    NewsMode,
+    PermissionsFlags,
+    ReportsFlags,
+    ReportsMode,
+    TradeFlags,
+    TransferMode,
+)
 from .value_objects import (
     MarginProfile, CommissionRule, SwapConfiguration,
     GroupSymbolOverride, RoutingRule, GroupPermissions
@@ -67,6 +81,70 @@ class Group:
     
     # Advanced features
     news_mode: NewsMode = NewsMode.FULL
+    #: ConfigGroups.NewsCategory / NewsLangs.
+    news_category: str = ""
+    news_langs: List[str] = field(default_factory=list)
+
+    # ------------------------------------------------------------------
+    # The remaining ConfigGroups wire fields (plan step 5).
+    #
+    # Before this, all 27 were UNMODELLED: the codec quarantined them into
+    # mt5_extra on import so re-export stayed byte-identical, but the ENTITY
+    # could neither read nor write them. Two consequences, both bad:
+    #   * the admin UI could not edit the Company tab, the password minimum,
+    #     the reports schedule or the demo-account defaults - and /schema
+    #     advertised fields nothing could set;
+    #   * any save() that rebuilt the row from the entity alone reset them to
+    #     their column defaults (defect D18).
+    # Every field below is named for its ConfigGroups wire name, typed with the
+    # SDK enum from Include.md where the SDK defines one, and is written by
+    # group_to_db and read by db_to_group in the same change.
+    # ------------------------------------------------------------------
+
+    # --- Permissions / authentication (EnPermissionsFlags, EnAuthMode, EnAuthOTPMode)
+    permissions_flags: PermissionsFlags = PermissionsFlags.NONE
+    auth_mode: AuthMode = AuthMode.STANDARD
+    #: The group's minimum password length. password_policy clamps this to the
+    #: platform floor of 8 and ceiling of 16; the live export has 8 everywhere.
+    auth_password_min: int = 8
+    auth_otp_mode: AuthOTPMode = AuthOTPMode.DISABLED
+
+    # --- White label (the Group modal's Company tab) ---
+    company: str = ""
+    company_page: str = ""
+    company_email: str = ""
+    company_support_page: str = ""
+    company_support_email: str = ""
+    company_catalog: str = ""
+    company_deposit_url: str = ""
+    company_withdrawal_url: str = ""
+
+    # --- Reports & internal mail (EnReportsMode, EnReportsFlags, EnMailMode) ---
+    reports_mode: ReportsMode = ReportsMode.DISABLED
+    reports_flags: ReportsFlags = ReportsFlags.NONE
+    reports_email: str = ""
+    mail_mode: MailMode = MailMode.FULL
+
+    # --- Trade-server behaviour ---
+    #: EnTransferMode - who may move funds between accounts.
+    trade_transfer_mode: TransferMode = TransferMode.DISABLED
+    #: ConfigGroups.TradeInterestrate - the accumulated-interest rate.
+    trade_interestrate: Decimal = field(default_factory=lambda: Decimal("0"))
+    #: ConfigGroups.TradeVirtualCredit - broker-extended virtual credit.
+    trade_virtual_credit: Decimal = field(default_factory=lambda: Decimal("0"))
+
+    # --- Demo-account provisioning ---
+    demo_leverage: int = 0
+    demo_deposit: Decimal = field(default_factory=lambda: Decimal("0"))
+    #: After how many days of inactivity a demo account's trades are cleaned.
+    demo_trades_clean: int = 0
+
+    # --- Limits ---
+    #: EnHistoryLimit - how much history a client of this group may request.
+    limit_history: HistoryLimit = HistoryLimit.ALL
+    #: Cumulative one-direction volume limit. A Decimal because the wire carries
+    #: "0.00"; 0 means unlimited in MT5's own sense for this field.
+    limit_positions_volume: Decimal = field(default_factory=lambda: Decimal("0"))
     
     # Metadata
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -332,6 +410,23 @@ class Group:
     def can_trade(self) -> bool:
         """Check if accounts in this group can trade."""
         return self.is_active and self.permissions.trade_allowed
+
+    def clients_may_connect(self) -> bool:
+        """PERMISSION_ENABLE_CONNECTION - the group's own connection gate.
+
+        Distinct from an account's USER_RIGHT_ENABLED: MT5 requires BOTH. A
+        group with this bit clear refuses every client of the group regardless
+        of their mask.
+        """
+        return bool(self.permissions_flags & PermissionsFlags.ENABLE_CONNECTION)
+
+    def forces_password_reset(self) -> bool:
+        """PERMISSION_RESET_PASSWORD - reset the password after first logon."""
+        return bool(self.permissions_flags & PermissionsFlags.RESET_PASSWORD)
+
+    def forces_otp(self) -> bool:
+        """PERMISSION_FORCED_OTP_USAGE."""
+        return bool(self.permissions_flags & PermissionsFlags.FORCED_OTP_USAGE)
     
     def has_trade_flag(self, flag: TradeFlags) -> bool:
         """Check if a specific trade flag is enabled."""

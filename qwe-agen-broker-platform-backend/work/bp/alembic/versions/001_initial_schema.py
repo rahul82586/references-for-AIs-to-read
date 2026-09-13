@@ -31,6 +31,25 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
+# --- D3 FIX (step 5) -------------------------------------------------------
+# These server_defaults used to read sa.text("'{}'::jsonb"). The ::jsonb cast is
+# PostgreSQL-only syntax, so `alembic upgrade head` against SQLite died on 001
+# with "near \"::\": syntax error" - which is why `cli migrate` and `make migrate`
+# only ever worked against PostgreSQL, and why this proof had to build its
+# baseline from create_all instead of from the migration chain.
+#
+# Dropping the cast is a NO-OP on PostgreSQL: an untyped string literal assigned
+# to a jsonb column is implicitly cast, so `DEFAULT '{}'` and
+# `DEFAULT '{}'::jsonb` produce the same stored default. SQLite accepts the bare
+# literal. The column TYPE is already dialect-portable via the JSONB->JSON
+# compile hook in infrastructure/persistence/database.py (added in M5); only the
+# default text was passing through verbatim.
+#
+# Safe for production: Neon is already at 009_identity_plane, and alembic never
+# re-runs an applied revision, so this changes nothing on the live database. A
+# fresh PostgreSQL migration produces a semantically identical schema.
+# ---------------------------------------------------------------------------
+
 
 
 def upgrade() -> None:
@@ -61,7 +80,7 @@ def upgrade() -> None:
         sa.Column('reports_email', sa.String(length=256), nullable=False, server_default=sa.text("''")),
         sa.Column('news_mode', sa.Integer(), nullable=False, server_default=sa.text('2')),
         sa.Column('news_category', sa.String(length=256), nullable=False, server_default=sa.text("''")),
-        sa.Column('news_langs', postgresql.JSONB(), nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('news_langs', postgresql.JSONB(), nullable=False, server_default=sa.text("\'[]\'")),
         sa.Column('mail_mode', sa.Integer(), nullable=False, server_default=sa.text('1')),
         sa.Column('trade_flags', sa.Integer(), nullable=False, server_default=sa.text('0')),
         sa.Column('trade_transfer_mode', sa.Integer(), nullable=False, server_default=sa.text('0')),
@@ -84,15 +103,15 @@ def upgrade() -> None:
         sa.Column('limit_symbols', sa.Integer(), nullable=False, server_default=sa.text('0')),
         sa.Column('limit_positions', sa.Integer(), nullable=False, server_default=sa.text('0')),
         sa.Column('limit_positions_volume', sa.Numeric(precision=20, scale=8), nullable=False, server_default=sa.text('0')),
-        sa.Column('margin_json', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
-        sa.Column('commissions_json', postgresql.JSONB(), nullable=False, server_default=sa.text("'[]'::jsonb")),
-        sa.Column('symbol_overrides_json', postgresql.JSONB(), nullable=False, server_default=sa.text("'[]'::jsonb")),
-        sa.Column('permissions_json', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
-        sa.Column('swaps_json', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
-        sa.Column('routing_json', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
-        sa.Column('mt5_extra', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
-        sa.Column('mt5_scale', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
-        sa.Column('mt5_source', postgresql.JSONB(), nullable=True, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('margin_json', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
+        sa.Column('commissions_json', postgresql.JSONB(), nullable=False, server_default=sa.text("\'[]\'")),
+        sa.Column('symbol_overrides_json', postgresql.JSONB(), nullable=False, server_default=sa.text("\'[]\'")),
+        sa.Column('permissions_json', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
+        sa.Column('swaps_json', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
+        sa.Column('routing_json', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
+        sa.Column('mt5_extra', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
+        sa.Column('mt5_scale', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
+        sa.Column('mt5_source', postgresql.JSONB(), nullable=True, server_default=sa.text("\'{}\'")),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=True, server_default=sa.text('now()')),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True, server_default=sa.text('now()')),
         sa.PrimaryKeyConstraint('name'),
@@ -133,7 +152,7 @@ def upgrade() -> None:
         sa.Column('registration_date', sa.DateTime(timezone=True), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=True, server_default=sa.text('now()')),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True, server_default=sa.text('now()')),
-        sa.Column('mt5_extra', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('mt5_extra', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
         sa.PrimaryKeyConstraint('login'),
         sa.ForeignKeyConstraint(['group_name'], ['groups.name']),
     )
@@ -208,7 +227,7 @@ def upgrade() -> None:
         sa.Column('last_pass_change', sa.DateTime(timezone=True), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=True, server_default=sa.text('now()')),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True, server_default=sa.text('now()')),
-        sa.Column('mt5_extra', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('mt5_extra', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
         sa.PrimaryKeyConstraint('id'),
     )
     op.create_index('ix_clients_external_id', 'clients', ['external_id'], unique=False)
@@ -299,11 +318,11 @@ def upgrade() -> None:
         sa.Column('name', sa.String(length=256), nullable=False, server_default=sa.text("''")),
         sa.Column('mailbox', sa.String(length=256), nullable=False, server_default=sa.text("''")),
         sa.Column('server_id', sa.Integer(), nullable=False, server_default=sa.text('1')),
-        sa.Column('rights_json', postgresql.JSONB(), nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('rights_json', postgresql.JSONB(), nullable=False, server_default=sa.text("\'[]\'")),
         sa.Column('rights_mask_0', sa.BigInteger(), nullable=False, server_default=sa.text('0')),
         sa.Column('rights_mask_1', sa.BigInteger(), nullable=False, server_default=sa.text('0')),
         sa.Column('rights_mask_2', sa.BigInteger(), nullable=False, server_default=sa.text('0')),
-        sa.Column('group_scope_json', postgresql.JSONB(), nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('group_scope_json', postgresql.JSONB(), nullable=False, server_default=sa.text("\'[]\'")),
         sa.Column('request_limit_logs', sa.Integer(), nullable=False, server_default=sa.text('0')),
         sa.Column('request_limit_reports', sa.Integer(), nullable=False, server_default=sa.text('0')),
         sa.Column('role', sa.String(length=32), nullable=False, server_default=sa.text("'READ_ONLY'")),
@@ -311,14 +330,14 @@ def upgrade() -> None:
         sa.Column('totp_secret', sa.String(length=64), nullable=True),
         sa.Column('is_2fa_enabled', sa.Boolean(), nullable=False, server_default=sa.text('false')),
         sa.Column('must_change_password', sa.Boolean(), nullable=False, server_default=sa.text('false')),
-        sa.Column('allowed_ips_json', postgresql.JSONB(), nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('allowed_ips_json', postgresql.JSONB(), nullable=False, server_default=sa.text("\'[]\'")),
         sa.Column('certificate_fingerprint', sa.String(length=128), nullable=True),
         sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('true')),
         sa.Column('last_login', sa.DateTime(timezone=True), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=True, server_default=sa.text('now()')),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True, server_default=sa.text('now()')),
-        sa.Column('mt5_extra', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
-        sa.Column('mt5_source', postgresql.JSONB(), nullable=True, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('mt5_extra', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
+        sa.Column('mt5_source', postgresql.JSONB(), nullable=True, server_default=sa.text("\'{}\'")),
         sa.PrimaryKeyConstraint('login'),
     )
 
@@ -469,17 +488,17 @@ def upgrade() -> None:
         sa.Column('swap_short', sa.Numeric(precision=20, scale=8), nullable=False, server_default=sa.text('0')),
         sa.Column('swap_3day', sa.Integer(), nullable=False, server_default=sa.text('3')),
         sa.Column('swap_year_days', sa.Integer(), nullable=False, server_default=sa.text('0')),
-        sa.Column('sessions_quotes_json', postgresql.JSONB(), nullable=False, server_default=sa.text("'[]'::jsonb")),
-        sa.Column('sessions_trades_json', postgresql.JSONB(), nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('sessions_quotes_json', postgresql.JSONB(), nullable=False, server_default=sa.text("\'[]\'")),
+        sa.Column('sessions_trades_json', postgresql.JSONB(), nullable=False, server_default=sa.text("\'[]\'")),
         sa.Column('time_start', sa.BigInteger(), nullable=False, server_default=sa.text('0')),
         sa.Column('time_expiration', sa.BigInteger(), nullable=False, server_default=sa.text('0')),
         sa.Column('option_mode', sa.Integer(), nullable=False, server_default=sa.text('0')),
         sa.Column('strike_price', sa.Numeric(precision=20, scale=8), nullable=False, server_default=sa.text('0')),
         sa.Column('face_value', sa.Numeric(precision=20, scale=8), nullable=False, server_default=sa.text('0')),
         sa.Column('face_value_currency', sa.String(length=8), nullable=False, server_default=sa.text("'USD'")),
-        sa.Column('mt5_extra', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
-        sa.Column('mt5_scale', postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
-        sa.Column('mt5_source', postgresql.JSONB(), nullable=True, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('mt5_extra', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
+        sa.Column('mt5_scale', postgresql.JSONB(), nullable=False, server_default=sa.text("\'{}\'")),
+        sa.Column('mt5_source', postgresql.JSONB(), nullable=True, server_default=sa.text("\'{}\'")),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=True, server_default=sa.text('now()')),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True, server_default=sa.text('now()')),
         sa.PrimaryKeyConstraint('name'),

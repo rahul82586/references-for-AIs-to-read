@@ -58,32 +58,48 @@ def main() -> int:
     # the JSONB->SQLite compile hook lives in database.py; importing the models
     # registers every table on Base.metadata (same set env.py uses).
     from infrastructure.persistence.database import Base, DatabaseManager  # noqa: F401
+    # EVERY model module, not just the four this proof was written against.
+    # A partial import list makes the "models and migration agree" check below
+    # compare against an incomplete metadata and report drift that is really just
+    # an unimported table - it hid reconciliation_breaks and mt5_routing_rules on
+    # its first run.
     import infrastructure.persistence.db_models  # noqa: F401
     import infrastructure.persistence.config_models  # noqa: F401
     import infrastructure.persistence.manager_models  # noqa: F401
     import infrastructure.persistence.account_models  # noqa: F401
+    import infrastructure.persistence.reconciliation_models  # noqa: F401
+    import infrastructure.persistence.routing_models  # noqa: F401
+    import infrastructure.persistence.identity_models  # noqa: F401
 
     tmpdir = tempfile.mkdtemp(prefix="p1_migration_")
     db_path = pathlib.Path(tmpdir) / "mig.db"
     url = f"sqlite+aiosqlite:///{db_path}"
-
-    import asyncio
-
-    async def create_base_schema() -> None:
-        """The 008-era schema: today's models, which deliberately do NOT declare
-        the 009 columns yet (a declared column without mapper support is a
-        full-row save waiting to blank it)."""
-        manager = DatabaseManager(url)
-        await manager.create_tables()
-        await manager.close()
-
-    asyncio.run(create_base_schema())
 
     cfg = Config(str(BP / "alembic.ini"))
     cfg.set_main_option("sqlalchemy.url", url)
     cfg.set_main_option("script_location", str(BP / "alembic"))
 
     engine = sa.create_engine(f"sqlite:///{db_path}")
+
+    # ---------------------------------------------------------------------
+    # CHANGED IN STEP 5, and the change makes this proof stronger, not weaker.
+    #
+    # The 008-era starting schema used to be built from Base.metadata.create_all
+    # - which was valid ONLY because the models deliberately did not declare the
+    # 009 columns yet. Step 5 declares them (that is the whole point of the
+    # milestone: entity + model + mapper together), so create_all now produces
+    # the POST-009 shape and the old "before" assertion could not hold.
+    #
+    # So the baseline is now built by ALEMBIC (`upgrade 008_reconciliation_breaks`
+    # from an empty database), which is what a real 008-era server was: a
+    # product of the migration chain alone, independent of the ORM. That removes
+    # the circularity the old version had - it was comparing the models against
+    # themselves - and it lets the proof assert the property that actually
+    # matters now, added below as "models and migration agree": an alembic-only
+    # database at head and a create_all database have the SAME columns, so the
+    # DDL and the ORM cannot drift.
+    # ---------------------------------------------------------------------
+    command.upgrade(cfg, "008_reconciliation_breaks")
 
     def columns(table: str) -> set:
         return {c["name"] for c in sa.inspect(engine).get_columns(table)}
@@ -124,6 +140,53 @@ def main() -> int:
         )).fetchone()
     check("partial predicate uses the TECHNICAL bit (65536)",
           row is not None and "65536" in (row[0] or ""), (row[0] or "")[-60:] if row else "index missing")
+
+    print("== models and migration agree (the step-5 atomicity guarantee) ==")
+    # Build a SECOND throwaway database from the ORM alone and compare column
+    # sets table by table. Step 5's rule is that an entity field, a model column
+    # and both mapper directions land in the same change; this is the check that
+    # fails if a column is declared on the model but never added by a migration
+    # (or vice versa) - the drift that produces a full-row save blanking data.
+    model_db = pathlib.Path(tmpdir) / "models.db"
+    model_url = f"sqlite+aiosqlite:///{model_db}"
+
+    import asyncio
+
+    async def _create_all() -> None:
+        manager = DatabaseManager(model_url)
+        await manager.create_tables()
+        await manager.close()
+
+    asyncio.run(_create_all())
+    model_engine = sa.create_engine(f"sqlite:///{model_db}")
+    model_inspector = sa.inspect(model_engine)
+    mig_inspector = sa.inspect(engine)
+
+    def _cols(insp, table):
+        return {c["name"] for c in insp.get_columns(table)}
+
+    # alembic_version is alembic's own bookkeeping row and is never an ORM model.
+    ALEMBIC_OWN = {"alembic_version"}
+    mig_tables = set(mig_inspector.get_table_names()) - ALEMBIC_OWN
+    model_tables = set(model_inspector.get_table_names()) - ALEMBIC_OWN
+    shared = sorted(mig_tables & model_tables)
+    check("both schemas expose the same tables",
+          mig_tables == model_tables,
+          f"migration-only={sorted(mig_tables - model_tables)} "
+          f"models-only={sorted(model_tables - mig_tables)}")
+    drift = {}
+    for table in shared:
+        a, b = _cols(mig_inspector, table), _cols(model_inspector, table)
+        if a != b:
+            drift[table] = {"migration_only": sorted(a - b), "models_only": sorted(b - a)}
+    check("no column drift between migration 009 and the ORM models",
+          not drift, str(drift)[:300])
+    for table in ("accounts", "clients", "groups", "managers"):
+        if table in shared:
+            check(f"{table}: every model column exists in the migrated schema",
+                  _cols(model_inspector, table) <= _cols(mig_inspector, table),
+                  str(sorted(_cols(model_inspector, table) - _cols(mig_inspector, table)))[:200])
+    model_engine.dispose()
 
     print("== defaults match the live Neon shapes ==")
     defaults = {

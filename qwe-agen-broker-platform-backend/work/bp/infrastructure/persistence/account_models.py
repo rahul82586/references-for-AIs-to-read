@@ -38,6 +38,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import (
     BigInteger,
+    text,
     Boolean,
     Column,
     DateTime,
@@ -129,12 +130,77 @@ class AccountModel(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
+    # ------------------------------------------------------------------
+    # The IMTUser identity surface, added by migration 009_identity_plane.
+    #
+    # Declared HERE in the same change as the entity fields and the mapper that
+    # round-trips them, and never before: `account_to_db()` builds a fresh model
+    # on every save, so a column with no mapper support is a full-row merge
+    # waiting to blank it - the D8b/D15 defect class. Every column below has a
+    # line in account_to_db AND in db_to_account; test_account_model_columns_
+    # are_all_mapped fails the build if one is ever added without both.
+    #
+    # Types and nullability mirror 009 exactly (it was reconstructed from the
+    # live Neon information_schema), so create_all on SQLite, a fresh alembic
+    # upgrade, and production all converge on the same shape.
+    # ------------------------------------------------------------------
+    first_name = Column(String(128), nullable=False, default="", server_default="")
+    last_name = Column(String(128), nullable=False, default="", server_default="")
+    middle_name = Column(String(128), nullable=False, default="", server_default="")
+    company = Column(String(256), nullable=False, default="", server_default="")
+    country = Column(String(64), nullable=False, default="", server_default="")
+    state = Column(String(64), nullable=False, default="", server_default="")
+    city = Column(String(128), nullable=False, default="", server_default="")
+    zip_code = Column(String(32), nullable=False, default="", server_default="")
+    address = Column(Text, nullable=False, default="", server_default="")
+    phone = Column(String(64), nullable=False, default="", server_default="")
+    email = Column(String(256), nullable=False, default="", server_default="")
+    language = Column(String(16), nullable=False, default="en", server_default="en")
+    #: IMTUser::Status - "RE" resident / "NR" non-resident. A string, not an int.
+    residency_status = Column(String(8), nullable=False, default="", server_default="")
+    id_number = Column(String(128), nullable=False, default="", server_default="")
+    lead_source = Column(String(128), nullable=False, default="", server_default="")
+    lead_campaign = Column(String(128), nullable=False, default="", server_default="")
+    mqid = Column(String(64), nullable=False, default="", server_default="")
+    visitor_id = Column(String(64), nullable=False, default="", server_default="")
+    comment = Column(Text, nullable=False, default="", server_default="")
+    #: COLORREF as MT5 exports it (AABBGGRR). NULL = never set; 0xFF000000 =
+    #: "transparent"/no colour. Not the dealer's free-form `color_tag`.
+    color = Column(BigInteger, nullable=True)
+    agent_login = Column(BigInteger, nullable=True)
+    #: IMTUser::Account - external system / bank account.
+    bank_account = Column(String(128), nullable=False, default="", server_default="")
+    interest_rate = Column(NUMERIC, nullable=False, default=0, server_default="0")
+    #: NULL = inherit the group limit. 0 = "none allowed". Never collapse them.
+    limit_orders = Column(Integer, nullable=True)
+    limit_positions_value = Column(NUMERIC, nullable=True)
+    #: IMTUser::Rights - the 18-bit mask, and the ONLY authority for is_enabled.
+    rights = Column(BigInteger, nullable=False, default=0, server_default="0")
+    investor_password_hash = Column(String(512), nullable=False, default="", server_default="")
+    phone_password_hash = Column(String(512), nullable=False, default="", server_default="")
+    webapi_password_hash = Column(String(512), nullable=False, default="", server_default="")
+    otp_secret = Column(String(64), nullable=True)
+    cert_serial_number = Column(BigInteger, nullable=True)
+    last_ip = Column(String(64), nullable=False, default="", server_default="")
+    last_pass_change = Column(DateTime(timezone=True), nullable=True)
+
     mt5_extra = Column(JSONB, nullable=False, default=dict)
 
     __table_args__ = (
         Index("idx_accounts_group", "group_name"),
         Index("idx_accounts_client", "client_id"),
         Index("idx_accounts_type", "account_type"),
+        Index("idx_accounts_agent_login", "agent_login"),
+        # Migration 009's partial index: only rows with the TECHNICAL bit pay for
+        # an entry, which is exactly the population the manager terminal filters.
+        # sqlite_where/postgresql_where so create_all matches the migration on
+        # both engines.
+        Index(
+            "idx_accounts_rights_technical",
+            "rights",
+            postgresql_where=text("(rights & 65536) <> 0"),
+            sqlite_where=text("(rights & 65536) <> 0"),
+        ),
     )
 
 
@@ -193,13 +259,61 @@ def account_to_db(account: Account) -> AccountModel:
         so_equity=account.so_equity.amount if isinstance(account.so_equity, Money) else None,
         so_margin=account.so_margin.amount if isinstance(account.so_margin, Money) else None,
         # storage and commission are Money on the domain, never None.
-        is_enabled=bool(account.is_enabled),
+        # Derived from the mask on the way in, so the column is a mirror of
+        # `rights` and never an independent fact.
+        is_enabled=bool(_rights_value(account) & 0x1),
         is_online=bool(account.is_online),
         last_login=account.last_login,
         password_hash=getattr(account, "password_hash", "") or "",
         color_tag=account.color_tag,
         dealer_notes=account.dealer_notes or None,
         registration_date=account.registration_date,
+        # --- IMTUser identity surface (step 5). One writer per number: the
+        # rights mask is written from the entity, and `is_enabled` is written
+        # from the SAME mask rather than from a second boolean, so the two
+        # columns can never disagree.
+        rights=int(_rights_value(account)),
+        first_name=account.first_name or "",
+        last_name=account.last_name or "",
+        middle_name=account.middle_name or "",
+        company=account.company or "",
+        country=account.country or "",
+        state=account.state or "",
+        city=account.city or "",
+        zip_code=account.zip_code or "",
+        address=account.address or "",
+        phone=account.phone or "",
+        email=account.email or "",
+        language=account.language or "en",
+        residency_status=account.residency_status or "",
+        id_number=account.id_number or "",
+        lead_source=account.lead_source or "",
+        lead_campaign=account.lead_campaign or "",
+        mqid=account.mqid or "",
+        visitor_id=account.visitor_id or "",
+        comment=account.comment or "",
+        color=account.color,
+        agent_login=account.agent_login,
+        bank_account=account.bank_account or "",
+        interest_rate=_dec(account.interest_rate),
+        # NULL stays NULL: it means "inherit the group", which 0 does not.
+        limit_orders=account.limit_orders,
+        limit_positions_value=(
+            account.limit_positions_value
+            if account.limit_positions_value is not None
+            else None
+        ),
+        investor_password_hash=account.investor_password_hash or "",
+        phone_password_hash=account.phone_password_hash or "",
+        webapi_password_hash=account.webapi_password_hash or "",
+        otp_secret=account.otp_secret,
+        cert_serial_number=account.cert_serial_number,
+        last_ip=account.last_ip or "",
+        last_pass_change=account.last_pass_change,
+        # Preserve an imported account's unmodelled wire fields. Without this a
+        # full-row merge blanks mt5_extra on the first save - the same loss D18
+        # describes for groups.
+        mt5_extra=_json_safe(dict(getattr(account, "mt5_extra", None) or {})),
         created_at=account.created_at,
         # D8b: the write time, not whatever the domain object carried. Stamping
         # the domain value made a resurrected stale row look freshly written
@@ -249,7 +363,51 @@ def db_to_account(model: AccountModel, group: Any = None) -> Account:
         registration_date=model.registration_date,
         created_at=model.created_at or datetime.now(timezone.utc),
         updated_at=model.updated_at or datetime.now(timezone.utc),
+        # --- IMTUser identity surface ------------------------------------
+        # The stored mask is the authority. from_flags REFUSES bits outside
+        # IMTUser::EnUsersRights rather than masking them, so a corrupt row is a
+        # loud error and never a silently-permissive account.
+        rights=_user_rights_or_legacy(model),
+        first_name=model.first_name or "",
+        last_name=model.last_name or "",
+        middle_name=model.middle_name or "",
+        company=model.company or "",
+        country=model.country or "",
+        state=model.state or "",
+        city=model.city or "",
+        zip_code=model.zip_code or "",
+        address=model.address or "",
+        phone=model.phone or "",
+        email=model.email or "",
+        language=model.language or "en",
+        residency_status=model.residency_status or "",
+        id_number=model.id_number or "",
+        lead_source=model.lead_source or "",
+        lead_campaign=model.lead_campaign or "",
+        mqid=model.mqid or "",
+        visitor_id=model.visitor_id or "",
+        comment=model.comment or "",
+        color=_int_or_none(model.color),
+        agent_login=_int_or_none(model.agent_login),
+        bank_account=model.bank_account or "",
+        interest_rate=_dec(model.interest_rate),
+        limit_orders=(
+            None if model.limit_orders is None else _int(model.limit_orders, 0)
+        ),
+        limit_positions_value=(
+            None
+            if model.limit_positions_value is None
+            else _dec(model.limit_positions_value)
+        ),
+        investor_password_hash=model.investor_password_hash or "",
+        phone_password_hash=model.phone_password_hash or "",
+        webapi_password_hash=model.webapi_password_hash or "",
+        otp_secret=model.otp_secret,
+        cert_serial_number=_int_or_none(model.cert_serial_number),
+        last_ip=model.last_ip or "",
+        last_pass_change=model.last_pass_change,
     )
+    account.mt5_extra = dict(_json_loads(getattr(model, "mt5_extra", None)))
     # D1, defence in depth: margin_level is DERIVED from equity / margin_used
     # rather than read from the column. The column is still written (external
     # SQL consumers read it), but the domain object never trusts it: a stale
@@ -268,6 +426,69 @@ def db_to_account(model: AccountModel, group: Any = None) -> Account:
     account.so_equity = _money(model.so_equity, currency) if model.so_equity is not None else None
     account.so_margin = _money(model.so_margin, currency) if model.so_margin is not None else None
     return account
+
+
+def _rights_value(account: Any) -> int:
+    """The account's rights as a storable int, whatever shape the entity carries.
+
+    Accepts a UserRight, a raw int, or a list of MT5 wire strings. Anything with
+    a bit outside IMTUser::EnUsersRights is refused by UserRight.from_flags -
+    we would rather fail the save than store a mask nobody can interpret.
+    """
+    from core.domains.identity.rights import UserRight
+
+    value = getattr(account, "rights", None)
+    if isinstance(value, UserRight):
+        return int(value.value)
+    if value is None:
+        return 0
+    if isinstance(value, (list, tuple)):
+        mask = 0
+        for item in value:
+            mask |= int(item)
+        return UserRight.from_flags(mask).to_flags()
+    return UserRight.from_flags(int(value)).to_flags()
+
+
+def _user_rights_or_legacy(model: Any):
+    """Read the mask back, tolerating rows written before the column existed.
+
+    Migration 009 backfilled `rights` with 0 for every pre-existing row. In MT5 a
+    zero mask is USER_RIGHT_NONE - not even allowed to connect - but these rows
+    were live, enabled accounts whose `is_enabled` said True. Trusting the 0
+    would silently disable 45 real accounts on read, which is the opposite of
+    "refuse rather than fake": it would be *inventing* a restriction MT5 never
+    recorded. So for a zero mask ONLY, fall back to the legacy boolean and
+    reconstruct MT5's own USER_RIGHT_DEFAULT. A row whose mask is genuinely 0
+    because an admin cleared it also carries is_enabled=False, and takes the
+    disabled branch.
+    """
+    from core.domains.identity.rights import MT5_USER_RIGHT_DEFAULT, UserRight
+
+    raw = _int(getattr(model, "rights", 0), 0)
+    if raw:
+        return UserRight.from_flags(raw)
+    legacy_enabled = bool(getattr(model, "is_enabled", True))
+    return (
+        MT5_USER_RIGHT_DEFAULT
+        if legacy_enabled
+        else MT5_USER_RIGHT_DEFAULT & ~UserRight.ENABLED
+    )
+
+
+def _int_or_none(value: Any) -> Optional[int]:
+    return None if value is None else _int(value, 0)
+
+
+def _json_loads(value: Any) -> Any:
+    if value is None:
+        return {}
+    if isinstance(value, (dict, list)):
+        return value
+    try:
+        return json.loads(value)
+    except (TypeError, ValueError):
+        return {}
 
 
 def _so_activation_value(value: Any) -> int:
@@ -304,6 +525,12 @@ def client_to_db(client: Client):
         phone=client.phone or "",
         email=client.email or "",
         language=client.language or "en",
+        # migration 009's five IMTClient columns.
+        middle_name=getattr(client, "middle_name", "") or "",
+        state=getattr(client, "state", "") or "",
+        id_number=getattr(client, "id_number", "") or "",
+        lead_source=getattr(client, "lead_source", "") or "",
+        lead_campaign=getattr(client, "lead_campaign", "") or "",
         password_hash=client.password_hash or "",
         investor_password_hash=client.investor_password_hash or "",
         phone_password_hash=getattr(client, "phone_password_hash", "") or "",
@@ -338,6 +565,11 @@ def db_to_client(model) -> Client:
         phone=model.phone or "",
         email=model.email or "",
         language=model.language or "en",
+        middle_name=model.middle_name or "",
+        state=model.state or "",
+        id_number=model.id_number or "",
+        lead_source=model.lead_source or "",
+        lead_campaign=model.lead_campaign or "",
         password_hash=model.password_hash or "",
         investor_password_hash=model.investor_password_hash or "",
         phone_password_hash=model.phone_password_hash or "",

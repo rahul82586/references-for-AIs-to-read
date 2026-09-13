@@ -8,7 +8,7 @@ import uuid
 from core.domains.common.value_objects import Money
 from .enums import (
     MarginMode, ExecutionMode, TradeMode, FreeMarginMode,
-    StopOutMode, CommissionType
+    StopOutMode, CommissionType, MarginFreeProfitMode
 )
 
 
@@ -36,6 +36,11 @@ class MarginProfile:
     leverage_max: int = 500
     margin_hedged: Decimal = field(default_factory=lambda: Decimal('0'))
     flags: int = 0
+    #: ConfigGroups.MarginFreeProfitMode (EnMarginFreeProfitMode): PL = both
+    #: fixed loss and profit count toward free margin, LOSS = only fixed loss.
+    #: Modelled here rather than quarantined, because it changes the free-margin
+    #: number the risk engine reports.
+    free_profit_mode: MarginFreeProfitMode = MarginFreeProfitMode.PL
 
 
 @dataclass

@@ -657,52 +657,23 @@ requires_fixtures = pytest.mark.skipif(
 
 
 def _seeder_group(raw: dict, dom: dict) -> Group:
-    """Build a Group from an MT5 record the way the M2 seeder will."""
-    from infrastructure.mt5 import wire
-    from infrastructure.persistence import config_mappers
+    """The domain Group the importer builds for one ConfigGroups record.
 
-    margin = dom.get("margin") or {}
-    account_type = mt5enums.account_type_from_group_path(dom["name"]) or AccountType.REAL
-    commissions = []
-    for entry in dom.get("commissions") or []:
-        tiers = entry.get("tiers") or []
-        first = tiers[0] if tiers else {}
-        commissions.append(
-            CommissionRule(
-                name=entry.get("name") or "",
-                symbol_pattern=entry.get("symbol_pattern") or "*",
-                currency=entry.get("currency") or "USD",
-                value=first.get("rate") or Decimal(0),
-            )
-        )
-    overrides = []
-    for entry in dom.get("symbol_overrides") or []:
-        overrides.append(
-            GroupSymbolOverride(symbol_pattern=entry.get("symbol_pattern") or "*")
-        )
-    return Group(
-        name=dom["name"],
-        server_id=int(dom.get("server_id", 1)),
-        currency=dom.get("currency", "USD"),
-        account_type=account_type,
-        margin=MarginProfile(
-            mode=mt5enums.MARGIN_MODE_FROM_MT5.get(
-                int(margin.get("mode", 0)), MarginMode.RETAIL
-            ),
-            margin_call_level=margin.get("margin_call_level") or Decimal("50"),
-            stop_out_level=margin.get("stop_out_level") or Decimal("30"),
-        ),
-        trade_flags=TradeFlags(int(raw.get("TradeFlags", 0) or 0)),
-        # All three limits must come off the wire. The domain defaults are 200/200/100,
-        # and MT5's real groups carry 0 (= unlimited), so omitting any of them makes
-        # the export assert our default over the server's actual value.
-        limit_orders=int(raw.get("LimitOrders", 0) or 0),
-        limit_positions=int(raw.get("LimitPositions", 0) or 0),
-        limit_symbols=int(raw.get("LimitSymbols", 0) or 0),
-        commissions=commissions,
-        symbol_overrides=overrides,
-    )
+    Delegates to the production loader rather than rebuilding the mapping here.
+    This function used to be a hand-rolled copy of `loader.groups_from_mt5`'s
+    inner body, and it had drifted: it set only 17 of MT5's 44 fields. That was
+    invisible while the other 27 were quarantined into mt5_extra, and became a
+    hard failure the moment step 5 made the entity own them - the omitted fields
+    arrived as dataclass defaults and overwrote the live server's values on
+    export. Keeping one builder is the fix; a test that re-implements the code
+    under test only proves the test agrees with itself.
 
+    `dom` is accepted and ignored, so every existing call site keeps working.
+    """
+    from infrastructure.config.loader import group_from_mt5_record
+
+    group, _extra, _scale, _source = group_from_mt5_record(raw)
+    return group
 
 @requires_fixtures
 def test_every_real_mt5_group_round_trips_through_the_database():
