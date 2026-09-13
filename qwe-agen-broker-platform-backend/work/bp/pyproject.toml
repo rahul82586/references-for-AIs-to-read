@@ -52,6 +52,10 @@ dependencies = [
     "cryptography>=42.0.0",
     "pyjwt>=2.8.0",
     "passlib[bcrypt]>=1.7.4",
+    # F5 fix: these were REQUIRED but undeclared, so `pip install -e .` on a
+    # clean machine yielded an app that could not import its own auth module.
+    "argon2-cffi>=23.1.0",   # M6 login hashing (Argon2PasswordHasher)
+    "pyotp>=2.9.0",          # manager 2FA (TOTPService)
     
     # Data & Analytics
     "pandas>=2.2.0",
@@ -85,6 +89,15 @@ dev = [
     "ruff>=0.1.14",
     "mypy>=1.8.0",
     "pre-commit>=3.6.0",
+    # F5 fix: the test suite cannot run without these. asyncpg is what
+    # DATABASE_URL=postgresql+asyncpg actually dials (psycopg2-binary above is
+    # declared but unused - kept for now, removal is a separate decision);
+    # aiosqlite backs every SQLite proof/test; hypothesis drives the
+    # property tests; httpx is required by starlette's TestClient.
+    "asyncpg>=0.29.0",
+    "aiosqlite>=0.19.0",
+    "hypothesis>=6.92.0",
+    "httpx>=0.26.0",
 ]
 
 [project.scripts]

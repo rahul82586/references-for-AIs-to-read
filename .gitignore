@@ -1,0 +1,47 @@
+# ============================================================================
+# Repository .gitignore — restored 2026-09-13 (session 5).
+# This file was lost TWICE by GitHub web uploads; its absence is what let a
+# real .env be committed (defect D4). It is now tracked, and the CI gate and
+# the session-death protocol both assume it exists. Never delete it; if you
+# must push by hand, use `git push`, never the web upload.
+# ============================================================================
+
+# --- secrets: the one rule that matters -------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.cer
+*.crt
+
+# --- python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- local databases, logs, decoded fixtures ---------------------------------
+*.db
+*.sqlite
+*.sqlite3
+decoded/
+*.log
+logs/
+work/logs/
+
+# --- editor / OS --------------------------------------------------------------
+.DS_Store
+.idea/
+.vscode/
+*.swp

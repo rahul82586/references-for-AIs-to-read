@@ -55,6 +55,23 @@ class SqlGroupRepository(IGroupRepository):
             await session.commit()
             return True
 
+    async def delete_by_name(self, name: str) -> bool:
+        """Delete by the MT5 path name - the natural key every group has.
+
+        delete(group_id) cannot address an MT5-imported group whose surrogate
+        group_id is NULL; the identity plane's DeleteGroupHandler needs this.
+        """
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(GroupModel).where(GroupModel.name == name)
+            )
+            model = result.scalar_one_or_none()
+            if model is None:
+                return False
+            await session.delete(model)
+            await session.commit()
+            return True
+
     async def get_all_groups(self) -> List[Group]:
         async with self.session_factory() as session:
             result = await session.execute(select(GroupModel))

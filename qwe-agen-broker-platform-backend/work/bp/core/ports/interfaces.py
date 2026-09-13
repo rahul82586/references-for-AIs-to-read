@@ -100,6 +100,32 @@ class IAccountRepository(ABC, Generic[T]):
         """Persists an account aggregate."""
         pass
 
+    async def find_all(self) -> List[T]:
+        """Every account.
+
+        Declared because the SQL repository HAS it and the admin plane calls it
+        (`GET /admin/accounts`, `GET /admin/status`), but the port never said
+        so - it worked by accident. Optional in the base-class sense used
+        throughout this file: doubles that do not implement it raise a named
+        NotImplementedError instead of failing mysteriously.
+        """
+        raise NotImplementedError(
+            "IAccountRepository.find_all is part of the extended MT5 query surface and is "
+            "not implemented by this repository yet."
+        )
+
+    async def count_by_group_name(self, group_name: str) -> int:
+        """How many accounts sit in a group (MT5 path name).
+
+        The identity plane needs this to refuse group deletion/currency changes
+        while accounts exist. A COUNT in SQL, not find_all()+len(): the answer
+        must not depend on loading every account into the process.
+        """
+        raise NotImplementedError(
+            "IAccountRepository.count_by_group_name is part of the extended MT5 query "
+            "surface and is not implemented by this repository yet."
+        )
+
     async def update_valuation(self, account: T, include_margin: bool = False) -> int:
         """D8b: persist only the valuation columns this caller owns.
 
@@ -573,6 +599,19 @@ class IGroupRepository(ABC, Generic[T]):
         raise NotImplementedError(
             "IGroupRepository.delete is part of the extended MT5 query surface and is not "
             "implemented by this repository yet."
+        )
+
+    async def delete_by_name(self, name: str) -> bool:
+        """Remove a group by its MT5 path name (the natural key).
+
+        delete(group_id) cannot address an MT5-imported group whose surrogate
+        group_id is NULL; the name is the one identifier every group has.
+        Optional like the rest of the extended surface: DeleteGroupHandler
+        falls back to delete(group_id) when a repository does not implement it.
+        """
+        raise NotImplementedError(
+            "IGroupRepository.delete_by_name is part of the extended MT5 query surface and is "
+            "not implemented by this repository yet."
         )
 
 

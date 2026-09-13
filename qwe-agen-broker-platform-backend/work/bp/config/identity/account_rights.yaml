@@ -1,0 +1,132 @@
+# MT5 IMTUser::EnUsersRights - GENERATED FILE, do not edit by hand.
+# Regenerate: python3 scripts/dev/extract_identity_yaml.py <repo_root> <decoded_fixtures>
+# The 16-bit account permission mask (accounts.rights column). `inverted: true` means
+# the Admin UI checkbox shows the opposite sense of the stored bit (MT5 stores
+# TRADE_DISABLED; the UI shows 'Enable trading').
+flags:
+  - name: USER_RIGHT_NONE
+    bit: 0
+    flag: 0x0000000000000000
+    tab: null
+    label: "USER_RIGHT_NONE"
+    inverted: false
+    description: "No permissions."
+  - name: USER_RIGHT_ENABLED
+    bit: 1
+    flag: 0x0000000000000001
+    tab: account
+    label: "Enable this account"
+    inverted: false
+    description: "The user is allowed to connect."
+  - name: USER_RIGHT_PASSWORD
+    bit: 2
+    flag: 0x0000000000000002
+    tab: account
+    label: "Allow to change password"
+    inverted: false
+    description: "The user is allowed to change the password."
+  - name: USER_RIGHT_TRADE_DISABLED
+    bit: 4
+    flag: 0x0000000000000004
+    tab: limits
+    label: "Enable trading"
+    inverted: true
+    description: "Trading is disabled for the user."
+  - name: USER_RIGHT_INVESTOR
+    bit: 8
+    flag: 0x0000000000000008
+    tab: null
+    label: "investor-password session (internal)"
+    inverted: false
+    description: "Service value for internal use."
+  - name: USER_RIGHT_CONFIRMED
+    bit: 16
+    flag: 0x0000000000000010
+    tab: security
+    label: "Certificate confirmed"
+    inverted: false
+    description: "User's certificate is confirmed."
+  - name: USER_RIGHT_TRAILING
+    bit: 32
+    flag: 0x0000000000000020
+    tab: limits
+    label: "Enable trailing stops"
+    inverted: false
+    description: "The user is allowed to use trailing stop."
+  - name: USER_RIGHT_EXPERT
+    bit: 64
+    flag: 0x0000000000000040
+    tab: limits
+    label: "Enable algo trading by Expert Advisors"
+    inverted: false
+    description: "The user is allowed to use Expert Advisors."
+  - name: USER_RIGHT_OBSOLETE
+    bit: 128
+    flag: 0x0000000000000080
+    tab: null
+    label: "obsolete, unused"
+    inverted: false
+    description: "The flag is obsolete and is not used."
+  - name: USER_RIGHT_REPORTS
+    bit: 256
+    flag: 0x0000000000000100
+    tab: limits
+    label: "Enable daily reports"
+    inverted: false
+    description: "The user is allowed to receive daily reports. If the permission is not enabled, daily reports are neither generated nor sent for the account."
+  - name: USER_RIGHT_READONLY
+    bit: 512
+    flag: 0x0000000000000200
+    tab: null
+    label: "read-only session (internal)"
+    inverted: false
+    description: "Service value for internal use."
+  - name: USER_RIGHT_RESET_PASS
+    bit: 1024
+    flag: 0x0000000000000400
+    tab: account
+    label: "Change password at next login"
+    inverted: false
+    description: "The user must change password during the next connection."
+  - name: USER_RIGHT_OTP_ENABLED
+    bit: 2048
+    flag: 0x0000000000000800
+    tab: account
+    label: "Enable one-time password"
+    inverted: false
+    description: "The user can use OTP authentication."
+  - name: USER_RIGHT_SPONSORED_HOSTING
+    bit: 8192
+    flag: 0x0000000000002000
+    tab: limits
+    label: "Enable sponsored VPS hosting"
+    inverted: false
+    description: "Brokers can pay the virtual hosting fee for their customers. The service is extremely important for traders, and the opportunity to receive a VPS for free can give them a good reason to choose your company over competitors. The availability of a broker-sponsored VPS is controlled at the individual account level. Only if this flag is enabled, the appropriate payment plan will be shown to the trader in the client terminal. For more details, please read the appropriate section (#sponsored)."
+  - name: USER_RIGHT_API_ENABLED
+    bit: 16384
+    flag: 0x0000000000004000
+    tab: limits
+    label: "Enable API connections (obsolete)"
+    inverted: false
+    description: "The user is allowed to connect via the Web API. The flag is obsolete and is not used."
+  - name: USER_RIGHT_PUSH_NOTIFICATION
+    bit: 32768
+    flag: 0x0000000000008000
+    tab: null
+    label: "Push notifications"
+    inverted: false
+    description: "The user has enabled Push notifications from the trade server (#notifications) in the client terminal. The ability to subscribe to such notifications is defined by the group settings (IMTConGroup::PERMISSION_NOTIFY_* (#enpermissionsflags))."
+  - name: USER_RIGHT_TECHNICAL
+    bit: 65536
+    flag: 0x0000000000010000
+    tab: limits
+    label: "Show to regular managers"
+    inverted: true
+    description: "Permission for convenient work with technical accounts. Disable it for testing accounts to hide them from all managers who do not have special access to technical accounts (IMTConManager::RIGHT_ACC_TECHNICAL (#enmanagerrights)). Such technical accounts can be confusing for the managers working with clients, in which case hiding them can be useful.  The permission affects the visibility in the general list of accounts in the Administrator and Manager terminals, as well as in the list of online accounts in the Manager terminal."
+  - name: USER_RIGHT_EXCLUDE_REPORTS
+    bit: 131072
+    flag: 0x0000000000020000
+    tab: limits
+    label: "Include in server reports"
+    inverted: true
+    description: "Allows excluding an account from server reports. Like the previous permission, it is intended for more convenient work with technical accounts."

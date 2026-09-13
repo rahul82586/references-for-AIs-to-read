@@ -249,9 +249,16 @@ async def list_managers(repo: Any = Depends(get_manager_repo)) -> List[Dict[str,
     """
     _require(repo, "manager")
     managers = await repo.find_all()
+    from core.domains.identity.rights import ManagerRightsMask
+
     out = []
     for manager in managers:
-        rights = list(getattr(manager, "rights", None) or [])
+        rights_value = getattr(manager, "rights", None)
+        if isinstance(rights_value, ManagerRightsMask):
+            granted = rights_value.count
+        else:
+            # legacy raw-array shape, still accepted by manager_to_db
+            granted = sum(1 for r in list(rights_value or []) if str(r).strip() == "1")
         out.append(
             {
                 "login": str(manager.login),
@@ -259,8 +266,8 @@ async def list_managers(repo: Any = Depends(get_manager_repo)) -> List[Dict[str,
                 "mailbox": getattr(manager, "mailbox", "") or "",
                 "server_id": getattr(manager, "server_id", 1),
                 "role": manager.role.value if hasattr(manager.role, "value") else str(manager.role),
-                "rights_granted": sum(1 for r in rights if str(r).strip() == "1"),
-                "rights_total": len(rights) or 128,
+                "rights_granted": granted,
+                "rights_total": 128,
                 "group_scope": list(getattr(manager, "group_scope", None) or []),
                 "is_2fa_enabled": bool(manager.is_2fa_enabled),
                 "must_change_password": bool(getattr(manager, "must_change_password", False)),

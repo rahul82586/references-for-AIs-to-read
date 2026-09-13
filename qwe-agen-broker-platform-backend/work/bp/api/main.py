@@ -44,6 +44,7 @@ from api.di_providers import (
 )
 from api.routers import account, auth, trade, market_data
 from api.routers.admin import admin_router
+from api.routers.admin import groups as admin_groups
 from api.routers.manager import (
     connection as manager_connection,
     main as manager_main,
@@ -157,6 +158,11 @@ def create_app(container: Optional[Dict[str, Any]] = None) -> FastAPI:
     app.include_router(trade.router)
     app.include_router(account.router)
     app.include_router(market_data.router)
+    # Identity plane (step 4): the groups CRUD router - written since M2 but
+    # never mounted (bug F3). Mounted BEFORE admin_router on purpose: both own
+    # paths under /api/v1/admin/groups, and GET /groups/schema must resolve
+    # here instead of being swallowed by admin_router's /groups/{name:path}.
+    app.include_router(admin_groups.router)
     app.include_router(admin_router.router)
 
     # Include Manager API routers

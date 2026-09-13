@@ -36,3 +36,197 @@ from api.auth.dependencies import get_current_user
 get_current_manager = get_current_user
 
 from api.auth.jwt_handler import verify_token as verify_manager_token
+
+
+# ---------------------------------------------------------------------------
+# Identity plane (step 3): rights-based authorisation
+# ---------------------------------------------------------------------------
+#
+# Until now the 128-bit rights mask was stored correctly and enforced nowhere:
+# `grep rights api/ application/` found four hits, all inside the list-managers
+# serializer COUNTING bits for display. require_right() is the line that turns
+# stored bits into actual authorisation.
+#
+# Two credential paths, deliberately:
+#   * X-Admin-API-Key (exact match) - the bootstrap/break-glass path. It is the
+#     only admin auth that exists until CreateManagerHandler provisions real
+#     staff logins, and it grants everything (a server-side secret is already
+#     total trust).
+#   * Authorization: Bearer <manager JWT> - the token AuthService.login_manager
+#     issues (is_manager claim). The manager's mask decides, per right.
+#
+# Everything else is REFUSED, in the project's fail-closed style:
+#   * a client token on the admin plane -> 403, not a silently fabricated
+#     identity (F2's lesson: get_current_user invents account 100001; this
+#     dependency never invents anything);
+#   * unknown / inactive manager login -> 401, indistinguishable (no login
+#     enumeration, matching M6's login contract);
+#   * must_change_password -> 403 until changed. MT5 stores this flag and
+#     blocks; we stored it and ignored it - not anymore;
+#   * allowed_ips configured and the client IP outside it -> 403
+#     (MT_RET_AUTH_MANAGER_IPBLOCK, 1012).
+
+import ipaddress
+from dataclasses import dataclass
+from typing import Any, List
+
+from fastapi import Request
+
+
+@dataclass
+class AdminPrincipal:
+    """Who the admin plane resolved for this request. Never fabricated:
+    kind='admin_key' means the server-side key matched; kind='manager' means a
+    real ManagerAccount row was loaded and its mask checked."""
+
+    kind: str  # "admin_key" | "manager"
+    login: Optional[str] = None
+    name: str = ""
+    rights: Optional[Any] = None  # ManagerRightsMask for kind == "manager"
+    manager: Optional[Any] = None  # the ManagerAccount itself
+
+
+def _ip_allowed(client_ip: Optional[str], allowed: List[str]) -> bool:
+    """CIDR/IP allow-list match. An unparseable entry fails closed: a malformed
+    allow-list must not widen access."""
+    if not allowed:
+        return True  # no list = unrestricted (MT5: an empty IP list allows all)
+    if not client_ip:
+        return False
+    try:
+        addr = ipaddress.ip_address(client_ip)
+    except ValueError:
+        return False
+    for entry in allowed:
+        try:
+            network = ipaddress.ip_network(str(entry), strict=False)
+        except ValueError:
+            continue  # unparseable entry grants nothing
+        if addr in network:
+            return True
+    return False
+
+
+def require_right(right_name: str):
+    """FastAPI dependency factory: the caller must hold `right_name`.
+
+    The right is resolved AT FACTORY TIME (import/startup), so a typo in a
+    route definition crashes the boot instead of failing every request later -
+    refuse rather than fake, applied to our own code.
+    """
+    from core.domains.identity.rights import (
+        ManagerRightsMask,
+        UnknownRightError,
+        get_manager_rights,
+    )
+
+    try:
+        required = get_manager_rights().resolve(right_name)
+    except (UnknownRightError, FileNotFoundError) as exc:
+        raise RuntimeError(
+            f"require_right({right_name!r}): {exc}"
+        ) from exc
+
+    async def dependency(
+        request: Request,
+        x_admin_api_key: Optional[str] = Header(None, alias="X-Admin-API-Key"),
+        authorization: Optional[str] = Header(None),
+    ) -> AdminPrincipal:
+        # --- path 1: the server-side admin key -----------------------------
+        if x_admin_api_key is not None:
+            if not ADMIN_API_KEY_ENV:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="ADMIN_API_KEY is not configured on this server",
+                )
+            if x_admin_api_key != ADMIN_API_KEY_ENV:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Invalid X-Admin-API-Key header",
+                )
+            return AdminPrincipal(kind="admin_key")
+
+        # --- path 2: a manager JWT ------------------------------------------
+        if authorization and authorization.lower().startswith("bearer "):
+            token = authorization.split(" ", 1)[1].strip()
+            try:
+                payload = verify_manager_token(token)
+            except Exception:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Could not validate credentials",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            if not payload.get("is_manager"):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="client tokens cannot access the admin plane",
+                )
+
+            from api.di_providers import get_manager_repo
+
+            repo = get_manager_repo()
+            if repo is None:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=(
+                        "the manager repository is not registered in the DI container; "
+                        "manager-right authorisation is not wired on this server"
+                    ),
+                )
+            manager = await repo.find_by_login(str(payload.get("sub", "")))
+            # An unknown or inactive manager is ONE answer, exactly like M6's
+            # login: no enumeration, and never a fabricated identity (anti-F2).
+            if manager is None or not manager.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Could not validate credentials",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            if manager.must_change_password:
+                # MT_RET_AUTH_RESET_PASSWORD (1026): "Master password must be
+                # changed." Stored since M2, enforced for the first time here.
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="password change required before this action (MT_RET_AUTH_RESET_PASSWORD)",
+                )
+            client_ip = request.client.host if request.client else None
+            if not _ip_allowed(client_ip, list(manager.allowed_ips or [])):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="IP address is not valid for this manager (MT_RET_AUTH_MANAGER_IPBLOCK)",
+                )
+            rights = manager.rights
+            if not isinstance(rights, ManagerRightsMask):
+                # A legacy raw-array manager (in-memory double predating step 3).
+                rights = ManagerRightsMask.from_array(list(rights or []))
+            if not rights.has(required):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=(
+                        f"manager {manager.login} does not hold {required.name} "
+                        f"(right {required.index}); MT_RET_ERR_PERMISSIONS"
+                    ),
+                )
+            return AdminPrincipal(
+                kind="manager",
+                login=str(manager.login),
+                name=manager.name or "",
+                rights=rights,
+                manager=manager,
+            )
+
+        # --- nothing usable --------------------------------------------------
+        if not ADMIN_API_KEY_ENV:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="ADMIN_API_KEY is not configured on this server",
+            )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="X-Admin-API-Key or a manager Bearer token is required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    dependency.__name__ = f"require_right_{right_name.lower()}"
+    return dependency

@@ -1,0 +1,3 @@
+# User-saved manager role presets (MT5 Permissions tab: Save As / Delete).
+# Builtin presets live in role_presets_builtin.yaml and cannot be deleted.
+presets: []

@@ -246,11 +246,23 @@ ACCOUNT_TYPE_TO_GROUP_PATH_PREFIX = {v: k for k, v in GROUP_PATH_PREFIX_TO_ACCOU
 
 
 def account_type_from_group_path(path: str) -> Optional[Any]:
-    """Derive the AccountType from an MT5 group path such as ``real\\real-SF``."""
+    """Derive the AccountType from an MT5 group path such as ``real\\real-SF``.
+
+    Delegates to the ONE canonical rule - ``core.domains.identity.group_type``
+    (MT5 Group-Types.md: case-SENSITIVE substring on the full name including
+    path, REAL as the fallback). This used to be a case-insensitive PREFIX
+    match, which disagreed with MT5 on the guide's own examples: "Demoforex"
+    is REAL (not demo) and "real\\demoforex-USD" is DEMO (not real). The prefix
+    map above is kept for the inverse direction (group_path_from_account_type).
+
+    Returns None only for an empty path, preserving the historical contract
+    every caller already handles with ``or AccountType.REAL``.
+    """
     if not path:
         return None
-    head = path.replace("/", "\\").split("\\", 1)[0].strip().lower()
-    return GROUP_PATH_PREFIX_TO_ACCOUNT_TYPE.get(head)
+    from core.domains.identity.group_type import derive_group_type
+
+    return derive_group_type(path)
 
 
 def group_path_from_account_type(account_type: Any, leaf: str = "") -> str:

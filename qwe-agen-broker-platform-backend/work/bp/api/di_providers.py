@@ -241,6 +241,30 @@ def get_modify_deal_handler() -> ModifyDealHandler:
         event_bus=container.resolve(IEventBus),
     )
 
+def get_update_group_handler():
+    """Provider for UpdateGroupHandler (identity plane, step 4)."""
+    from application.commands.update_group import UpdateGroupHandler
+
+    container = get_di_container()
+    return UpdateGroupHandler(
+        group_repo=container.resolve(IGroupRepository),
+        event_bus=container.resolve(IEventBus),
+        account_repo=_container.get("account_repo"),
+    )
+
+
+def get_delete_group_handler():
+    """Provider for DeleteGroupHandler (identity plane, step 4)."""
+    from application.commands.update_group import DeleteGroupHandler
+
+    container = get_di_container()
+    return DeleteGroupHandler(
+        group_repo=container.resolve(IGroupRepository),
+        event_bus=container.resolve(IEventBus),
+        account_repo=_container.get("account_repo"),
+    )
+
+
 def get_create_group_handler() -> CreateGroupHandler:
     """Provider for CreateGroupHandler."""
     container = get_di_container()

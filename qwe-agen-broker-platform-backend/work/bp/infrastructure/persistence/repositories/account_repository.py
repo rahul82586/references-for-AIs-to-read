@@ -214,6 +214,22 @@ class SqlAccountRepository(IAccountRepository):
                 select(PositionModel.account_login).distinct()
             )
             return [row[0] for row in result.fetchall()]
+    async def count_by_group_name(self, group_name: str) -> int:
+        """How many accounts sit in a group - a COUNT, not a find_all()+len().
+
+        The identity plane refuses group deletion / currency change while any
+        account exists, and that check must not load every account to answer.
+        """
+        from sqlalchemy import func as sa_func
+
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(sa_func.count()).select_from(AccountModel).where(
+                    AccountModel.group_name == group_name
+                )
+            )
+            return int(result.scalar_one())
+
     async def find_all(self):
         """Every account. ConfigCache loads this once at startup."""
         async with self.session_factory() as session:

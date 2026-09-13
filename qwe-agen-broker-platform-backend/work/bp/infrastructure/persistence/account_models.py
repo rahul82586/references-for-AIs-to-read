@@ -408,7 +408,15 @@ def manager_to_db(manager: ManagerAccount, *, mt5_extra: Optional[Dict[str, Any]
                   mt5_source: Optional[Dict[str, Any]] = None):
     from .manager_models import ManagerModel
 
-    rights = list(getattr(manager, "rights", None) or [])
+    from core.domains.identity.rights import ManagerRightsMask
+
+    rights_value = getattr(manager, "rights", None)
+    if isinstance(rights_value, ManagerRightsMask):
+        rights = rights_value.to_array()
+    else:
+        # Back-compat: older callers (and some tests) still pass the raw
+        # 128-position list. Accept it, but the declared field is the mask.
+        rights = list(rights_value or [])
     if not rights:
         # Derive the array from the role when a manager was created natively rather
         # than imported. An administrator gets every right, which is what MT5's own
@@ -446,7 +454,29 @@ def manager_to_db(manager: ManagerAccount, *, mt5_extra: Optional[Dict[str, Any]
 def db_to_manager(model) -> ManagerAccount:
     if model is None:
         return None
-    manager = ManagerAccount(
+    from core.domains.identity.rights import ManagerRightsMask
+
+    # rights_json is the wire array; the three mask words are the queryable copy.
+    # Prefer the array (lossless: it can carry "1" at indices MT5's enum leaves
+    # unassigned, and the live export's administrators do exactly that at 68/69).
+    stored_array = list(model.rights_json or [])
+    if stored_array:
+        rights = ManagerRightsMask.from_array(stored_array)
+    else:
+        rights = ManagerRightsMask.from_masks(
+            [
+                _int(model.rights_mask_0, 0),
+                _int(model.rights_mask_1, 0),
+                _int(model.rights_mask_2, 0),
+            ]
+        )
+
+    # Step 3 (identity plane): every MT5 field is a DECLARED constructor argument.
+    # This used to build the dataclass and then attach name/mailbox/server_id/
+    # rights/group_scope/request limits/must_change_password as dynamic attributes,
+    # so every consumer read them via getattr(..., default) and a renamed field
+    # silently produced a default instead of an error.
+    return ManagerAccount(
         manager_id=str(model.login),
         login=str(model.login),
         role=_enum(ManagerRole, model.role, ManagerRole.READ_ONLY),
@@ -458,18 +488,15 @@ def db_to_manager(model) -> ManagerAccount:
         is_active=bool(model.is_active),
         last_login=model.last_login,
         created_at=model.created_at or datetime.now(timezone.utc),
+        name=model.name or "",
+        mailbox=model.mailbox or "",
+        server_id=_int(model.server_id, 1),
+        rights=rights,
+        group_scope=list(model.group_scope_json or []),
+        request_limit_logs=_int(model.request_limit_logs, 0),
+        request_limit_reports=_int(model.request_limit_reports, 0),
+        must_change_password=bool(model.must_change_password),
     )
-    # MT5-side fields the domain dataclass does not declare yet. Attached rather than
-    # dropped so an export can reproduce the record.
-    manager.name = model.name or ""
-    manager.mailbox = model.mailbox or ""
-    manager.server_id = _int(model.server_id, 1)
-    manager.rights = list(model.rights_json or [])
-    manager.group_scope = list(model.group_scope_json or [])
-    manager.request_limit_logs = _int(model.request_limit_logs, 0)
-    manager.request_limit_reports = _int(model.request_limit_reports, 0)
-    manager.must_change_password = bool(model.must_change_password)
-    return manager
 
 
 def manager_mt5_record(row) -> Dict[str, Any]:

@@ -223,21 +223,25 @@ async def ensure_first_admin(
         hasher(password) if hasher is not None else f"PLAINTEXT-REPLACE-ME:{password}"
     )
 
+    from core.domains.identity.rights import ManagerRightsMask
+
     manager = ManagerAccount(
         manager_id=str(login),
         login=str(login),
         role=ManagerRole.SUPER_ADMIN,
         password_hash=password_hash,
         is_active=True,
+        # Declared fields (identity-plane step 3) - no more dynamic attaching.
+        name="First Admin",
+        mailbox="Administrator (Don't Touch)",
+        server_id=1,
+        # MT5's auto-created administrator has every right set. from_array is
+        # wire-preserving: all 128 positions, exactly the legacy shape, so the
+        # stored rights_json and the re-exported record are unchanged.
+        rights=ManagerRightsMask.from_array(["1"] * 128),
+        group_scope=[{"Group": "*"}],
+        must_change_password=True,
     )
-    manager.name = "First Admin"
-    manager.mailbox = "Administrator (Don't Touch)"
-    manager.server_id = 1
-    # MT5's auto-created administrator has every right set, which is what all 9
-    # managers in the reference export look like.
-    manager.rights = ["1"] * 128
-    manager.group_scope = [{"Group": "*"}]
-    manager.must_change_password = True
 
     if password_hasher is None:
         report.warnings.append(

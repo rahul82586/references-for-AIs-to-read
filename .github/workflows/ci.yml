@@ -1,0 +1,82 @@
+# ============================================================================
+# CI — restored 2026-09-13 (session 5). This workflow was lost TWICE to GitHub
+# web uploads (M5 built it; session 3 recovered it from a dead chat's HTML;
+# the web upload that created commit 38dc30b0 dropped it again). It is tracked
+# in the repo now; the session-death protocol forbids web uploads for exactly
+# this reason. Push with `git push`.
+#
+# Layout note: this repository is the reference monorepo; the platform lives in
+# qwe-agen-broker-platform-backend/work/bp, so every step sets that as the
+# working directory. If bp is ever promoted to its own repo root (the M5 debt
+# item), only `defaults.run.working-directory` and the fixture paths change.
+# ============================================================================
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: qwe-agen-broker-platform-backend/work/bp
+    env:
+      PYTHONPATH: ${{ github.workspace }}/qwe-agen-broker-platform-backend/work/bp
+      BROKER_MT5_FIXTURES: ${{ github.workspace }}/decoded/mt5-format-structure
+      # CI-only throwaway values: the server and the test suite fail hard
+      # without them (M5), and nothing here touches real infrastructure.
+      SECRET_KEY: ci-only-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      ADMIN_API_KEY: ci-only-admin-key-0123456789abcdef0123456789abcdef
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: qwe-agen-broker-platform-backend/work/bp/pyproject.toml
+
+      - name: Install (declared deps - F5 fixed, no manual extras needed)
+        run: pip install -e ".[dev]"
+
+      - name: Ruff — the M0 syntax/import gate
+        run: python -m ruff check --select E9,F63,F7,F82 .
+
+      - name: Decode MT5 fixtures (UTF-16LE -> UTF-8)
+        working-directory: ${{ github.workspace }}
+        run: |
+          python3 - <<'EOF'
+          import json, pathlib
+          src = pathlib.Path("mt5-format-structure")
+          out = pathlib.Path("decoded/mt5-format-structure")
+          out.mkdir(parents=True, exist_ok=True)
+          n = 0
+          for f in sorted(src.glob("*.json")):
+              raw = f.read_bytes()
+              txt = raw.decode("utf-16-le" if raw[:2] == b"\xff\xfe" else "utf-8",
+                               errors="replace").lstrip("\ufeff")
+              json.loads(txt)  # validate
+              (out / f.name).write_text(txt, encoding="utf-8")
+              n += 1
+          print("decoded", n, "fixture files")
+          assert n == 14
+          EOF
+
+      - name: Pytest — full suite with fixtures (0 skips expected)
+        env:
+          BROKER_MT5_FIXTURES: ${{ github.workspace }}/decoded/mt5-format-structure
+        run: python -m pytest tests -q
+
+      - name: Proofs — offline gates (no credentials, no network)
+        run: |
+          python3 scripts/p1_proof_migration_009.py
+          python3 scripts/p1_proof_identity.py
+          python3 scripts/m1_proof_roundtrip_all_sections.py
+          python3 scripts/m8_proof_routing.py
+          python3 scripts/m9_proof_sltp_expiration.py
+          python3 scripts/m10_proof_adapters.py
+          python3 scripts/m11_proof_a_book.py

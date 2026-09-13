@@ -1,0 +1,26 @@
+# Builtin manager role presets - GENERATED FILE, do not edit by hand.
+# Regenerate: python3 scripts/dev/extract_identity_yaml.py <repo_root> <decoded_fixtures>
+# Administrator and Manager are DECODED FROM THE LIVE TCTrader-Live EXPORT (logins 1000
+# and 208011) - real-server answers, not guesses. tests/unit/domains/identity/
+# test_role_presets.py asserts that equality on every run.
+presets:
+  - name: Administrator
+    description: "Every assignable right, exactly the 110-bit mask of the live export's login 1000/2000/3000 administrators (indices 0-109; 110-112 payments and 128 RIGHT_LAST stay unset, as on the real server)."
+    builtin: true
+    rights_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+  - name: Manager
+    description: "The live export's login 208011 'M Manager', bit for bit: 39 rights - the manager terminal, account/trade reads, own-group editing - with no ADMIN, no ACCOUNTANT, no DEALER, no RISK."
+    builtin: true
+    rights_indices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 26, 27, 29, 34, 41, 42, 43, 46, 51, 52, 64, 65, 66, 67, 70, 71, 96, 97, 98, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+  - name: Dealer
+    description: "Manager plus dealing: RIGHT_QUOTES (31), RIGHT_TRADES_DEALER (37), RIGHT_TRADES_SUPERVISOR (42)."
+    builtin: true
+    rights_indices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 26, 27, 29, 31, 34, 37, 41, 42, 43, 46, 51, 52, 64, 65, 66, 67, 70, 71, 96, 97, 98, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+  - name: Accountant
+    description: "Manager plus RIGHT_ACCOUNTANT (24) - may move client funds."
+    builtin: true
+    rights_indices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 24, 25, 26, 27, 29, 34, 41, 42, 43, 46, 51, 52, 64, 65, 66, 67, 70, 71, 96, 97, 98, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+  - name: RiskManager
+    description: "Manager plus RIGHT_RISK_MANAGER (32) - aggregate and coverage positions."
+    builtin: true
+    rights_indices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 26, 27, 29, 32, 34, 41, 42, 43, 46, 51, 52, 64, 65, 66, 67, 70, 71, 96, 97, 98, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
