@@ -45,6 +45,7 @@ from api.di_providers import (
 from api.routers import account, auth, trade, market_data
 from api.routers.admin import admin_router
 from api.routers.admin import groups as admin_groups
+from api.routers.admin import accounts as admin_accounts
 from api.routers.manager import (
     connection as manager_connection,
     main as manager_main,
@@ -163,6 +164,12 @@ def create_app(container: Optional[Dict[str, Any]] = None) -> FastAPI:
     # paths under /api/v1/admin/groups, and GET /groups/schema must resolve
     # here instead of being swallowed by admin_router's /groups/{name:path}.
     app.include_router(admin_groups.router)
+    # Identity plane (step 6): account + client creation. Mounted BEFORE
+    # admin_router for the same reason as the groups router - both own paths
+    # under /api/v1/admin/accounts, and GET /accounts/schema must resolve here
+    # rather than being swallowed by a /{login} route.
+    app.include_router(admin_accounts.accounts_router)
+    app.include_router(admin_accounts.clients_router)
     app.include_router(admin_router.router)
 
     # Include Manager API routers

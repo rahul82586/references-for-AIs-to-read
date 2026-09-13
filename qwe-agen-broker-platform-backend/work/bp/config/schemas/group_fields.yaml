@@ -31,37 +31,37 @@ fields:
      column: server_id, modelled: true, writable: false,
      description: "Trade server (cluster member) the group is bound to. MT5: binding cannot change while the group has accounts."}
   - {field: permissions_flags, mt5: PermissionsFlags, type: flags, tab: permissions, right: RIGHT_CFG_GROUPS,
-     column: permissions_flags, modelled: false, writable: false,
+     column: permissions_flags, modelled: true, writable: false,
      description: "Group permission bits (connections, reports, news, mail...). Row-level: round-trips, not yet editable."}
 
   # ---- authentication -------------------------------------------------------
   - {field: auth_mode, mt5: AuthMode, type: int, tab: common, right: RIGHT_CFG_GROUPS,
-     column: auth_mode, modelled: false, writable: false,
+     column: auth_mode, modelled: true, writable: false,
      description: "Authorisation mode (standard / extended certificates)."}
   - {field: auth_password_min, mt5: AuthPasswordMin, type: int, tab: common, right: RIGHT_CFG_GROUPS,
-     column: auth_password_min, modelled: false, writable: false, min: 8, max: 16,
+     column: auth_password_min, modelled: true, writable: false, min: 8, max: 16,
      description: "Minimum password length for accounts in this group. Platform floor 8, maximum 16. password_policy.PasswordPolicy.for_group reads this."}
   - {field: auth_otp_mode, mt5: AuthOTPMode, type: int, tab: common, right: RIGHT_CFG_GROUPS,
-     column: auth_otp_mode, modelled: false, writable: false,
+     column: auth_otp_mode, modelled: true, writable: false,
      description: "One-time-password mode (disabled / TOTP)."}
 
   # ---- white label (Company tab) --------------------------------------------
   - {field: company, mt5: Company, type: string, tab: company, right: RIGHT_CFG_GROUPS,
-     column: company, modelled: false, writable: false, description: "Company name serving the group (mandatory in MT5)."}
+     column: company, modelled: true, writable: false, description: "Company name serving the group (mandatory in MT5)."}
   - {field: company_page, mt5: CompanyPage, type: string, tab: company, right: RIGHT_CFG_GROUPS,
-     column: company_page, modelled: false, writable: false, description: "Company website."}
+     column: company_page, modelled: true, writable: false, description: "Company website."}
   - {field: company_email, mt5: CompanyEmail, type: string, tab: company, right: RIGHT_CFG_GROUPS,
-     column: company_email, modelled: false, writable: false, description: "Company email."}
+     column: company_email, modelled: true, writable: false, description: "Company email."}
   - {field: company_support_page, mt5: CompanySupportPage, type: string, tab: company, right: RIGHT_CFG_GROUPS,
-     column: company_support_page, modelled: false, writable: false, description: "Support site; empty defaults to mql5.com in the terminal."}
+     column: company_support_page, modelled: true, writable: false, description: "Support site; empty defaults to mql5.com in the terminal."}
   - {field: company_support_email, mt5: CompanySupportEmail, type: string, tab: company, right: RIGHT_CFG_GROUPS,
-     column: company_support_email, modelled: false, writable: false, description: "Support email; receives daily-report copies when enabled."}
+     column: company_support_email, modelled: true, writable: false, description: "Support email; receives daily-report copies when enabled."}
   - {field: company_catalog, mt5: CompanyCatalog, type: string, tab: company, right: RIGHT_CFG_GROUPS,
-     column: company_catalog, modelled: false, writable: false, description: "Templates sub-folder (mail templates etc.); empty = standard."}
+     column: company_catalog, modelled: true, writable: false, description: "Templates sub-folder (mail templates etc.); empty = standard."}
   - {field: company_deposit_url, mt5: CompanyDepositURL, type: string, tab: company, right: RIGHT_CFG_GROUPS,
-     column: company_deposit_url, modelled: false, writable: false, description: "Deposit page URL; enables the terminal's Deposit command (real accounts only)."}
+     column: company_deposit_url, modelled: true, writable: false, description: "Deposit page URL; enables the terminal's Deposit command (real accounts only)."}
   - {field: company_withdrawal_url, mt5: CompanyWithdrawalURL, type: string, tab: company, right: RIGHT_CFG_GROUPS,
-     column: company_withdrawal_url, modelled: false, writable: false, description: "Withdrawal page URL (real accounts only)."}
+     column: company_withdrawal_url, modelled: true, writable: false, description: "Withdrawal page URL (real accounts only)."}
 
   # ---- currency --------------------------------------------------------------
   - {field: currency, mt5: Currency, type: string, tab: common, right: RIGHT_CFG_GROUPS,
@@ -73,31 +73,31 @@ fields:
 
   # ---- reports / news / mail ---------------------------------------------------
   - {field: reports_mode, mt5: ReportsMode, type: int, tab: reports, right: RIGHT_CFG_GROUPS,
-     column: reports_mode, modelled: false, writable: false, description: "Automatic reports mode."}
+     column: reports_mode, modelled: true, writable: false, description: "Automatic reports mode."}
   - {field: reports_flags, mt5: ReportsFlags, type: flags, tab: reports, right: RIGHT_CFG_GROUPS,
-     column: reports_flags, modelled: false, writable: false, description: "Which automatic reports are sent."}
+     column: reports_flags, modelled: true, writable: false, description: "Which automatic reports are sent."}
   - {field: reports_email, mt5: ReportsEmail, type: string, tab: reports, right: RIGHT_CFG_GROUPS,
-     column: reports_email, modelled: false, writable: false, description: "Recipient for automatic reports."}
+     column: reports_email, modelled: true, writable: false, description: "Recipient for automatic reports."}
   - {field: news_mode, mt5: NewsMode, type: enum, enum: NewsMode, tab: news_mail, right: RIGHT_CFG_GROUPS,
      column: news_mode, modelled: true, writable: false,
      description: "News delivery: disabled / headers only / full package."}
   - {field: news_category, mt5: NewsCategory, type: string, tab: news_mail, right: RIGHT_CFG_GROUPS,
-     column: news_category, modelled: false, writable: false, description: "Allowed news categories (comma list; empty = all)."}
+     column: news_category, modelled: true, writable: false, description: "Allowed news categories (comma list; empty = all)."}
   - {field: news_langs, mt5: NewsLangs, type: nested, tab: news_mail, right: RIGHT_CFG_GROUPS,
-     column: news_langs, modelled: false, writable: false, description: "News language filter list."}
+     column: news_langs, modelled: true, writable: false, description: "News language filter list."}
   - {field: mail_mode, mt5: MailMode, type: int, tab: news_mail, right: RIGHT_CFG_GROUPS,
-     column: mail_mode, modelled: false, writable: false, description: "Internal mail system enablement for the group."}
+     column: mail_mode, modelled: true, writable: false, description: "Internal mail system enablement for the group."}
 
   # ---- trading ------------------------------------------------------------------
   - {field: trade_flags, mt5: TradeFlags, type: flags, enum: TradeFlags, tab: trade, right: RIGHT_CFG_GROUPS,
      column: trade_flags, modelled: true, writable: false,
      description: "Trading permission bits: SWAPS, TRAILING, EXPERTS, EXPIRATION, SIGNALS_*, SO_COMPENSATION, SO_FULLY_HEDGED, FIFO_CLOSE, HEDGE_PROHIBIT."}
   - {field: trade_transfer_mode, mt5: TradeTransferMode, type: int, tab: trade, right: RIGHT_CFG_GROUPS,
-     column: trade_transfer_mode, modelled: false, writable: false, description: "Balance-transfer permissions within/between groups."}
+     column: trade_transfer_mode, modelled: true, writable: false, description: "Balance-transfer permissions within/between groups."}
   - {field: trade_interestrate, mt5: TradeInterestrate, type: decimal, tab: trade, right: RIGHT_CFG_GROUPS,
-     column: trade_interestrate, modelled: false, writable: false, description: "Interest rate (annual %) charged on free margin."}
+     column: trade_interestrate, modelled: true, writable: false, description: "Interest rate (annual %) charged on free margin."}
   - {field: trade_virtual_credit, mt5: TradeVirtualCredit, type: decimal, tab: trade, right: RIGHT_CFG_GROUPS,
-     column: trade_virtual_credit, modelled: false, writable: false, description: "Virtual credit added to margin calculations."}
+     column: trade_virtual_credit, modelled: true, writable: false, description: "Virtual credit added to margin calculations."}
 
   # ---- margin ----------------------------------------------------------------------
   - {field: margin_mode, mt5: MarginMode, type: enum, enum: MarginMode, tab: margin, right: RIGHT_GRP_DETAILS_MARGIN,
@@ -117,20 +117,20 @@ fields:
   - {field: stop_out_level, mt5: MarginStopOut, type: decimal, unit: percent, tab: margin, right: RIGHT_GRP_DETAILS_MARGIN,
      column: margin_stop_out, modelled: true, writable: true,
      description: "Stop-out threshold, PERCENT. Liquidation closes worst loss first until margin_level recovers above it."}
-  - {field: margin_free_profit_mode, mt5: MarginFreeProfitMode, type: int, tab: margin, right: RIGHT_GRP_DETAILS_MARGIN,
-     column: margin_free_profit_mode, modelled: false, writable: false, description: "Which profit portion counts toward free margin (PL/LOSS)."}
+  - {field: margin.free_profit_mode, mt5: MarginFreeProfitMode, type: int, tab: margin, right: RIGHT_GRP_DETAILS_MARGIN,
+     column: margin_free_profit_mode, modelled: true, writable: false, description: "Which profit portion counts toward free margin (PL/LOSS)."}
 
   # ---- demo ------------------------------------------------------------------------
   - {field: demo_leverage, mt5: DemoLeverage, type: int, tab: demo, right: RIGHT_CFG_GROUPS,
-     column: demo_leverage, modelled: false, writable: false, description: "Leverage for demo accounts opened from the terminal."}
+     column: demo_leverage, modelled: true, writable: false, description: "Leverage for demo accounts opened from the terminal."}
   - {field: demo_deposit, mt5: DemoDeposit, type: decimal, tab: demo, right: RIGHT_CFG_GROUPS,
-     column: demo_deposit, modelled: false, writable: false, description: "Starting demo balance."}
+     column: demo_deposit, modelled: true, writable: false, description: "Starting demo balance."}
   - {field: demo_trades_clean, mt5: DemoTradesClean, type: int, unit: days, tab: demo, right: RIGHT_CFG_GROUPS,
-     column: demo_trades_clean, modelled: false, writable: false, description: "Clean demo account history after N days of inactivity (0 = never)."}
+     column: demo_trades_clean, modelled: true, writable: false, description: "Clean demo account history after N days of inactivity (0 = never)."}
 
   # ---- limits -------------------------------------------------------------------------
   - {field: limit_history, mt5: LimitHistory, type: int, tab: limits, right: RIGHT_CFG_GROUPS,
-     column: limit_history, modelled: false, writable: false, description: "History depth available to the group's accounts."}
+     column: limit_history, modelled: true, writable: false, description: "History depth available to the group's accounts."}
   - {field: limit_orders, mt5: LimitOrders, type: int, tab: limits, right: RIGHT_CFG_GROUPS,
      column: limit_orders, modelled: true, writable: true, description: "Max active orders + positions per account (MT5 counts both)."}
   - {field: limit_symbols, mt5: LimitSymbols, type: int, tab: limits, right: RIGHT_CFG_GROUPS,
@@ -138,7 +138,7 @@ fields:
   - {field: limit_positions, mt5: LimitPositions, type: int, tab: limits, right: RIGHT_CFG_GROUPS,
      column: limit_positions, modelled: true, writable: true, description: "Max simultaneous open positions per account."}
   - {field: limit_positions_volume, mt5: LimitPositionsVolume, type: decimal, tab: limits, right: RIGHT_CFG_GROUPS,
-     column: limit_positions_volume, modelled: false, writable: false, description: "Cumulative volume limit in one direction (the 'Limit total value of positions' algorithm lives here)."}
+     column: limit_positions_volume, modelled: true, writable: false, description: "Cumulative volume limit in one direction (the 'Limit total value of positions' algorithm lives here)."}
 
   # ---- nested configuration -------------------------------------------------------------
   - {field: commissions, mt5: Commissions, type: nested, tab: commissions, right: RIGHT_GRP_DETAILS_COMMISSION,

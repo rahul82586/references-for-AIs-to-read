@@ -10,7 +10,13 @@ from .repositories.routing_rule_repository import SqlRoutingRuleRepository
 from .repositories.coverage_account_repository import SqlCoverageAccountRepository
 from .repositories.symbol_repository import SqlSymbolRepository
 from .repositories.group_repository import SqlGroupRepository
-from .repositories.manager_repository import SqlClientRepository, SqlManagerRepository
+from .repositories.manager_repository import SqlManagerRepository
+# Step 6: the PROMOTED client repository - the one that implements
+# IClientRepository. manager_repository.SqlClientRepository stays for any
+# caller still importing it by path, but the container hands out this one,
+# because a handler wired against a concrete class cannot be substituted in a
+# test and its port cannot be resolved.
+from .repositories.identity_repository import SqlClientRepository, SqlLoginAllocatorStore
 from .event_store import SqlEventStore
 
 def setup_persistence_di(database_manager: DatabaseManager) -> dict:
@@ -35,6 +41,28 @@ def setup_persistence_di(database_manager: DatabaseManager) -> dict:
     client_repo = SqlClientRepository(session_factory)
     event_store = SqlEventStore(session_factory)
 
+    # MT5's "Next" button. The rule lives in the domain (core/domains/accounts/
+    # login_allocator.py) and the atomic UPDATE...RETURNING lives in the store, so
+    # the arithmetic is testable without a database and the race safety is a
+    # property of one SQL statement rather than of Python.
+    from core.domains.accounts.login_allocator import (
+        DEFAULT_CLIENT_LOGIN_FLOOR,
+        LoginAllocator,
+    )
+
+    login_allocator = LoginAllocator(
+        SqlLoginAllocatorStore(session_factory),
+        default_floor=int(
+            __import__("os").environ.get("BROKER_LOGIN_FLOOR", DEFAULT_CLIENT_LOGIN_FLOOR)
+        ),
+    )
+
+    def uow_factory():
+        """One session per unit of work, so a multi-repository write is atomic."""
+        from .unit_of_work import UnitOfWork
+
+        return UnitOfWork(session_factory=session_factory)
+
     return {
         'holiday_repo': holiday_repo,
         'group_repo': group_repo,
@@ -50,4 +78,6 @@ def setup_persistence_di(database_manager: DatabaseManager) -> dict:
         'manager_repo': manager_repo,
         'client_repo': client_repo,
         'event_store': event_store,
+        'login_allocator': login_allocator,
+        'uow_factory': uow_factory,
     }

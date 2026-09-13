@@ -75,6 +75,17 @@ class EventType(Enum):
     HOLIDAY_UPDATED = "config.holiday_updated"
     HOLIDAY_DELETED = "config.holiday_deleted"
 
+    # Identity plane events (plan step 6). Kept in their own namespace rather
+    # than under "config." because they are not cache-invalidation signals: a
+    # new account changes the risk engine's population, the manager terminal's
+    # account list and the coverage book, none of which read ConfigCache.
+    CLIENT_CREATED = "identity.client_created"
+    CLIENT_UPDATED = "identity.client_updated"
+    ACCOUNT_CREATED = "identity.account_created"
+    ACCOUNT_UPDATED = "identity.account_updated"
+    ACCOUNT_DELETED = "identity.account_deleted"
+    MANAGER_CREATED = "identity.manager_created"
+
 
 @dataclass(frozen=True)
 class DomainEvent:
@@ -408,6 +419,58 @@ class GroupUpdated(DomainEvent):
 class GroupDeleted(DomainEvent):
     """A Group was removed."""
     event_type: EventType = field(default=EventType.GROUP_DELETED, init=False)
+
+
+# =============================================================================
+# Identity plane (plan step 6). Published by CreateClientHandler,
+# CreateAccountHandler and CreateManagerHandler.
+#
+# NOTE what these events must NOT carry: a password, in any form. The plaintext
+# exists only in the create response and the Argon2 hash only in the database;
+# an event is broadcast to every subscriber and eventually to the event store,
+# so putting either here would leak it into logs and into Redis.
+# =============================================================================
+
+@dataclass(frozen=True)
+class ClientCreated(DomainEvent):
+    """A new person/company record (MT5 IMTClient) was created."""
+    event_type: EventType = field(default=EventType.CLIENT_CREATED, init=False)
+
+
+@dataclass(frozen=True)
+class ClientUpdated(DomainEvent):
+    """A client's KYC details changed."""
+    event_type: EventType = field(default=EventType.CLIENT_UPDATED, init=False)
+
+
+@dataclass(frozen=True)
+class AccountCreated(DomainEvent):
+    """A new trading login (MT5 IMTUser) was created.
+
+    Deliberately does NOT trigger a tick or a margin recompute: a fresh account
+    has no positions, so its margin is zero by construction. Emitting a
+    recompute here is how an account gets valued against a price it never traded
+    at - the D16 class.
+    """
+    event_type: EventType = field(default=EventType.ACCOUNT_CREATED, init=False)
+
+
+@dataclass(frozen=True)
+class AccountUpdated(DomainEvent):
+    """An account's configuration changed (group, rights, limits, passwords)."""
+    event_type: EventType = field(default=EventType.ACCOUNT_UPDATED, init=False)
+
+
+@dataclass(frozen=True)
+class AccountDeleted(DomainEvent):
+    """An account was removed. Its login is never reused - see LoginAllocator."""
+    event_type: EventType = field(default=EventType.ACCOUNT_DELETED, init=False)
+
+
+@dataclass(frozen=True)
+class ManagerCreated(DomainEvent):
+    """A new staff login (MT5 IMTConManager) was provisioned."""
+    event_type: EventType = field(default=EventType.MANAGER_CREATED, init=False)
 
 
 @dataclass(frozen=True)

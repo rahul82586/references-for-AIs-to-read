@@ -889,3 +889,71 @@ class IHistoricalBarRepository(ABC):
 
 
 
+
+
+# ---------------------------------------------------------------------------
+# Identity plane (plan step 6)
+# ---------------------------------------------------------------------------
+
+
+class IClientRepository(ABC, Generic[T]):
+    """The person/company record - MT5 IMTClient.
+
+    SqlClientRepository said in its own docstring that it was waiting for this
+    port. Declaring it is what lets CreateClientHandler be wired through the DI
+    container instead of reaching into a concrete class, and what makes the
+    client plane testable against a fake.
+
+    One client owns MANY accounts (demo + real + contest) without duplicating
+    their passport or address - that is the whole reason MT5 separates IMTClient
+    from IMTUser, and the reason this port is not folded into IAccountRepository.
+    """
+
+    @abstractmethod
+    async def find_by_id(self, client_id: str) -> Optional[T]:
+        """By the surrogate id."""
+
+    @abstractmethod
+    async def find_by_client_id(self, client_id: str) -> Optional[T]:
+        """By the external KYC id - what an operator types into Preferred Client."""
+
+    @abstractmethod
+    async def save(self, client: T) -> T:
+        """Insert or update."""
+
+    @abstractmethod
+    async def delete(self, client_id: str) -> bool:
+        """Delete by surrogate id. False when there was nothing to delete."""
+
+    @abstractmethod
+    async def find_all(self) -> List[T]:
+        """Every client. Paginate at the query layer, not by slicing this."""
+
+    @abstractmethod
+    async def count(self) -> int:
+        """A COUNT, not len(await find_all())."""
+
+
+class ILoginAllocator(ABC):
+    """MT5's "Next" button: the closest free login, never a reused one.
+
+    Deliberately NOT a method on IAccountRepository. Allocation is a separate
+    concern with a separate consistency requirement - it must be atomic in the
+    store, not in Python - and folding it into the account repository is how a
+    MAX(login)+1 implementation ends up looking acceptable.
+
+    See core/domains/accounts/login_allocator.py for the rule and why the guide's
+    "do not use logins of deleted account" forbids the obvious implementation.
+    """
+
+    @abstractmethod
+    async def next_login(
+        self, scope: Optional[str] = None, *, login_floor: Optional[int] = None
+    ) -> Any:
+        """Reserve the next free login. Returns AllocatedLogin."""
+
+    @abstractmethod
+    async def peek(
+        self, scope: Optional[str] = None, *, login_floor: Optional[int] = None
+    ) -> int:
+        """The login Next would show, WITHOUT reserving it. Advisory only."""

@@ -75,6 +75,7 @@ jobs:
         run: |
           python3 scripts/p1_proof_migration_009.py
           python3 scripts/p1_proof_identity.py
+          python3 scripts/p1_proof_account_creation.py
           python3 scripts/m1_proof_roundtrip_all_sections.py
           python3 scripts/m8_proof_routing.py
           python3 scripts/m9_proof_sltp_expiration.py

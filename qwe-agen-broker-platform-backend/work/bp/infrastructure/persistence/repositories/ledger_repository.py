@@ -11,11 +11,21 @@ class SqlLedgerRepository(ILedgerRepository):
     def __init__(self, session_factory):
         self.session_factory = session_factory
 
-    async def save(self, operation: BalanceOperation) -> BalanceOperation:
-        async with self.session_factory() as session:
-            model = balance_operation_to_db(operation)
+    async def save(self, operation: BalanceOperation, session=None) -> BalanceOperation:
+        """Persist a ledger row. Pass `session` to join a caller's transaction.
+
+        The opening deposit on a newly created account must land in the same
+        transaction as the account itself, or a crash between the two leaves a
+        balance with no ledger entry - which is exactly the unreconcilable book
+        the reconciliation engine (M12) exists to detect.
+        """
+        model = balance_operation_to_db(operation)
+        if session is not None:
             await session.merge(model)
-            await session.commit()
+            return operation
+        async with self.session_factory() as own:
+            await own.merge(model)
+            await own.commit()
             return operation
 
     async def get_by_account(self, account_login: str) -> List[BalanceOperation]:

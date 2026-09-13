@@ -15,7 +15,16 @@ from application.services.risk_service import PreTradeRiskService
 from core.domains.risk.engine import RiskEngine
 
 from application.commands.create_group import CreateGroupHandler
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from application.commands.create_account import CreateAccountHandler
+    from application.commands.create_client import CreateClientHandler
+
 from core.ports.interfaces import (
+    IClientRepository,
+    ILoginAllocator,
+    ILedgerRepository,
     IGroupRepository,
     IEventBus,
     IAccountRepository,
@@ -274,6 +283,51 @@ def get_create_group_handler() -> CreateGroupHandler:
     )
 
 
+def _optional(container: Any, key: str) -> Any:
+    """Resolve a provider that a deployment may legitimately not have wired.
+
+    Used for the ledger and the unit-of-work factory: an account create WITHOUT
+    an opening deposit needs neither, and refusing the whole plane because one
+    optional collaborator is absent would be worse than the honest alternative,
+    which is that CreateAccountHandler refuses only when a deposit is requested
+    and the ledger is missing.
+    """
+    try:
+        view = getattr(container, "_providers", None) or getattr(container, "providers", None)
+        if isinstance(view, dict):
+            return view.get(key)
+        return container.get(key) if hasattr(container, "get") else None
+    except Exception:
+        return None
+
+
+def get_create_client_handler() -> "CreateClientHandler":
+    """Provider for CreateClientHandler (MT5 IMTClient)."""
+    from application.commands.create_client import CreateClientHandler
+
+    container = get_di_container()
+    return CreateClientHandler(
+        client_repo=container.resolve(IClientRepository),
+        event_bus=container.resolve(IEventBus),
+    )
+
+
+def get_create_account_handler() -> "CreateAccountHandler":
+    """Provider for CreateAccountHandler (MT5's New Account dialog)."""
+    from application.commands.create_account import CreateAccountHandler
+
+    container = get_di_container()
+    return CreateAccountHandler(
+        account_repo=container.resolve(IAccountRepository),
+        group_repo=container.resolve(IGroupRepository),
+        login_allocator=container.resolve(ILoginAllocator),
+        event_bus=container.resolve(IEventBus),
+        client_repo=container.resolve(IClientRepository),
+        ledger_repo=_optional(container, "ledger_repo"),
+        uow_factory=_optional(container, "uow_factory"),
+    )
+
+
 # Port classes resolved through get_di_container().resolve(...), mapped to the
 # string keys the dict container actually uses. Extending this table is how a new
 # port becomes resolvable at startup.
@@ -281,6 +335,13 @@ register_port_keys(
     {
         IGroupRepository: "group_repo",
         IEventBus: "event_bus",
+        # Step 6: the identity plane's ports. Without these entries a handler
+        # wired through the container raises KeyError at startup rather than
+        # degrading - which is the intended behaviour, because a 503 at request
+        # time is worse than a crash at boot.
+        IClientRepository: "client_repo",
+        ILoginAllocator: "login_allocator",
+        ILedgerRepository: "ledger_repo",
         IAccountRepository: "account_repo",
         ISymbolRepository: "symbol_repo",
         IHolidayRepository: "holiday_repo",
