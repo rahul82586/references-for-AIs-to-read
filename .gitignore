@@ -45,3 +45,21 @@ work/logs/
 .idea/
 .vscode/
 *.swp
+
+# ---------------------------------------------------------------------------
+# Git bundles are a WORKSPACE ARTEFACT, deliberately untracked.
+#
+# The session-death protocol (rule 6) says to keep a bundle in work/patches/ and
+# push it. Committing it does not work: `git bundle create --all` includes every
+# committed object, so the bundle contains the PREVIOUS bundle, and the file
+# doubles every milestone - 5.7 MB, 11.4 MB, 22.9 MB, 45.8 MB, 91.7 MB - hitting
+# GitHub's 100 MB hard limit in about five milestones and permanently bloating
+# every clone along the way.
+#
+# The bundle is still created here at the end of every milestone, and it still
+# records a complete history, so it is a valid local safety net for the current
+# session. What actually survives a dead sandbox is `git push`, which is why rule
+# 1 says to push at every milestone and never use the web upload.
+# ---------------------------------------------------------------------------
+work/patches/*.bundle
+qwe-agen-broker-platform-backend/work/patches/*.bundle
