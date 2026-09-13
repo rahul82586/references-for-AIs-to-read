@@ -155,11 +155,34 @@ class ManagerAccount:
                 return not negate
         return False
 
-    def effective_report_window(self, per_report_limit: Optional[int]) -> int:
-        """MT5: the strictest limit always applies."""
-        mine = int(self.request_limit_reports or 0)
-        theirs = int(per_report_limit or 0)
-        candidates = [v for v in (mine, theirs) if v > 0]
+    def effective_report_window(self, per_report_limit_days: Optional[int]) -> int:
+        """How far back this manager may request, in DAYS. The strictest wins.
+
+        Administrator guide, Managers -> Reports:
+
+            "When reports are requested, the system checks both the individual
+             data depth limits from the 'Reports' section and the 'Available
+             reports' parameter from the Permissions section. **The strictest
+             limit always applies.** For example, if the 'Available reports'
+             parameter is set to '6 months' and a specific report has a limit of
+             90 days, the manager will only be able to request data for the past
+             90 days."
+
+        The two inputs are in DIFFERENT units, which is the bug this fixes:
+        ``request_limit_reports`` is an ``EnManagerLimit`` ORDINAL (0=unlimited,
+        1=1 month ... 6=3 years) per ``IMTConManager::LimitReports``, while a
+        per-report limit is a number of DAYS. min()-ing them directly compared an
+        ordinal against a day count - so "6 months" (ordinal 3) lost to 90 days
+        and the manager was silently restricted to 3 DAYS. The ordinal is
+        converted first, then the strictest of the two day counts wins.
+
+        Returns 0 for "unlimited" (neither side restricts).
+        """
+        from core.domains.accounts.enums import limit_period_to_days
+
+        mine_days = limit_period_to_days(self.request_limit_reports)
+        theirs = int(per_report_limit_days or 0)
+        candidates = [v for v in (mine_days, theirs) if v > 0]
         return min(candidates) if candidates else 0
 
 

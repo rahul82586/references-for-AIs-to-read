@@ -46,6 +46,7 @@ from api.routers import account, auth, trade, market_data
 from api.routers.admin import admin_router
 from api.routers.admin import groups as admin_groups
 from api.routers.admin import accounts as admin_accounts
+from api.routers.admin import managers as admin_managers
 from api.routers.manager import (
     connection as manager_connection,
     main as manager_main,
@@ -170,6 +171,10 @@ def create_app(container: Optional[Dict[str, Any]] = None) -> FastAPI:
     # rather than being swallowed by a /{login} route.
     app.include_router(admin_accounts.accounts_router)
     app.include_router(admin_accounts.clients_router)
+    # Step 7: the manager plane. Also BEFORE admin_router, which already serves
+    # GET /admin/managers - this router adds the writes and the catalogues, and
+    # its /rights, /presets and /schema must not resolve as a manager login.
+    app.include_router(admin_managers.router)
     app.include_router(admin_router.router)
 
     # Include Manager API routers

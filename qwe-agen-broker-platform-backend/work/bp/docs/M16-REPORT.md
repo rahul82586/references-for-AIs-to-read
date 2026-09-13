@@ -1,4 +1,4 @@
-# M16 — IDENTITY PLANE steps 5–6: account creation & the group engine (session 6, 2026-09-13)
+# M16 — IDENTITY PLANE steps 5–7: account creation, the group engine, and the manager plane (session 6, 2026-09-13)
 
 **Scope delivered:** the 009 identity columns on the entities, models and mappers,
 atomically · the rights mask as the single authority for `is_enabled` · the Group
@@ -8,12 +8,12 @@ login allocator, the group-driven password policy and plaintext-returned-once ·
 the account/client HTTP plane with `require_right` · `/admin/accounts/schema` ·
 two new proof gates.
 
-**Gates after this milestone:** `pytest tests` **713 passed / 0 failed / 0 skipped**
-(was 670; **+43**) · ruff E9,F63,F7,F82 **clean** · round-trip **392/392** ·
+**Gates after this milestone:** `pytest tests` **740 passed / 0 failed / 0 skipped**
+(was 670; **+70**) · ruff E9,F63,F7,F82 **clean** · round-trip **392/392** ·
 m2 seed ✅ · m3 currencies 362/362 · m3 margin ✅ · m3 uow ✅ · m8 18/18 ·
 m9 14/14 · m10 19/19 · m11 39/39 · **p1_proof_migration_009 24/24** (was 18) ·
 **p1_proof_identity 59/59** · **p1_proof_account_creation 72/72 (NEW)** ·
-m4 weekend-skip (correct — Sunday).
+**p1_proof_manager_creation 80/80 (NEW)** · m4 weekend-skip (correct — Sunday).
 
 Everything below was transcribed from `Include.md`, the Administrator guide and
 the live TCTrader-Live export. Nothing was inferred from a summary.
@@ -360,3 +360,147 @@ point at nothing** — that needs an explicit backfill-or-start-clean decision.
 **New, from this session:** the manager plane's `require_right` is wired for
 accounts and clients, but the existing admin **reads** still use the static key;
 and `must_change_password` is enforced in `require_right` but still not at login.
+
+
+---
+
+## 8. Step 7 — the manager plane (`CreateManagerHandler`, presets, IP allow-list)
+
+Read from `Include.md` `IMTConManager` (line 19653) + `IMTConManagerAccess`
+(19633), the guide's *Managers* section (Common / Permissions / Reports / IP
+Access List), and all **9 live ConfigManagers records**.
+
+### The rules, each enforced
+
+* **No login allocation.** *"Manager accounts are created only based on accounts
+  added in the corresponding section"* and *"the specified account must be
+  included to the managers' group"*. So the handler REFUSES unless the named
+  account exists AND `derive_group_type(group.name) is MANAGER` — verified
+  against your three real staff groups (`managers\administrators`,
+  `managers\dealers`, `managers\API`). This is what keeps staff logins out of
+  the client account list.
+* **`server_id` comes from the account's GROUP.** *"A manager can service only
+  those accounts that belong to the server, to which the group the manager is
+  included to refers."* Not accepted from the request.
+* **Rights by NAME, never indices.** An unknown name is refused with an
+  explanation, because a silently-empty mask creates a manager who authenticates
+  and then 403s on everything — which reads as a broken server, not a typo.
+  `RIGHT_LAST` (128) is asserted non-grantable; the catalogue excludes it so the
+  UI cannot render a checkbox for it (**96 grantable of 97**).
+* **The Groups scope obeys BOTH guide rules.** *"A rule cannot consist of
+  prohibition only"* → `"!demo*"` refused, `"!demo*,real*"` accepted. *"Rules are
+  checked top to bottom; if you allow all groups in the first row you will not be
+  able to prohibit some in the next"* → `"*,!managers*"` is **accepted but the
+  dead rule is reported**, because MT5 accepts it and refusing would be inventing
+  a restriction. Also refused: a `*` that is not at an end (`"de*mo"` is matched
+  LITERALLY by `_mask_matches`, so it silently grants nothing — a typo that reads
+  like a wildcard), `"!"` not first, and empty patterns. Order is preserved, never
+  sorted or deduplicated, because first-match-wins makes order semantic.
+* **One writer for the credential.** `accounts.password_hash` is the authority;
+  `managers.password_hash` is a MIRROR written only here, in the same
+  transaction. Omitting a password copies the account's existing hash — no new
+  plaintext is invented. Two independent passwords for one login number (one
+  checked by `/auth/login`, one by the manager plane) would be the D1/D18 class
+  again: a secret written in one place and verified from another.
+* **`must_change_password` defaults to False**, and this is a deliberate reversal
+  of what the plan implied. MT5 forces the change on the AUTO-created
+  administrator (which `cli seed` already does), not on every manager an operator
+  provisions. Defaulting it True would lock a new manager out of the entire admin
+  plane — `require_right` 403s on the flag — with **no manager password-change
+  endpoint to unlock them**. That is a trap, not a control. It is now an explicit
+  command field.
+
+### 🟠 D19 (NEW, found this session) — `effective_report_window` compared two different units
+
+`IMTConManager::LimitReports` is documented as *"reports access limit
+**EnManagerLimit**"* — an ORDINAL (0=unlimited, 1=1 month, 2=3 months, 3=6
+months, 4/5/6=1/2/3 years). M15's `effective_report_window` did
+`min(request_limit_reports, per_report_limit_days)`, i.e. min()-ed an **ordinal**
+against a **day count**:
+
+```
+"Available reports" = 6 months (ordinal 3)  vs  a report limited to 90 days
+  before:  min(3, 90)  = 3      -> the manager could request 3 DAYS
+  after:   min(180, 90) = 90    -> the guide's own answer
+```
+
+The guide states the rule and the example explicitly: *"The strictest limit
+always applies. For example, if the 'Available reports' parameter is set to '6
+months' and a specific report has a limit of 90 days, the manager will only be
+able to request data for the past 90 days."*
+
+Worse, the M15 unit test **encoded the bug**: it constructed
+`request_limit_reports=30` — which is not a valid `EnManagerLimit` ordinal at all
+— and asserted days back. Nothing validated the field, so an invalid value sat in
+a column and was compared against a different unit.
+
+Fix: `LIMIT_PERIOD_DAYS` + `limit_period_to_days()` in `core/domains/accounts/enums.py`
+(the ONE place the conversion lives; MT5 publishes no day mapping, so the table is
+our documented convention and the guide's example holds under it), and
+`_validate_limits` refuses any ordinal outside 0..6 on create and update. The
+test now asserts the guide's example verbatim and that ordinal 30 raises.
+
+This is the D1/D13/D16 class again — a number that means one thing where it is
+written and another where it is read.
+
+### IP allow-list: From/To **ranges**, not just CIDR
+
+`IMTConManagerAccess` has exactly two members, `From()` and `To()` — a RANGE. The
+guide's use case is *"limit managers' access, for example, to the dealing room
+only"*, and a CIDR cannot express `10.0.0.5-10.0.0.9`. `_ip_allowed` now accepts
+three spellings: the wire dict `{"From":…,"To":…}`, the string `"from-to"`, and
+CIDR/single-address. An unparseable entry grants NOTHING; a reversed range is
+normalised (an operator typo, not a grant); v4 and v6 never cross-match; an empty
+list is unrestricted, which is what all nine live managers carry (`Access: []`).
+16 cases pinned.
+
+**A regression caught here:** the first implementation routed CIDR through
+`ip_address`, which rejects `"10.0.0.0/24"`, so every prefix allow-list silently
+refused. Caught by the proof before commit.
+
+### HTTP plane
+
+```
+POST   /api/v1/admin/managers              201  create (on an existing managers-group account)
+POST   /api/v1/admin/managers/create       201  alias
+GET    /api/v1/admin/managers/{login}      200  rights DECODED to names, grouped by plane
+PUT    /api/v1/admin/managers/{login}      200  rights / scope / limits / IPs; refuses a no-op
+GET    /api/v1/admin/managers/rights       200  97 rights, index+plane+description, sentinel excluded
+GET    /api/v1/admin/managers/presets      200  the Role picker
+POST   /api/v1/admin/managers/presets      201  Save As
+DELETE /api/v1/admin/managers/presets/{n}  200  Delete (builtins refused)
+GET    /api/v1/admin/managers/schema       200  manager_fields.yaml descriptors
+```
+
+39 → **45 paths**. Gated by **`RIGHT_CFG_MANAGERS` (17)**, *not*
+`RIGHT_ACC_MANAGER` (27) — the SDK keeps them apart, and collapsing them would let
+anyone who may edit an account grant themselves more rights. A test asserts a
+manager holding only `RIGHT_ACC_MANAGER` gets **403** on this plane, and that the
+catalogues are gated too.
+
+Catalogue routes are declared **before** `/{login}` (the M15 `/groups/schema`
+lesson) and a test asserts none of them resolves as a login.
+
+`login_manager` now returns `must_change_password` (in the body AND the JWT
+claim) so a terminal can show the change-password dialog. Login still SUCCEEDS
+with the flag set — a manager who cannot authenticate cannot change their
+password; `require_right` is what blocks privileged actions.
+
+### New gates
+
+```
+scripts/p1_proof_manager_creation.py       80/80   (in CI now)
+tests/unit/api/test_step7_manager_api.py   26 tests
+tests/unit/domains/identity/…               +1 (the EnManagerLimit day mapping)
+```
+
+The manager proof uses **your nine real managers as the fixture** and re-asserts
+that `Administrator` == login 1000's 110 bits and `Manager` == login 208011's 39
+bits, bit for bit, plus that all nine masks still round-trip.
+
+### SDK/wire note worth keeping
+
+`IMTConManager` has **no** `Name()` and **no** `Rights()` accessor — it exposes
+`Right(index)` one bit at a time. The export's `Name` field and its 128-element
+`"0"`/`"1"` array are **export-format artefacts**, not SDK surface.
+`manager_fields.yaml` documents this rather than pretending the two agree.

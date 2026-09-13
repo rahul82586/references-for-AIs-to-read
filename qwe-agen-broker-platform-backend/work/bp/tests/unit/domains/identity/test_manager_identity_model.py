@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+import pytest
+
 from core.domains.identity.models import ManagerAccount, ManagerRole
 from core.domains.identity.rights import ManagerRightsMask
 from core.domains.identity.role_presets import builtin_presets
@@ -94,11 +96,47 @@ def test_group_scope_is_mt5_mask_semantics():
 
 
 def test_strictest_report_limit_wins():
-    manager = ManagerAccount(manager_id="1", login="1", request_limit_reports=30)
-    assert manager.effective_report_window(7) == 7
-    assert manager.effective_report_window(90) == 30
-    assert manager.effective_report_window(None) == 30
-    assert manager.effective_report_window(0) == 30
+    """The guide's worked example, with the units right.
+
+    CORRECTED in step 7. This test used to set `request_limit_reports=30` and
+    expect days back. But `IMTConManager::LimitReports` is documented as
+    "reports access limit **EnManagerLimit**" - an ORDINAL, 0=unlimited,
+    1=1 month, 2=3 months, 3=6 months, 4/5/6=1/2/3 years. 30 is not a valid
+    ordinal at all, and min()-ing an ordinal against a per-report DAY count
+    compared two different units: "6 months" (ordinal 3) lost to 90 days, so a
+    manager was silently restricted to 3 DAYS instead of 90.
+
+    The ordinal is now converted before the comparison, and the guide's own
+    example is asserted verbatim: 'Available reports' = 6 months, a report
+    limited to 90 days -> 90.
+    """
+    six_months = ManagerAccount(manager_id="1", login="1", request_limit_reports=3)
+    # the guide's example: 6 months (180 days) vs a 90-day report -> 90
+    assert six_months.effective_report_window(90) == 90
+    # a looser per-report limit -> the manager's own period is stricter
+    assert six_months.effective_report_window(400) == 180
+    assert six_months.effective_report_window(7) == 7
+    # no per-report limit -> the manager's own period, in days
+    assert six_months.effective_report_window(None) == 180
+    assert six_months.effective_report_window(0) == 180
+
+    unlimited = ManagerAccount(manager_id="2", login="2", request_limit_reports=0)
+    assert unlimited.effective_report_window(90) == 90
+    assert unlimited.effective_report_window(None) == 0
+
+    with pytest.raises(ValueError):
+        # 30 is what this test used to store: not an EnManagerLimit ordinal
+        ManagerAccount(manager_id="3", login="3", request_limit_reports=30).effective_report_window(90)
+
+
+def test_every_manager_limit_ordinal_maps_to_a_day_count():
+    from core.domains.accounts.enums import LIMIT_PERIOD_DAYS, ManagerLimit
+
+    assert {int(m.value) for m in ManagerLimit} == set(LIMIT_PERIOD_DAYS)
+    assert LIMIT_PERIOD_DAYS[0] == 0                     # unlimited
+    assert LIMIT_PERIOD_DAYS[1] < LIMIT_PERIOD_DAYS[6]   # monotonic
+    days = [LIMIT_PERIOD_DAYS[i] for i in range(1, 7)]
+    assert days == sorted(days)
 
 
 def test_db_round_trip_preserves_the_mask_both_ways():

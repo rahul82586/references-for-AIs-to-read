@@ -39,11 +39,25 @@ class SqlManagerRepository(IManagerRepository):
             model = result.scalar_one_or_none()
             return db_to_manager(model) if model else None
 
-    async def save(self, manager: ManagerAccount) -> ManagerAccount:
-        async with self.session_factory() as session:
-            model = manager_to_db(manager)
+    async def save(self, manager: ManagerAccount, session=None) -> ManagerAccount:
+        """Persist a manager. Pass `session` to join a caller's transaction.
+
+        CreateManagerHandler writes the manager row and the account's password
+        hash together: the account is the one writer of the credential and the
+        manager row mirrors it, so a crash between the two would leave a login
+        that works on one plane and fails on the other.
+        """
+        model = manager_to_db(
+            manager,
+            mt5_extra=getattr(manager, "mt5_extra", None),
+            mt5_source=getattr(manager, "mt5_source", None),
+        )
+        if session is not None:
             await session.merge(model)
-            await session.commit()
+            return manager
+        async with self.session_factory() as own:
+            await own.merge(model)
+            await own.commit()
             return manager
 
     async def save_model(self, model: ManagerModel) -> None:

@@ -85,6 +85,8 @@ class EventType(Enum):
     ACCOUNT_UPDATED = "identity.account_updated"
     ACCOUNT_DELETED = "identity.account_deleted"
     MANAGER_CREATED = "identity.manager_created"
+    MANAGER_UPDATED = "identity.manager_updated"
+    MANAGER_DELETED = "identity.manager_deleted"
 
 
 @dataclass(frozen=True)
@@ -471,6 +473,22 @@ class AccountDeleted(DomainEvent):
 class ManagerCreated(DomainEvent):
     """A new staff login (MT5 IMTConManager) was provisioned."""
     event_type: EventType = field(default=EventType.MANAGER_CREATED, init=False)
+
+
+@dataclass(frozen=True)
+class ManagerUpdated(DomainEvent):
+    """A staff login's rights, scope or limits changed.
+
+    Every node must re-resolve authorisation for that login: a cached mask is a
+    privilege that outlived its revocation.
+    """
+    event_type: EventType = field(default=EventType.MANAGER_UPDATED, init=False)
+
+
+@dataclass(frozen=True)
+class ManagerDeleted(DomainEvent):
+    """A staff login was removed."""
+    event_type: EventType = field(default=EventType.MANAGER_DELETED, init=False)
 
 
 @dataclass(frozen=True)

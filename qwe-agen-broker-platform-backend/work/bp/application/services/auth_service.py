@@ -110,17 +110,32 @@ class AuthService:
 
         # Issue Admin JWT token with role claims
         role_str = str(manager.role.value if hasattr(manager.role, "value") else manager.role).strip()
+        # must_change_password rides in the token as well as the body, so a
+        # stateless consumer can see it. Login still SUCCEEDS with it set: a
+        # manager who cannot authenticate cannot change their password. That is
+        # MT5's own behaviour - the terminal connects and presents a
+        # change-password dialog - and require_right() is what blocks privileged
+        # actions until the password is changed (enforced since M15). Before step
+        # 7 the flag was stored and enforced per-request but never surfaced here,
+        # so a UI had no way to know it should show the dialog.
+        must_change = bool(getattr(manager, "must_change_password", False))
         token = create_access_token(data={
             "sub": str(manager.login),
             "manager_id": str(manager.manager_id),
             "role": role_str,
-            "is_manager": True
+            "is_manager": True,
+            "must_change_password": must_change,
         })
         return {
             "access_token": token,
             "token_type": "bearer",
             "login": manager.login,
             "role": role_str,
+            "must_change_password": must_change,
+            # The mask, decoded to names and grouped by plane, so a terminal can
+            # render its menu from what this manager may actually do instead of
+            # from the cosmetic `role` label (which authorisation never reads).
+            "rights_count": getattr(manager.rights, "count", None),
         }
 
 

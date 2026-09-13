@@ -1,6 +1,6 @@
 # Forex Broker Platform — PROJECT STATE & CONTEXT ANCHOR v6
 
-**Written:** 2026-09-13 (session 6, at the end of M16 = identity-plan steps 5–6)
+**Written:** 2026-09-13 (session 6, at the end of M16 = identity-plan steps 5–7)
 **Supersedes:** `PROJECT-STATE-v5.md` (session 5). Read `M16-REPORT.md` for this
 milestone in full, and `IDENTITY-BUILD-PLAN.md` for what step 7 onward needs.
 v5's §3 (architecture + design law), §5 (decisions not to re-litigate) and §7
@@ -16,13 +16,13 @@ export read directly, not via a summary.
 
 ## 0. Verified current state — everything below was RUN, not read
 
-Tree: `qwe-agen-broker-platform-backend/work/bp` — **352 py files / ~69k LOC**,
-migrations **001→009**, HTTP paths **33 → 39**.
+Tree: `qwe-agen-broker-platform-backend/work/bp` — **360 py files / ~73k LOC**,
+migrations **001→009**, HTTP paths **33 → 45**.
 
 | Gate | Result (2026-09-13, session 6) |
 |---|---|
 | `pip install -e ".[dev]"` | clean, no manual extras (F5 fix holds) |
-| `pytest tests` (fixtures decoded) | **713 passed, 0 failed, 0 skipped** (was 670; **+43**) |
+| `pytest tests` (fixtures decoded) | **740 passed, 0 failed, 0 skipped** (was 670; **+70**) |
 | `ruff --select E9,F63,F7,F82` | clean |
 | `m1_proof_roundtrip_all_sections` | **392/392** byte-identical |
 | `m2_proof_seed` / `m3_proof_currencies` / `m3_proof_margin` / `m3_proof_uow` | pass / 362/362 / pass / pass |
@@ -31,6 +31,7 @@ migrations **001→009**, HTTP paths **33 → 39**.
 | `p1_proof_migration_009` | **24/24** (was 18/18 — restructured, see §3) |
 | `p1_proof_identity` | **59/59** |
 | **`p1_proof_account_creation` (NEW)** | **72/72** — in CI |
+| **`p1_proof_manager_creation` (NEW)** | **80/80** — in CI; your nine real managers as the fixture |
 | GitHub Actions CI | ✅ **2 runs `completed/success` on `e361299`** — CI is alive for the first time since M5 built it |
 
 ## 0b. Live infrastructure — probed 2026-09-13 (session 6)
@@ -88,7 +89,7 @@ identity & config plane steps 0–4. **M16 (this session) = steps 5–6:**
   `IClientRepository` + `ILoginAllocator` ports · identity events.
 
 **Defect ledger delta:** **D18 ❌→✅ FIXED (found this session)** ·
-**D3 ❌→✅ FIXED** · D16 ❌ OPEN · D17 ❌ OPEN · D4 🟡 (vector closed, the leak
+**D19 ❌→✅ FIXED (found this session)** · **D3 ❌→✅ FIXED** · D16 ❌ OPEN · D17 ❌ OPEN · D4 🟡 (vector closed, the leak
 is still fetchable) · F1/F2/F4/F6/F7/F8/F9 ❌ OPEN · F3 ✅ (M15) · F5 ✅ (M15) ·
 everything else as v5.
 
@@ -188,9 +189,7 @@ run found that **`login_counters` had no ORM model at all**.
    login; the client/manager planes still run on `get_current_user` (**F2**
    fabrication).
 
-**P1 — identity plane, plan steps 7–9**
-4. **Step 7:** `CreateManagerHandler` (refuses unless the account sits in a
-   `managers\…` group) + the presets API + IP allow-list rollout.
+**P1 — identity plane, plan step 8 onward (step 7 is DONE)**
 5. **Step 8:** read queries + `/schema` for account/client/manager — unblocks the
    Theia UI and B2's `/admin/{orders,deals,positions}`. Also fix **F8/F9**
    first: they are the only cross-account positions read the UI has.
@@ -309,10 +308,21 @@ GitHub HEAD *is* `e361299`; `d13a981` returns 422 and `work/patches/` 404s — s
 the bundle's only extra commit is the bundle file itself. All 14 M15 artifacts
 were verified present in the clone. **Nothing was lost.**
 
-**Session 6 handover state:** M16 is committed locally on `main` as `fd1b512`
-(step 5) + one further commit (step 6) on top of `e361299`, with a bundle at
-`work/patches/repo-full-history.bundle`. The user pushes — credentials never live
-in the sandbox. **Next session: paste THIS file + `docs/M16-REPORT.md` +
-`docs/IDENTITY-BUILD-PLAN.md`, then start at plan step 7** (`CreateManagerHandler`
-+ the presets API), or take `UpdateAccountHandler` / the `clients`=0 decision
-first if the account plane needs completing end to end.
+**Session 6 handover state:** steps 5, 6 and 7 are all committed. `fd1b512`
+(step 5) and `dd27011` (step 6) are **pushed to GitHub and CI is green on
+`dd2701138`**; step 7 plus the docs are committed locally on top. A fresh bundle
+is at `work/patches/repo-full-history.bundle`. Note the earlier bundle commit
+`fe37bac` was never pushed — it is a 5.7 MB binary and GitHub HEAD stops at
+`dd27011`, which is harmless but worth knowing.
+
+**Next session: paste THIS file + `docs/M16-REPORT.md` +
+`docs/IDENTITY-BUILD-PLAN.md`, then start at plan step 8** — the read queries and
+`/schema` endpoints for account/client/manager, which unblock the Theia UI and
+B2's `/admin/{orders,deals,positions}`. Fix **F8/F9 first**: `PositionGet` is the
+only cross-account positions read the UI has and it currently returns `[]` with
+`ticket=0`.
+
+Two things to decide before step 8: the **`clients` = 0 backfill** (§0b), and
+`UpdateAccountHandler` (the per-tab partial bodies plus the two move rules) —
+plus growing `UpdateGroupCommand` to the 27 fields the entity now models, since
+its own docstring still says it is limited to the pre-step-5 subset.

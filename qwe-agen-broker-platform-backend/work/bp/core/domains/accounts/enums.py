@@ -1,5 +1,6 @@
 """Account domain enumerations."""
 from enum import Enum, IntFlag
+from typing import Any
 
 
 class AccountType(Enum):
@@ -217,6 +218,48 @@ class ManagerLimit(Enum):
     YEAR_1 = 4
     YEAR_2 = 5
     YEAR_3 = 6
+
+
+#: EnManagerLimit / EnHistoryLimit ordinal -> a day count, so a PERIOD can be
+#: compared against a per-report limit that is expressed in DAYS.
+#:
+#: MT5 does not publish a day mapping - the enum members are named "1 month",
+#: "3 months", "6 months", "1/2/3 years" - so this table is OUR convention, and
+#: it is the only place the conversion lives. The guide's own worked example
+#: holds under any sane month length: "'Available reports' set to 6 months and a
+#: specific report limited to 90 days -> the manager can only request the past 90
+#: days", i.e. min(180, 90) = 90.
+LIMIT_PERIOD_DAYS = {
+    0: 0,        # unlimited
+    1: 30,       # 1 month
+    2: 90,       # 3 months
+    3: 180,      # 6 months
+    4: 365,      # 1 year
+    5: 730,      # 2 years
+    6: 1095,     # 3 years
+}
+
+
+def limit_period_to_days(ordinal_value: Any) -> int:
+    """An EnManagerLimit/EnHistoryLimit ordinal as a day count. 0 = unlimited.
+
+    An ordinal outside 0..6 is refused rather than clamped: before step 7 this
+    field was silently treated as a DAY COUNT, so a manager row could carry
+    ``request_limit_reports = 30`` - which is not a valid EnManagerLimit at all -
+    and `effective_report_window` would then min() an ordinal against a number of
+    days. Two different units in one comparison is the D1/D13/D16 class: a number
+    that means one thing where it is written and another where it is read.
+    """
+    try:
+        value = int(ordinal_value or 0)
+    except (TypeError, ValueError):
+        raise ValueError(f"limit period {ordinal_value!r} is not an integer") from None
+    if value not in LIMIT_PERIOD_DAYS:
+        raise ValueError(
+            f"limit period {value} is not an EnManagerLimit/EnHistoryLimit ordinal; "
+            f"valid: {sorted(LIMIT_PERIOD_DAYS)} (0=unlimited, 1=1 month ... 6=3 years)"
+        )
+    return LIMIT_PERIOD_DAYS[value]
 
 
 class ClientType(Enum):

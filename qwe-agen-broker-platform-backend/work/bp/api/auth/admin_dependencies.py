@@ -68,7 +68,7 @@ from api.auth.jwt_handler import verify_token as verify_manager_token
 
 import ipaddress
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any, List, Optional
 
 from fastapi import Request
 
@@ -86,25 +86,81 @@ class AdminPrincipal:
     manager: Optional[Any] = None  # the ManagerAccount itself
 
 
-def _ip_allowed(client_ip: Optional[str], allowed: List[str]) -> bool:
-    """CIDR/IP allow-list match. An unparseable entry fails closed: a malformed
-    allow-list must not widen access."""
+def _ip_entry_matches(addr, entry) -> bool:
+    """Does one allow-list entry cover `addr`?
+
+    Three spellings, because MT5's own model and ours do not agree:
+
+    * ``IMTConManagerAccess`` is a **From/To range** - the IP Access List tab has
+      two columns, "From" and "To", and the guide's use case is "limit managers'
+      access, for example, to the dealing room only". A CIDR cannot express
+      10.0.0.5-10.0.0.9, so ranges are accepted both as the wire dict
+      ``{"From": …, "To": …}`` and as the string ``"from-to"``.
+    * CIDR (``10.0.0.0/24``), which is what this platform stored before and what
+      an operator is most likely to type.
+    * A single address, which ``ip_network`` handles as a /32.
+
+    An unparseable entry grants NOTHING - it is skipped, not treated as "allow".
+    A malformed allow-list must never widen access; that is the fail-closed rule
+    the rest of this module follows.
+    """
+    lo = hi = None
+    if isinstance(entry, dict):
+        lo = entry.get("From", entry.get("from"))
+        hi = entry.get("To", entry.get("to"))
+        if lo is None and hi is None:
+            return False
+    else:
+        text = str(entry).strip()
+        if not text:
+            return False
+        if "-" in text and "/" not in text:
+            parts = text.split("-", 1)
+            lo, hi = parts[0].strip(), parts[1].strip()
+        else:
+            # A CIDR or a bare address. `ip_address` rejects "10.0.0.0/24", so
+            # this branch must go through `ip_network`, which handles BOTH a
+            # network and a single host (/32). Treating a CIDR as an address was
+            # the regression that made every prefix allow-list silently refuse.
+            try:
+                return addr in ipaddress.ip_network(text, strict=False)
+            except ValueError:
+                return False
+
+    try:
+        low = ipaddress.ip_address(str(lo).strip())
+    except ValueError:
+        return False
+    try:
+        high = ipaddress.ip_address(str(hi).strip())
+    except ValueError:
+        # "From" without a usable "To": treat it as a single address or a network.
+        try:
+            return addr in ipaddress.ip_network(str(lo).strip(), strict=False)
+        except ValueError:
+            return False
+    if low.version != high.version or low.version != addr.version:
+        return False
+    if high < low:
+        low, high = high, low          # a reversed range is an operator typo, not a grant
+    return low <= addr <= high
+
+
+def _ip_allowed(client_ip: Optional[str], allowed: List[Any]) -> bool:
+    """Allow-list match over CIDRs, single addresses and From/To ranges.
+
+    An EMPTY list means unrestricted - MT5's own semantics, and what all nine
+    live managers carry (``Access: []``).
+    """
     if not allowed:
-        return True  # no list = unrestricted (MT5: an empty IP list allows all)
+        return True
     if not client_ip:
         return False
     try:
         addr = ipaddress.ip_address(client_ip)
     except ValueError:
         return False
-    for entry in allowed:
-        try:
-            network = ipaddress.ip_network(str(entry), strict=False)
-        except ValueError:
-            continue  # unparseable entry grants nothing
-        if addr in network:
-            return True
-    return False
+    return any(_ip_entry_matches(addr, entry) for entry in allowed)
 
 
 def require_right(right_name: str):

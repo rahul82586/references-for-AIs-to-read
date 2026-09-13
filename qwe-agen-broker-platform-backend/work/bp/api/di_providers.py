@@ -20,11 +20,16 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from application.commands.create_account import CreateAccountHandler
     from application.commands.create_client import CreateClientHandler
+    from application.commands.create_manager import (
+        CreateManagerHandler,
+        UpdateManagerHandler,
+    )
 
 from core.ports.interfaces import (
     IClientRepository,
     ILoginAllocator,
     ILedgerRepository,
+    IManagerRepository,
     IGroupRepository,
     IEventBus,
     IAccountRepository,
@@ -312,6 +317,31 @@ def get_create_client_handler() -> "CreateClientHandler":
     )
 
 
+def get_create_manager_handler() -> "CreateManagerHandler":
+    """Provider for CreateManagerHandler (MT5's Managers section)."""
+    from application.commands.create_manager import CreateManagerHandler
+
+    container = get_di_container()
+    return CreateManagerHandler(
+        manager_repo=container.resolve(IManagerRepository),
+        account_repo=container.resolve(IAccountRepository),
+        group_repo=container.resolve(IGroupRepository),
+        event_bus=container.resolve(IEventBus),
+        uow_factory=_optional(container, "uow_factory"),
+    )
+
+
+def get_update_manager_handler() -> "UpdateManagerHandler":
+    """Provider for UpdateManagerHandler."""
+    from application.commands.create_manager import UpdateManagerHandler
+
+    container = get_di_container()
+    return UpdateManagerHandler(
+        manager_repo=container.resolve(IManagerRepository),
+        event_bus=container.resolve(IEventBus),
+    )
+
+
 def get_create_account_handler() -> "CreateAccountHandler":
     """Provider for CreateAccountHandler (MT5's New Account dialog)."""
     from application.commands.create_account import CreateAccountHandler
@@ -342,6 +372,7 @@ register_port_keys(
         IClientRepository: "client_repo",
         ILoginAllocator: "login_allocator",
         ILedgerRepository: "ledger_repo",
+        IManagerRepository: "manager_repo",
         IAccountRepository: "account_repo",
         ISymbolRepository: "symbol_repo",
         IHolidayRepository: "holiday_repo",
