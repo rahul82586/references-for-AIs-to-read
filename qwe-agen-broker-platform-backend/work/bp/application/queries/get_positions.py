@@ -88,3 +88,51 @@ class GetPositionsQueryHandler:
                 }
             )
         return results
+
+
+# ---------------------------------------------------------------------------
+# Manager plane (F8): the cross-account read.
+#
+# The client-plane handler above is correct FOR ITS PURPOSE - one account,
+# valued through the RiskEngine, refusing to answer without one. The manager's
+# PositionGet is a different question: show the book (any account, any symbol),
+# stored values, no valuation pass. Reusing the client handler for it was the
+# original F8 - the route passed `symbol=` to a query that never declared it
+# and `account_login=None` to a required str, so EVERY call raised TypeError
+# and the route's blanket `except` served [] as if the whole book were flat.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class GetManagerPositionsQuery:
+    """Cross-account open-position read for the manager plane.
+
+    Both filters are optional; None means "no filter". This mirrors MT5's
+    PositionGet, which lists the book and lets the terminal filter.
+    """
+    account_login: Optional[int] = None
+    symbol: Optional[str] = None
+
+
+class GetManagerPositionsQueryHandler:
+    """Dispatches to the repository's own SQL-level reads - never find_all()
+    plus a Python filter, which is the read-side twin of the paging trap.
+
+    Returns Position ENTITIES. Serialization is the route's job via the one
+    shared serializer (api.schemas.manager.main.position_to_info), so every
+    consumer sees the same wire shape.
+    """
+
+    def __init__(self, position_repo: IPositionRepository):
+        self.position_repo = position_repo
+
+    async def handle(self, query: GetManagerPositionsQuery) -> List[Any]:
+        login = query.account_login
+        symbol = (query.symbol or "").strip() or None
+        if login is not None and symbol is not None:
+            return await self.position_repo.get_by_account_and_symbol(int(login), symbol)
+        if login is not None:
+            return await self.position_repo.get_positions_by_account(int(login))
+        if symbol is not None:
+            return await self.position_repo.get_by_symbol(symbol)
+        return await self.position_repo.get_open_positions()

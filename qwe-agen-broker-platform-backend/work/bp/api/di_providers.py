@@ -161,6 +161,18 @@ def get_positions_query_handler() -> Any:
     return _container.get("positions_query_handler")
 
 
+def get_manager_positions_query_handler() -> Any:
+    """Provider for the manager-plane cross-account positions read (F8).
+
+    Deliberately a SEPARATE key from positions_query_handler: the client-plane
+    handler values one account's book through the RiskEngine and refuses
+    without one; the manager plane serves the stored book across accounts.
+    One container key for two different contracts is how a route ends up
+    calling a handler whose query it cannot even construct - the original F8.
+    """
+    return _container.get("manager_positions_query_handler")
+
+
 def get_rate_limiter() -> Any:
     """Provider for IRateLimiter."""
     return _container.get("rate_limiter")

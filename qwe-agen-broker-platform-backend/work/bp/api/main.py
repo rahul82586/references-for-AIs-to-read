@@ -287,7 +287,10 @@ def create_app(container: Optional[Dict[str, Any]] = None) -> FastAPI:
             # stack's RiskEngine - the same single source of truth the
             # margin loop and the liquidation worker use.
             from application.queries.get_account_info import GetAccountInfoQueryHandler
-            from application.queries.get_positions import GetPositionsQueryHandler
+            from application.queries.get_positions import (
+                GetManagerPositionsQueryHandler,
+                GetPositionsQueryHandler,
+            )
 
             register_di_providers(
                 {
@@ -297,6 +300,13 @@ def create_app(container: Optional[Dict[str, Any]] = None) -> FastAPI:
                         symbol_repo=container.resolve(ISymbolRepository),
                         market_data_engine=stack.market_data_engine,
                         risk_engine=stack.risk_engine,
+                    ),
+                    # F8: the manager plane's cross-account book read. No
+                    # risk engine on purpose - it serves the STORED book (one
+                    # reader of what the valuation writers wrote), which is
+                    # what MT5's PositionGet returns.
+                    "manager_positions_query_handler": GetManagerPositionsQueryHandler(
+                        position_repo=container.resolve(IPositionRepository),
                     ),
                     # D2: /account/info and the manager UserGet both ask the
                     # container for this key. Nothing ever registered it, so
