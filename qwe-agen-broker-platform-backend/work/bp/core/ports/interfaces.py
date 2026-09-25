@@ -6,7 +6,7 @@ and external concerns (databases, message brokers, matching engines).
 Implementations live in the infrastructure layer and are injected at runtime.
 """
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, TypeVar, Generic, Callable, AsyncIterator
+from typing import Tuple, Any, List, Optional, TypeVar, Generic, Callable, AsyncIterator
 from datetime import datetime
 from decimal import Decimal
 
@@ -90,6 +90,23 @@ class IEventBus(ABC):
 
 class IAccountRepository(ABC, Generic[T]):
     """Contract for Account persistence."""
+
+    async def find_page(
+        self, limit: int = 100, offset: int = 0, **filters: Any
+    ) -> Tuple[List[T], int]:
+        """SQL-level page read (plan step 8): returns (rows, total_matching).
+
+        `total` counts ALL rows matching the filters, not the page - that is
+        what makes a pager honest. Implementations push WHERE/LIMIT/OFFSET into
+        SQL; `find_all()[:limit]` loads every row then throws most away, the
+        trap the build plan names. Accepted filters are documented on each
+        implementation; an UNKNOWN filter is refused, never ignored - silently
+        dropping a filter serves an unfiltered page that looks filtered.
+        """
+        raise NotImplementedError(
+            "find_page is part of the step-8 read plane and is not implemented "
+            "by this repository yet."
+        )
     @abstractmethod
     async def find_by_login(self, login_id: str) -> Optional[T]:
         """Retrieves an account by its unique login ID."""
@@ -172,6 +189,23 @@ class IOrderRepository(ABC, Generic[T]):
     touching business logic.
     """
 
+    async def find_page(
+        self, limit: int = 100, offset: int = 0, **filters: Any
+    ) -> Tuple[List[T], int]:
+        """SQL-level page read (plan step 8): returns (rows, total_matching).
+
+        `total` counts ALL rows matching the filters, not the page - that is
+        what makes a pager honest. Implementations push WHERE/LIMIT/OFFSET into
+        SQL; `find_all()[:limit]` loads every row then throws most away, the
+        trap the build plan names. Accepted filters are documented on each
+        implementation; an UNKNOWN filter is refused, never ignored - silently
+        dropping a filter serves an unfiltered page that looks filtered.
+        """
+        raise NotImplementedError(
+            "find_page is part of the step-8 read plane and is not implemented "
+            "by this repository yet."
+        )
+
     @abstractmethod
     async def save(self, order: T, session: Optional[Any] = None) -> T:
         """Persists an order aggregate. Handles both inserts and updates."""
@@ -236,6 +270,23 @@ class IDealRepository(ABC, Generic[T]):
     modification is a reversal plus a correction deal chained through
     original_deal_id, never a mutation of an existing deal.
     """
+
+    async def find_page(
+        self, limit: int = 100, offset: int = 0, **filters: Any
+    ) -> Tuple[List[T], int]:
+        """SQL-level page read (plan step 8): returns (rows, total_matching).
+
+        `total` counts ALL rows matching the filters, not the page - that is
+        what makes a pager honest. Implementations push WHERE/LIMIT/OFFSET into
+        SQL; `find_all()[:limit]` loads every row then throws most away, the
+        trap the build plan names. Accepted filters are documented on each
+        implementation; an UNKNOWN filter is refused, never ignored - silently
+        dropping a filter serves an unfiltered page that looks filtered.
+        """
+        raise NotImplementedError(
+            "find_page is part of the step-8 read plane and is not implemented "
+            "by this repository yet."
+        )
 
     @abstractmethod
     async def save(self, deal: T, session: Optional[Any] = None) -> T:
@@ -454,6 +505,23 @@ class IPositionRepository(ABC, Generic[T]):
 
     Used by the risk engine and the margin loop to fetch open positions.
     """
+
+    async def find_page(
+        self, limit: int = 100, offset: int = 0, **filters: Any
+    ) -> Tuple[List[T], int]:
+        """SQL-level page read (plan step 8): returns (rows, total_matching).
+
+        `total` counts ALL rows matching the filters, not the page - that is
+        what makes a pager honest. Implementations push WHERE/LIMIT/OFFSET into
+        SQL; `find_all()[:limit]` loads every row then throws most away, the
+        trap the build plan names. Accepted filters are documented on each
+        implementation; an UNKNOWN filter is refused, never ignored - silently
+        dropping a filter serves an unfiltered page that looks filtered.
+        """
+        raise NotImplementedError(
+            "find_page is part of the step-8 read plane and is not implemented "
+            "by this repository yet."
+        )
 
     @abstractmethod
     async def save(self, position: T, session: Optional[Any] = None) -> T:
@@ -841,6 +909,23 @@ class ITokenBlacklist(ABC):
 
 class IManagerRepository(ABC, Generic[T]):
     """Contract for Manager Account persistence."""
+
+    async def find_page(
+        self, limit: int = 100, offset: int = 0, **filters: Any
+    ) -> Tuple[List[T], int]:
+        """SQL-level page read (plan step 8): returns (rows, total_matching).
+
+        `total` counts ALL rows matching the filters, not the page - that is
+        what makes a pager honest. Implementations push WHERE/LIMIT/OFFSET into
+        SQL; `find_all()[:limit]` loads every row then throws most away, the
+        trap the build plan names. Accepted filters are documented on each
+        implementation; an UNKNOWN filter is refused, never ignored - silently
+        dropping a filter serves an unfiltered page that looks filtered.
+        """
+        raise NotImplementedError(
+            "find_page is part of the step-8 read plane and is not implemented "
+            "by this repository yet."
+        )
     @abstractmethod
     async def find_by_login(self, login: str) -> Optional[T]:
         """Retrieves a manager account by login."""
@@ -908,6 +993,23 @@ class IClientRepository(ABC, Generic[T]):
     their passport or address - that is the whole reason MT5 separates IMTClient
     from IMTUser, and the reason this port is not folded into IAccountRepository.
     """
+
+    async def find_page(
+        self, limit: int = 100, offset: int = 0, **filters: Any
+    ) -> Tuple[List[T], int]:
+        """SQL-level page read (plan step 8): returns (rows, total_matching).
+
+        `total` counts ALL rows matching the filters, not the page - that is
+        what makes a pager honest. Implementations push WHERE/LIMIT/OFFSET into
+        SQL; `find_all()[:limit]` loads every row then throws most away, the
+        trap the build plan names. Accepted filters are documented on each
+        implementation; an UNKNOWN filter is refused, never ignored - silently
+        dropping a filter serves an unfiltered page that looks filtered.
+        """
+        raise NotImplementedError(
+            "find_page is part of the step-8 read plane and is not implemented "
+            "by this repository yet."
+        )
 
     @abstractmethod
     async def find_by_id(self, client_id: str) -> Optional[T]:

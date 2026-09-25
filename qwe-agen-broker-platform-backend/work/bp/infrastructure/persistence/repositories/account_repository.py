@@ -1,5 +1,5 @@
 from typing import Any, Optional, List
-from sqlalchemy import select
+from sqlalchemy import BigInteger, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.domains.accounts.models import Account, Group
@@ -229,6 +229,52 @@ class SqlAccountRepository(IAccountRepository):
                 )
             )
             return int(result.scalar_one())
+
+    async def find_page(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+        group_name: Optional[str] = None,
+        account_type: Optional[str] = None,
+        enabled: Optional[bool] = None,
+        session: Optional[AsyncSession] = None,
+    ):
+        """Paged account list. Filters: group_name (exact MT5 path),
+        account_type (the derived enum value), enabled (the is_enabled MIRROR
+        column - correct for legacy rights=0 rows AND for new rows, because
+        step 5 made the mask write through to it).
+
+        Ordered by login NUMERICALLY (login is stored as a string; lexicographic
+        order would serve 1000, 10000, 100001, 885863 - a UI table that looks
+        broken). CAST to BIGINT is legal on PostgreSQL and on SQLite.
+        """
+        async def _page(sess: AsyncSession):
+            stmt = select(AccountModel)
+            count_stmt = select(func.count()).select_from(AccountModel)
+            if group_name is not None:
+                stmt = stmt.where(AccountModel.group_name == group_name)
+                count_stmt = count_stmt.where(AccountModel.group_name == group_name)
+            if account_type is not None:
+                stmt = stmt.where(AccountModel.account_type == account_type)
+                count_stmt = count_stmt.where(AccountModel.account_type == account_type)
+            if enabled is not None:
+                stmt = stmt.where(AccountModel.is_enabled == bool(enabled))
+                count_stmt = count_stmt.where(AccountModel.is_enabled == bool(enabled))
+            total = (await sess.execute(count_stmt)).scalar() or 0
+            stmt = stmt.order_by(cast(AccountModel.login, BigInteger)).limit(limit).offset(offset)
+            models = (await sess.execute(stmt)).scalars().all()
+            rows = []
+            for model in models:
+                group = None
+                if self.group_repo is not None and model.group_name:
+                    group = await self.group_repo.find_by_name(model.group_name)
+                rows.append(db_to_account(model, group))
+            return rows, int(total)
+
+        if session:
+            return await _page(session)
+        async with self.session_factory() as sess:
+            return await _page(sess)
 
     async def find_all(self):
         """Every account. ConfigCache loads this once at startup."""

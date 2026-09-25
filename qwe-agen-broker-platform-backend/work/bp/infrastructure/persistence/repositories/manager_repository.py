@@ -9,7 +9,7 @@ account without duplicating their KYC data.
 """
 from typing import List, Optional
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.domains.accounts.client import Client
@@ -66,6 +66,20 @@ class SqlManagerRepository(IManagerRepository):
             await session.merge(model)
             await session.commit()
 
+    async def find_page(self, limit: int = 100, offset: int = 0, **filters):
+        """Paged manager list, ordered by login. No filters yet: the manager
+        plane lists staff, it does not search them (MT5's own manager table
+        filters client-side). An unknown filter is refused, not ignored."""
+        if filters:
+            raise ValueError(f"SqlManagerRepository.find_page: unknown filter(s) {sorted(filters)}")
+        async def _page(sess: AsyncSession):
+            total = (await sess.execute(select(func.count()).select_from(ManagerModel))).scalar() or 0
+            stmt = select(ManagerModel).order_by(ManagerModel.login).limit(limit).offset(offset)
+            models = (await sess.execute(stmt)).scalars().all()
+            return [db_to_manager(m) for m in models], int(total)
+        async with self.session_factory() as sess:
+            return await _page(sess)
+
     async def find_all(self) -> List[ManagerAccount]:
         async with self.session_factory() as session:
             result = await session.execute(select(ManagerModel))
@@ -102,6 +116,23 @@ class SqlClientRepository:
             await session.merge(model)
             await session.commit()
             return client
+
+    async def find_page(self, limit: int = 100, offset: int = 0, **filters):
+        """Paged client list, newest first (created_at desc, id as the stable
+        tie-break). An unknown filter is refused, not ignored."""
+        if filters:
+            raise ValueError(f"SqlClientRepository.find_page: unknown filter(s) {sorted(filters)}")
+        async def _page(sess: AsyncSession):
+            total = (await sess.execute(select(func.count()).select_from(ClientModel))).scalar() or 0
+            stmt = (
+                select(ClientModel)
+                .order_by(ClientModel.created_at.desc(), ClientModel.id)
+                .limit(limit).offset(offset)
+            )
+            models = (await sess.execute(stmt)).scalars().all()
+            return [db_to_client(m) for m in models], int(total)
+        async with self.session_factory() as sess:
+            return await _page(sess)
 
     async def find_all(self) -> List[Client]:
         async with self.session_factory() as session:

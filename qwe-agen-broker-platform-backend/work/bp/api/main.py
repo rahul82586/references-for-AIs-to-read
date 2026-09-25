@@ -44,6 +44,7 @@ from api.di_providers import (
 )
 from api.routers import account, auth, trade, market_data
 from api.routers.admin import admin_router
+from api.routers.admin import reads as admin_reads
 from api.routers.admin import groups as admin_groups
 from api.routers.admin import accounts as admin_accounts
 from api.routers.admin import managers as admin_managers
@@ -170,6 +171,13 @@ def create_app(container: Optional[Dict[str, Any]] = None) -> FastAPI:
     # under /api/v1/admin/accounts, and GET /accounts/schema must resolve here
     # rather than being swallowed by a /{login} route.
     app.include_router(admin_accounts.accounts_router)
+    # Step 8: the READ plane. Mounted AFTER the step-6 write routers (so
+    # GET /accounts/schema keeps its ACC_MANAGER gate) and BEFORE admin_router
+    # (so the legacy find_all()[:limit] GET /accounts is shadowed by the paged
+    # read, not the other way round).
+    app.include_router(admin_reads.account_reads_router)
+    app.include_router(admin_reads.client_reads_router)
+    app.include_router(admin_reads.trade_reads_router)
     app.include_router(admin_accounts.clients_router)
     # Step 7: the manager plane. Also BEFORE admin_router, which already serves
     # GET /admin/managers - this router adds the writes and the catalogues, and

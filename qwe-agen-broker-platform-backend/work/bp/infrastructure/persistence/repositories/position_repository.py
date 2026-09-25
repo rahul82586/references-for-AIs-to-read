@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.domains.oms.entities.position import Position
 from core.ports.interfaces import IPositionRepository
@@ -84,6 +84,45 @@ class SqlPositionRepository(IPositionRepository[Position]):
             return await _get(session)
         async with self.session_factory() as sess:
             return await _get(sess)
+
+    async def find_page(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+        account_login: Optional[int] = None,
+        symbol: Optional[str] = None,
+        include_closed: bool = False,
+        session: Optional[AsyncSession] = None,
+    ):
+        """Paged cross-account position read (step 8's admin plane; the manager
+        plane's PositionGet keeps its unfiltered contract from F8/F9).
+
+        Open positions by default - `include_closed=True` adds the closed rows
+        for a history view. Newest first: time_create desc, position_id
+        tie-break.
+        """
+        async def _page(sess: AsyncSession):
+            conds = []
+            if not include_closed:
+                conds.append(PositionModel.time_done.is_(None))
+            if account_login is not None:
+                conds.append(PositionModel.account_login == int(account_login))
+            if symbol is not None:
+                conds.append(PositionModel.symbol == symbol)
+            count_stmt = select(func.count()).select_from(PositionModel)
+            stmt = select(PositionModel)
+            for c in conds:
+                count_stmt = count_stmt.where(c)
+                stmt = stmt.where(c)
+            total = (await sess.execute(count_stmt)).scalar() or 0
+            stmt = stmt.order_by(PositionModel.time_create.desc(), PositionModel.position_id).limit(limit).offset(offset)
+            models = (await sess.execute(stmt)).scalars().all()
+            return [db_to_position(m) for m in models], int(total)
+
+        if session:
+            return await _page(session)
+        async with self.session_factory() as sess:
+            return await _page(sess)
 
     async def find_by_account(
         self, account_login: int, session: Optional[AsyncSession] = None

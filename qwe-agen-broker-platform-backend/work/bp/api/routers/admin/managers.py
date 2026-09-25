@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
 
 from api.auth.admin_dependencies import require_right
@@ -380,6 +380,30 @@ async def create_manager(body: ManagerCreateRequest) -> Dict[str, Any]:
             "Save it now; the manager must change it at first login."
         )
     return payload
+
+
+@router.get("")
+async def list_managers_paged(
+    response: Response,
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+) -> List[Dict[str, Any]]:
+    """Paged manager list (step 8). Rights DECODED per row via the step-7
+    serializer - one builder for the manager wire shape. Declared BEFORE
+    /{login} so it can never resolve as a manager named ""."""
+    from api.di_providers import get_manager_repo
+    from application.queries.list_managers import ListManagersQuery, ListManagersQueryHandler
+
+    repo = get_manager_repo()
+    if repo is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Manager repository is not wired on this server",
+        )
+    handler = ListManagersQueryHandler(repo)
+    rows, total = await handler.handle(ListManagersQuery(limit=limit, offset=offset))
+    response.headers["X-Total-Count"] = str(total)
+    return [_manager_payload(m) for m in rows]
 
 
 @router.get("/{login}")

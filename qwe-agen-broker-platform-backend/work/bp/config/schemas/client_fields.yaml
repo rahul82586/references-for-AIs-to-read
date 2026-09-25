@@ -1,0 +1,150 @@
+# Client field descriptors - what the admin UI renders its Client form FROM.
+#
+# Authority: Include.md `IMTClient` (the 63 const accessors, read member by
+# member - RecordID..KYCStatus), the Administrator guide's Clients section,
+# and migration 009_identity_plane (the columns). MT5 names below are the exact
+# SDK accessors; `mt5: null` marks our own additions.
+#
+# Column meanings (same contract as account_fields.yaml):
+#   field     - our snake_case name (the JSON key on GET /admin/clients/{id})
+#   mt5       - the exact IMTClient accessor name, or null for our additions
+#   type      - string | int | decimal | bool | datetime
+#   tab       - create | general | address | contact | kyc | security | meta
+#   right     - the EnManagerRights name that gates EDITING it
+#   column    - clients-table column (all exist after migration 009)
+#   modelled  - true when the Client ENTITY declares it
+#   writable  - true when POST /api/v1/admin/clients accepts it TODAY
+#
+# The four password columns on this row are the DEPRECATED location (step 5):
+# MT5 keeps per-ACCOUNT credential material on IMTUser, and one client holding
+# a demo and a real account has two investor passwords. They are write-only
+# legacy: nothing new writes them, no GET ever returns them (booleans only),
+# and they are listed here so the UI can show "legacy credentials present"
+# instead of wondering why an account has an investor password and a client
+# seems not to.
+#
+# The SDK families NOT modelled yet are listed at the bottom, honestly flagged:
+# Person* demographics (BirthDate, Citizenship, Gender, TaxID, Employment,
+# Industry, Education, WealthSource, AnnualIncome, NetWorth, AnnualDeposit,
+# Document*), the Company* registry family (RegNumber, RegDate, RegAuthority,
+# Vat, Lei, LicenseNumber, LicenseAuthority, Website), Contact* extras
+# (Preferred, Messengers, SocialNetworks, LastDate), Experience* (FX, CFD,
+# Futures, Stocks), ClientType, TradingGroup, ClientOrigin(+Login), KYCStatus,
+# AssignedManager and the Compliance* family. Clients have NO wire import in
+# the live export ("Clients and accounts" carries only ConfigManagers), so
+# unlike groups/symbols there is no mt5_extra quarantine behind them - an
+# unmodelled client field is simply absent until it is declared.
+
+object: client
+wire_section: IMTClient
+fields:
+  # ---- identity / linkage --------------------------------------------------
+  - {field: id, mt5: RecordID, type: string, tab: meta, right: RIGHT_CLIENTS_ACCESS,
+     column: id, modelled: true, writable: false,
+     description: "Our primary key (UUID). MT5's RecordID is a UINT64; the mapping is ours, the role is the same."}
+  - {field: client_id, mt5: ClientExternalID, type: string, tab: create, right: RIGHT_CLIENTS_CREATE,
+     column: client_id, modelled: true, writable: true,
+     description: "External KYC id. Accounts reference their person through this record."}
+  - {field: external_id, mt5: null, type: string, tab: meta, right: RIGHT_CLIENTS_EDIT,
+     column: external_id, modelled: true, writable: true,
+     description: "Second external reference (CRM/back-office id). Our addition."}
+  - {field: mqid, mt5: null, type: string, tab: contact, right: RIGHT_CLIENTS_EDIT,
+     column: mqid, modelled: true, writable: true,
+     description: "MetaQuotes ID for push notifications. IMTClient has no MQID accessor - ours."}
+  - {field: agent_login, mt5: null, type: int, tab: general, right: RIGHT_CLIENTS_EDIT,
+     column: agent_login, modelled: true, writable: true,
+     description: "Introducing agent's account login (who earns agent commission). MT5's Introducer is a string; ours is the login."}
+
+  # ---- person / company ----------------------------------------------------
+  - {field: full_name, mt5: PersonName, type: string, tab: create, right: RIGHT_CLIENTS_DETAILS_NAME,
+     column: full_name, modelled: true, writable: true,
+     description: "The person's name. MT5 splits PersonName/PersonMiddleName/PersonLastName; we store the given name in full_name and the middle name separately."}
+  - {field: middle_name, mt5: PersonMiddleName, type: string, tab: create, right: RIGHT_CLIENTS_DETAILS_NAME,
+     column: middle_name, modelled: true, writable: true}
+  - {field: company, mt5: CompanyName, type: string, tab: create, right: RIGHT_CLIENTS_DETAILS_NAME,
+     column: company, modelled: true, writable: true,
+     description: "Corporate name. A corporate client fills this; the Company* registry family (RegNumber, Vat, Lei, ...) is not modelled yet."}
+  - {field: id_number, mt5: PersonDocumentNumber, type: string, tab: kyc, right: RIGHT_CLIENTS_DETAILS_ID,
+     column: id_number, modelled: true, writable: true,
+     description: "Passport / national id / TIN. CreateClientHandler refuses a DUPLICATE - one document identifies one person."}
+  - {field: status, mt5: ClientStatus, type: enum, enum: ClientStatus, tab: kyc, right: RIGHT_CLIENTS_KYC,
+     column: status, modelled: true, writable: true,
+     description: "The domain ClientStatus enum, EXPANDED from the code at read time (enum_values) so this descriptor can never drift from what the domain accepts. Our values are our own mapping, not the raw IMTClient::EnClientStatus ordinals (0/100/.../1300) - the SDK's finer application states (300-600) are not modelled yet."}
+
+  # ---- address (AddressX family) --------------------------------------------
+  - {field: country, mt5: AddressCountry, type: string, tab: address, right: RIGHT_CLIENTS_DETAILS_LOCATION,
+     column: country, modelled: true, writable: true}
+  - {field: state, mt5: AddressState, type: string, tab: address, right: RIGHT_CLIENTS_DETAILS_LOCATION,
+     column: state, modelled: true, writable: true}
+  - {field: city, mt5: AddressCity, type: string, tab: address, right: RIGHT_CLIENTS_DETAILS_LOCATION,
+     column: city, modelled: true, writable: true}
+  - {field: zip_code, mt5: AddressPostcode, type: string, tab: address, right: RIGHT_CLIENTS_DETAILS_ADDRESS,
+     column: zip_code, modelled: true, writable: true}
+  - {field: address, mt5: AddressStreet, type: string, tab: address, right: RIGHT_CLIENTS_DETAILS_ADDRESS,
+     column: address, modelled: true, writable: true}
+
+  # ---- contact (ContactX family) --------------------------------------------
+  - {field: phone, mt5: ContactPhone, type: string, tab: contact, right: RIGHT_CLIENTS_DETAILS_PHONE,
+     column: phone, modelled: true, writable: true}
+  - {field: email, mt5: ContactEmail, type: string, tab: contact, right: RIGHT_CLIENTS_DETAILS_EMAIL,
+     column: email, modelled: true, writable: true}
+  - {field: language, mt5: ContactLanguage, type: string, tab: contact, right: RIGHT_CLIENTS_DETAILS_GENERAL,
+     column: language, modelled: true, writable: true}
+
+  # ---- marketing ------------------------------------------------------------
+  - {field: lead_source, mt5: LeadSource, type: string, tab: general, right: RIGHT_CLIENTS_DETAILS_GENERAL,
+     column: lead_source, modelled: true, writable: true}
+  - {field: lead_campaign, mt5: LeadCampaign, type: string, tab: general, right: RIGHT_CLIENTS_DETAILS_GENERAL,
+     column: lead_campaign, modelled: true, writable: true}
+  - {field: comments, mt5: null, type: string, tab: general, right: RIGHT_CLIENTS_DETAILS_GENERAL,
+     column: comments, modelled: true, writable: true,
+     description: "Free-form notes. MT5 keeps comments in a separate IMTComment collection; ours is a column."}
+
+  # ---- timestamps (ours) -----------------------------------------------------
+  - {field: registration_date, mt5: null, type: datetime, tab: meta, right: RIGHT_CLIENTS_ACCESS,
+     column: registration_date, modelled: true, writable: false}
+  - {field: last_visit, mt5: ContactLastDate, type: datetime, tab: meta, right: RIGHT_CLIENTS_ACCESS,
+     column: last_visit, modelled: true, writable: false}
+  - {field: last_pass_change, mt5: null, type: datetime, tab: security, right: RIGHT_CLIENTS_ACCESS,
+     column: last_pass_change, modelled: true, writable: false}
+  - {field: created_at, mt5: null, type: datetime, tab: meta, right: RIGHT_CLIENTS_ACCESS,
+     column: created_at, modelled: true, writable: false}
+  - {field: updated_at, mt5: null, type: datetime, tab: meta, right: RIGHT_CLIENTS_ACCESS,
+     column: updated_at, modelled: true, writable: false}
+
+  # ---- security (DEPRECATED LOCATION - booleans only, never the values) -----
+  - {field: password_set, mt5: null, type: bool, tab: security, right: RIGHT_CLIENTS_ACCESS,
+     column: password_hash, modelled: true, writable: false, write_only: true,
+     description: "LEGACY. The authoritative credential lives on the ACCOUNT (IMTUser::PasswordHash). The GET payload exposes this boolean, never the hash."}
+  - {field: investor_password_set, mt5: null, type: bool, tab: security, right: RIGHT_CLIENTS_ACCESS,
+     column: investor_password_hash, modelled: true, writable: false, write_only: true,
+     description: "LEGACY - see password_set. Investor access is per-account in MT5."}
+  - {field: phone_password_set, mt5: null, type: bool, tab: security, right: RIGHT_CLIENTS_ACCESS,
+     column: phone_password_hash, modelled: true, writable: false, write_only: true,
+     description: "LEGACY - voice-desk identity check credential; per-account in MT5 (IMTUser::PhonePassword)."}
+  - {field: otp_enabled, mt5: null, type: bool, tab: security, right: RIGHT_CLIENTS_ACCESS,
+     column: otp_secret, modelled: true, writable: false, write_only: true,
+     description: "LEGACY - per-account in MT5 (IMTUser::OTPSecret). Boolean only; the secret never leaves the server."}
+  - {field: certificate_fingerprint, mt5: null, type: string, tab: security, right: RIGHT_CLIENTS_ACCESS,
+     column: certificate_fingerprint, modelled: true, writable: false,
+     description: "A fingerprint is an identifier, not a credential - operators need it to match a .cer file, same reasoning as the account's cert_serial_number."}
+
+# The SDK families declared above but NOT modelled - kept out of `fields`
+# rather than listed as modelled:false, because unlike groups (whose wire rows
+# carry every field) a client record has no source holding them yet. When the
+# KYC/backoffice story starts (deferred by explicit decision), these arrive
+# with their columns, mappers and descriptors together - step 5's atomicity
+# rule, not one without the other.
+unmodelled_sdk_families:
+  person: [PersonTitle, PersonLastName, PersonBirthDate, PersonCitizenship, PersonGender,
+           PersonTaxID, PersonDocumentType, PersonDocumentDate, PersonDocumentExtra,
+           PersonDocumentExpiration, PersonEmployment, PersonIndustry, PersonEducation,
+           PersonWealthSource, PersonAnnualIncome, PersonNetWorth, PersonAnnualDeposit]
+  company: [CompanyRegNumber, CompanyRegDate, CompanyRegAuthority, CompanyVat, CompanyLei,
+            CompanyLicenseNumber, CompanyLicenseAuthority, CompanyCountry, CompanyAddress,
+            CompanyWebsite]
+  contact: [ContactPreferred, ContactMessengers, ContactSocialNetworks]
+  experience: [ExperienceFX, ExperienceCFD, ExperienceFutures, ExperienceStocks]
+  classification: [ClientType, TradingGroup, ClientOrigin, ClientOriginLogin, KYCStatus]
+  governance: [AssignedManager, ComplianceApprovedBy, ComplianceClientCategory,
+               ComplianceDateApproval, ComplianceDateTermination, Introducer]

@@ -109,6 +109,22 @@ def get_position_repo() -> Any:
     return repo
 
 
+def get_client_repo() -> Any:
+    """Provider for IClientRepository (step 8 reads; step 6 writes use the
+    container key directly)."""
+    return _container.get("client_repo")
+
+
+def get_deal_repo() -> Any:
+    """Provider for IDealRepository (step 8: the admin Deals read)."""
+    return _container.get("deal_repo")
+
+
+def get_order_repo() -> Any:
+    """Provider for IOrderRepository (step 8: the admin Orders read)."""
+    return _container.get("order_repo")
+
+
 def get_symbol_repo() -> Any:
     """Provider for ISymbolRepository."""
     repo = _container.get("symbol_repo")

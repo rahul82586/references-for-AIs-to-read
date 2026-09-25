@@ -1,5 +1,5 @@
 from typing import List, Optional, Any
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.domains.oms.entities.deal import Deal
 from core.ports.interfaces import IDealRepository
@@ -39,6 +39,42 @@ class SqlDealRepository(IDealRepository[Deal]):
             return await _find(session)
         async with self.session_factory() as sess:
             return await _find(sess)
+
+    async def find_page(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+        account_login: Optional[int] = None,
+        symbol: Optional[str] = None,
+        entry: Optional[str] = None,
+        session: Optional[AsyncSession] = None,
+    ):
+        """Paged cross-account deal read (ENDPOINTS B2 - the UI's Deals page had
+        NO data source on any plane). Filters: account_login, symbol, entry
+        (IN/OUT/INOUT/OUT_BY). Newest first: created_at desc, deal_id tie-break.
+        """
+        async def _page(sess: AsyncSession):
+            conds = []
+            if account_login is not None:
+                conds.append(DealModel.account_login == int(account_login))
+            if symbol is not None:
+                conds.append(DealModel.symbol == symbol)
+            if entry is not None:
+                conds.append(DealModel.entry == entry)
+            count_stmt = select(func.count()).select_from(DealModel)
+            stmt = select(DealModel)
+            for c in conds:
+                count_stmt = count_stmt.where(c)
+                stmt = stmt.where(c)
+            total = (await sess.execute(count_stmt)).scalar() or 0
+            stmt = stmt.order_by(DealModel.created_at.desc(), DealModel.deal_id).limit(limit).offset(offset)
+            models = (await sess.execute(stmt)).scalars().all()
+            return [db_to_deal(m) for m in models], int(total)
+
+        if session:
+            return await _page(session)
+        async with self.session_factory() as sess:
+            return await _page(sess)
 
     async def find_by_order_id(self, order_id: str) -> List[Deal]:
         async with self.session_factory() as session:
