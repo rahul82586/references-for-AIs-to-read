@@ -372,15 +372,15 @@ frame; replies `{"status":"authenticated","user_id":…}`; bad token → close c
 
 | `API.*` method | Frontend calls | Backend reality | |
 |---|---|---|---|
-| `getAccounts` | `GET /admin/accounts` | `/api/v1/admin/accounts?limit=` | ✅ |
-| `getAccountDetail(login)` | `GET /admin/accounts/{login}` | `GET /api/v1/manager/UserGet?login=` (Bearer, richer) | ⚠️ |
-| `createAccount` | `POST /admin/accounts` | nothing — no `CreateAccountHandler` | ❌ |
+| `getAccounts` | `GET /admin/accounts` | `/api/v1/admin/accounts` — **M17: paged (SQL LIMIT/OFFSET), filtered (group/account_type/enabled), `X-Total-Count`** | ✅ |
+| `getAccountDetail(login)` | `GET /admin/accounts/{login}` | **M17: `GET /api/v1/admin/accounts/{login}` — the whole six-tab payload, rights decoded server-side** | ✅ |
+| `createAccount` | `POST /admin/accounts` | **M16 step 6: `POST /api/v1/admin/accounts` — full create flow, passwords returned once** | ✅ |
 | `updateAccount` | `PUT /admin/accounts/{login}` | nothing | ❌ |
 | `deleteAccount` | `DELETE /admin/accounts/{login}` | nothing | ❌ |
-| `getPositions` | `GET /admin/positions` | `GET /api/v1/manager/PositionGet` (no filters = all accounts) — **broken today: returns `[]` + `ticket:0`, see F8/F9** | ⚠️🔴 |
-| `getDeals` | `GET /admin/deals` | **nothing anywhere.** No deal-read endpoint on any plane | ❌ |
-| `getOrders` | `GET /admin/orders` | nothing | ❌ |
-| `getOrderHistory` | `GET /admin/orders/history` | nothing | ❌ |
+| `getPositions` | `GET /admin/positions` | **M17: F8/F9 FIXED (`PositionGet` serves the real book, proven live 10/10) + `GET /api/v1/admin/positions` paged with login/symbol/include_closed filters** | ✅ |
+| `getDeals` | `GET /admin/deals` | **M17: `GET /api/v1/admin/deals` — paged, filters login/symbol/entry, RIGHT_TRADES_READ** | ✅ |
+| `getOrders` | `GET /admin/orders` | **M17: `GET /api/v1/admin/orders` — paged, filters login/symbol/state/history** | ✅ |
+| `getOrderHistory` | `GET /admin/orders/history` | **M17: `GET /api/v1/admin/orders/history` — terminal states pinned** | ✅ |
 | `cancelOrder(ticket)` | `POST /admin/orders/{t}/cancel` | `POST /api/v1/manager/OrderDelete {ticket}` — caller's own account only | ⚠️ |
 | `placeOrder` | `POST /admin/trade/order` | `POST /api/v1/manager/OrderSend` — **caller's own account only**; body shape differs (`operation` not `type`, `stoploss` not `price_sl`) | ⚠️ |
 | `getSymbols` | `GET /admin/symbols` | `/api/v1/admin/symbols` | ✅ |
@@ -390,8 +390,8 @@ frame; replies `{"status":"authenticated","user_id":…}`; bad token → close c
 | `deleteSymbol` | `DELETE /admin/symbols/{s}` | nothing | ❌ |
 | `getGroups` | `GET /admin/groups` | `/api/v1/admin/groups` | ✅ |
 | `getGroupDetail` | `GET /admin/groups/{n}` | `/api/v1/admin/groups/real/real` (slash form) | ✅ |
-| `createGroup` | `POST /admin/groups` | **code exists but is not mounted** — `api/routers/admin/groups.py` declares `POST /api/v1/admin/groups/create` and `main.py` never imports it | ⚠️🔴 |
-| `updateGroup` | `PUT /admin/groups/{n}` | nothing | ❌ |
+| `createGroup` | `POST /admin/groups` | **M15: mounted, authed (`RIGHT_CFG_GROUPS`), extended + `/schema`** | ✅ |
+| `updateGroup` | `PUT /admin/groups/{n}` | **M15: `PUT` + `DELETE` live** (still limited to the pre-step-5 field subset — growing it to the 27 modelled fields is open) | ✅ |
 | `createGroupSymbolOverride` | `POST /admin/groups/{n}/symbols` | nothing | ❌ |
 | `getRoutingRules` | `GET /admin/routing` | nothing over HTTP — the data **is** there (`mt5_routing_rules` + `routing_rules` tables, M8 loader, `cli seed --mt5-routing`) | ❌ |
 | `createRoutingRule` | `POST /admin/routing` | nothing | ❌ |
@@ -409,7 +409,7 @@ frame; replies `{"status":"authenticated","user_id":…}`; bad token → close c
 | `getRiskExposure` | `GET /admin/risk/exposure` | nothing over HTTP — the coverage account's `exposure` JSON **is** maintained in the domain | ❌ |
 | `getRiskMarginCalls` | `GET /admin/risk/margin-calls` | nothing | ❌ |
 
-**Score: 5 ✅ · 6 ⚠️ · 25 ❌.** Also unmapped from your UI: the entire `data-feeds` page
+**Score after M17: 12 ✅ · 4 ⚠️ · 20 ❌.** (Was 5 ✅ · 6 ⚠️ · 25 ❌ when written; M15 fixed createGroup/updateGroup, M16 createAccount, M17 getAccountDetail/getPositions/getDeals/getOrders/getOrderHistory + paged getAccounts. Matrix rows last audited 2026-09-14.) Also unmapped from your UI: the entire `data-feeds` page
 (no feeder endpoints), `network-cluster` (probes `localhost:8000/8001/8002/8004` with `HEAD`;
 `infrastructure/cluster/` is empty and `cli sync` is the only cluster-ish command),
 and the `market-watch` page (needs `getTicks`).
@@ -427,9 +427,9 @@ Backend endpoints your `api.ts` does **not** use yet and should: `/api/v1/admin/
 
 | | Build | Why first |
 |---|---|---|
-| **B0** | **Fix `PositionGet` (F8 + F9).** Guard the nullable `price_current`, adopt the `/account/positions` contract (503 unwired, 500 on error, never a silent `[]`), and expose `position_id` as a string. | It is the only cross-account positions read the backend has, your Positions/Exposure/Margin-Call pages all depend on it, and today it returns `[]` + `ticket: 0` against your live database. Roughly 20 lines. |
+| **B0** ✅ DONE (M17) | ~~Fix `PositionGet` (F8 + F9).~~ Guard the nullable `price_current`, adopt the `/account/positions` contract (503 unwired, 500 on error, never a silent `[]`), and expose `position_id` as a string. | It is the only cross-account positions read the backend has, your Positions/Exposure/Margin-Call pages all depend on it, and today it returns `[]` + `ticket: 0` against your live database. Roughly 20 lines. |
 | **B1** | **Manager-on-behalf-of.** Every `/manager/*` trading call must accept a target `login`. Today `account_login = manager.login`, so an admin can only trade their own account. Add `login` to `OrderSend/OrderClose/OrderDelete/OrderModify/DealModify`, authorise it against the manager's `group_scope` + rights bitmask. | Nothing in a dealer/admin UI works otherwise. Also finally makes the Manager `Rights` bitmask mean something. |
-| **B2** | **`GET /api/v1/admin/orders`, `/deals`, `/positions`** (+ history variants, filters: login/symbol/state/date range, pagination). | Your Orders, Deals and Positions pages have no data source at all. `/deals` is the worst — there is no deal-read endpoint on *any* plane, so the IN/OUT lifecycle you just fixed in D11–D15 is invisible to the UI. |
+| **B2** ✅ DONE (M17) | ~~**`GET /api/v1/admin/orders`, `/deals`, `/positions`**~~ (+ history variants, filters: login/symbol/state/date range, pagination). | Your Orders, Deals and Positions pages have no data source at all. `/deals` is the worst — there is no deal-read endpoint on *any* plane, so the IN/OUT lifecycle you just fixed in D11–D15 is invisible to the UI. |
 | **B3** | **`GET /api/v1/admin/ticks`** — a snapshot of the last known bid/ask/age per symbol from `MarketDataEngine`, plus `source`. | Market Watch page. Cheapest high-value endpoint: the engine already holds the ticks; it just isn't exposed. |
 | **B4** | **Mount `api/routers/admin/groups.py`.** One line in `api/main.py`. Then align the path (`/groups/create` vs the frontend's `POST /groups`) and add `PUT`. | `CreateGroupHandler` already exists and is already tested — this is free. |
 
