@@ -1,0 +1,741 @@
+/* ================================================================
+   MT5 Admin Tree Widget — Theia sidebar panel styles
+   ================================================================ */
+
+/* ── Container ─────────────────────────────────────────────────── */
+.mt5-admin-tree-widget {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background: var(--theia-sideBar-background);
+    color: var(--theia-sideBar-foreground);
+    font-size: 12px;
+    font-family: var(--theia-ui-font-family);
+}
+
+.mt5-admin-tree-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+.mt5-admin-tree-header {
+    display: flex;
+    align-items: center;
+    padding: 4px 12px;
+    height: 22px;
+    background: var(--theia-sideBarSectionHeader-background);
+    border-bottom: 1px solid var(--theia-sideBarSectionHeader-border, var(--theia-contrastBorder));
+    flex-shrink: 0;
+}
+
+.mt5-admin-tree-header-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--theia-sideBarSectionHeader-foreground, var(--theia-foreground));
+    opacity: 0.9;
+}
+
+/* ── Scrollable body ───────────────────────────────────────────── */
+.mt5-admin-tree-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px 0;
+}
+
+.mt5-admin-tree-body::-webkit-scrollbar {
+    width: 6px;
+}
+.mt5-admin-tree-body::-webkit-scrollbar-thumb {
+    background: var(--theia-scrollbarSlider-background);
+    border-radius: 3px;
+}
+
+/* ── Tree rows ─────────────────────────────────────────────────── */
+.mt5-admin-tree-row {
+    display: flex;
+    align-items: center;
+    height: 22px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin: 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    user-select: none;
+    transition: background 0.1s ease;
+    gap: 4px;
+}
+
+.mt5-admin-tree-row:hover {
+    background: var(--theia-list-hoverBackground);
+}
+
+.mt5-admin-tree-row.selected {
+    background: var(--theia-list-activeSelectionBackground);
+    color: var(--theia-list-activeSelectionForeground);
+}
+
+/* ── Arrow ─────────────────────────────────────────────────────── */
+.mt5-admin-tree-arrow {
+    display: inline-flex;
+    align-items: center;
+    width: 16px;
+    flex-shrink: 0;
+    opacity: 0;
+    font-size: 12px;
+    color: var(--theia-foreground);
+}
+
+.mt5-admin-tree-arrow.visible {
+    opacity: 0.7;
+}
+
+.mt5-admin-tree-row:hover .mt5-admin-tree-arrow.visible,
+.mt5-admin-tree-row.selected .mt5-admin-tree-arrow.visible {
+    opacity: 1;
+}
+
+/* ── Node icon ─────────────────────────────────────────────────── */
+.mt5-admin-tree-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    opacity: 0.8;
+    color: var(--theia-symbolIcon-variableForeground, var(--theia-foreground));
+}
+
+.mt5-admin-tree-row.selected .mt5-admin-tree-icon {
+    opacity: 1;
+    color: var(--theia-list-activeSelectionForeground);
+}
+
+/* ── Label ─────────────────────────────────────────────────────── */
+.mt5-admin-tree-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12.5px;
+    line-height: 22px;
+}
+
+/* ── Children wrapper ──────────────────────────────────────────── */
+.mt5-admin-tree-children {
+    /* children inherit full row margins from their own .mt5-admin-tree-row */
+}
+
+/* ================================================================
+   MT5 Admin Content Widget — main area tab panel
+   ================================================================ */
+
+.mt5-admin-content-widget {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--theia-editor-background);
+    color: var(--theia-foreground);
+    font-family: var(--theia-ui-font-family);
+    overflow: auto;
+}
+
+.mt5-admin-content-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+/* ── Content header ────────────────────────────────────────────── */
+.mt5-admin-content-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 28px 16px;
+    border-bottom: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+    background: var(--theia-editorGroupHeader-tabsBackground);
+}
+
+.mt5-admin-content-header-icon {
+    font-size: 24px;
+    opacity: 0.85;
+    color: var(--theia-symbolIcon-variableForeground, #4fc3f7);
+}
+
+.mt5-admin-content-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    color: var(--theia-foreground);
+    border: none;
+}
+
+/* ── Content body ──────────────────────────────────────────────── */
+.mt5-admin-content-body {
+    flex: 1;
+    padding: 24px 28px;
+}
+
+/* ── Placeholder ───────────────────────────────────────────────── */
+.mt5-admin-section-placeholder {
+    max-width: 720px;
+}
+
+.mt5-admin-section-desc {
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--theia-descriptionForeground);
+    margin-bottom: 24px;
+}
+
+.mt5-admin-section-wip {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--theia-inputValidation-infoBackground);
+    border: 1px solid var(--theia-inputValidation-infoBorder);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--theia-inputValidation-infoForeground);
+    gap: 6px;
+}
+
+.mt5-admin-section-wip code {
+    font-family: var(--theia-code-font-family, monospace);
+    font-size: 11px;
+    background: var(--theia-textBlockQuote-background);
+    padding: 1px 5px;
+    border-radius: 3px;
+}
+
+/* ================================================================
+   Shared Admin Page Styles (adm-*)
+   Used by: NetworkClusterPage, GroupsPage, ClientsPage, etc.
+   ================================================================ */
+
+/* ── Page wrapper ───────────────────────────────────────────────── */
+.adm-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    font-size: 12px;
+    font-family: var(--theia-ui-font-family);
+    color: var(--theia-foreground);
+}
+
+/* ── Toolbar ────────────────────────────────────────────────────── */
+.adm-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: var(--theia-editorGroupHeader-tabsBackground);
+    border-bottom: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.adm-toolbar-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--theia-widget-border, var(--theia-contrastBorder));
+    margin: 0 4px;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────── */
+.adm-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    font-size: 11.5px;
+    border: 1px solid var(--theia-button-border, var(--theia-contrastBorder));
+    background: var(--theia-button-secondaryBackground);
+    color: var(--theia-button-secondaryForeground);
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s;
+}
+.adm-btn:hover:not(:disabled) { background: var(--theia-button-secondaryHoverBackground); }
+.adm-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.adm-btn-primary {
+    background: var(--theia-button-background);
+    color: var(--theia-button-foreground);
+    border-color: transparent;
+}
+.adm-btn-primary:hover:not(:disabled) { background: var(--theia-button-hoverBackground); }
+
+.adm-btn-danger {
+    background: transparent;
+    color: var(--theia-errorForeground);
+    border-color: var(--theia-errorForeground);
+    opacity: 0.85;
+}
+.adm-btn-danger:hover:not(:disabled) { background: var(--theia-inputValidation-errorBackground); opacity: 1; }
+
+.adm-icon-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--theia-foreground); opacity: 0.6;
+    display: flex; align-items: center; padding: 2px 4px; border-radius: 3px;
+}
+.adm-icon-btn:hover { opacity: 1; background: var(--theia-list-hoverBackground); }
+
+/* ── Tabs ───────────────────────────────────────────────────────── */
+.adm-tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 12px;
+    background: var(--theia-editorGroupHeader-tabsBackground);
+    border-bottom: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+    flex-shrink: 0;
+}
+.adm-tab {
+    padding: 6px 16px;
+    font-size: 12px;
+    border: none; background: none;
+    cursor: pointer;
+    color: var(--theia-descriptionForeground);
+    border-bottom: 2px solid transparent;
+    transition: all 0.12s;
+}
+.adm-tab:hover { color: var(--theia-foreground); }
+.adm-tab.active {
+    color: var(--theia-tab-activeForeground, var(--theia-foreground));
+    border-bottom-color: var(--theia-focusBorder);
+}
+
+/* ── Hint bar ───────────────────────────────────────────────────── */
+.adm-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 14px;
+    font-size: 11px;
+    color: var(--theia-descriptionForeground);
+    background: var(--theia-inputValidation-infoBackground);
+    border-bottom: 1px solid var(--theia-inputValidation-infoBorder);
+    flex-shrink: 0;
+}
+
+/* ── Table ──────────────────────────────────────────────────────── */
+.adm-table-wrap {
+    flex: 1;
+    overflow: auto;
+}
+.adm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+}
+.adm-table thead {
+    position: sticky;
+    top: 0;
+    background: var(--theia-editorGroupHeader-tabsBackground);
+    z-index: 1;
+}
+.adm-table th {
+    padding: 5px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    color: var(--theia-descriptionForeground);
+    border-bottom: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+    white-space: nowrap;
+}
+.adm-table td {
+    padding: 4px 10px;
+    border-bottom: 1px solid var(--theia-widget-border, transparent);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.adm-table tbody tr:hover { background: var(--theia-list-hoverBackground); }
+.adm-table tbody tr.selected { background: var(--theia-list-activeSelectionBackground); color: var(--theia-list-activeSelectionForeground); }
+.adm-table tbody tr.adm-row-disabled { opacity: 0.45; }
+
+/* ── Numbers ────────────────────────────────────────────────────── */
+.adm-num { text-align: right; font-variant-numeric: tabular-nums; font-family: monospace; }
+.adm-pos { color: var(--theia-gitDecoration-addedResourceForeground, #27ae60) !important; }
+.adm-neg { color: var(--theia-errorForeground) !important; }
+
+/* ── Badges / Tags ──────────────────────────────────────────────── */
+.adm-badge, .adm-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 10.5px;
+    font-weight: 600;
+    background: var(--theia-badge-background);
+    color: var(--theia-badge-foreground);
+    border: 1px solid transparent;
+}
+.adm-side-badge {
+    display: inline-flex; align-items: center;
+    padding: 1px 8px; border-radius: 3px;
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.3px;
+}
+.adm-side-badge.buy  { background: #27ae6022; color: #27ae60; border: 1px solid #27ae6066; }
+.adm-side-badge.sell { background: #e74c3c22; color: #e74c3c; border: 1px solid #e74c3c66; }
+
+.adm-chip {
+    display: inline-flex; align-items: center;
+    padding: 1px 8px; margin: 2px 2px;
+    background: var(--theia-badge-background);
+    color: var(--theia-badge-foreground);
+    border-radius: 10px; font-size: 10.5px;
+}
+.adm-dot {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; margin-right: 6px;
+}
+
+/* ── Status dot ─────────────────────────────────────────────────── */
+.adm-status-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.adm-status-dot.online  { background: var(--theia-successForeground, #27ae60); box-shadow: 0 0 4px #27ae6088; }
+.adm-status-dot.offline { background: var(--theia-errorForeground, #e74c3c); }
+
+/* ── CPU bar ────────────────────────────────────────────────────── */
+.adm-cpu-bar {
+    display: flex; align-items: center; gap: 6px;
+    min-width: 80px;
+}
+.adm-cpu-fill {
+    height: 4px; border-radius: 2px; transition: width 0.3s;
+    background: var(--theia-successForeground);
+}
+
+/* ── Search ─────────────────────────────────────────────────────── */
+.adm-search-wrap {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--theia-input-background);
+    border: 1px solid var(--theia-input-border);
+    border-radius: 3px;
+    padding: 2px 8px;
+}
+.adm-search {
+    background: none; border: none; outline: none;
+    color: var(--theia-input-foreground);
+    font-size: 11.5px;
+    width: 180px;
+}
+
+/* ── Inputs & Selects ───────────────────────────────────────────── */
+.adm-input {
+    background: var(--theia-input-background);
+    border: 1px solid var(--theia-input-border);
+    color: var(--theia-input-foreground);
+    border-radius: 3px; padding: 3px 7px; font-size: 12px;
+    outline: none;
+}
+.adm-input:focus { border-color: var(--theia-focusBorder); }
+.adm-select {
+    background: var(--theia-dropdown-background);
+    border: 1px solid var(--theia-dropdown-border);
+    color: var(--theia-dropdown-foreground);
+    border-radius: 3px; padding: 3px 7px; font-size: 12px;
+    cursor: pointer; outline: none;
+}
+
+/* ── Toggle ─────────────────────────────────────────────────────── */
+.adm-toggle {
+    padding: 2px 6px; border-radius: 3px; font-size: 10px;
+    border: 1px solid; cursor: pointer; background: none;
+}
+.adm-toggle.on  { color: var(--theia-successForeground); border-color: var(--theia-successForeground); }
+.adm-toggle.off { color: var(--theia-errorForeground);   border-color: var(--theia-errorForeground); }
+
+/* ── Split view ─────────────────────────────────────────────────── */
+.adm-split-view {
+    display: flex; flex: 1; overflow: hidden; gap: 0;
+}
+
+/* ── Detail panel ───────────────────────────────────────────────── */
+.adm-detail-panel {
+    display: flex; flex-direction: column;
+    flex: 1; border-left: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+    background: var(--theia-sideBar-background);
+    overflow: hidden; min-width: 220px;
+}
+.adm-detail-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px;
+    font-size: 12px; font-weight: 600;
+    border-bottom: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+    background: var(--theia-sideBarSectionHeader-background);
+    flex-shrink: 0;
+}
+.adm-detail-body {
+    flex: 1; overflow-y: auto; padding: 8px 0;
+}
+.adm-detail-section {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+    text-transform: uppercase; color: var(--theia-descriptionForeground);
+    padding: 10px 12px 4px;
+}
+.adm-kv {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 3px 12px; font-size: 11.5px;
+    border-bottom: 1px solid var(--theia-widget-border, transparent);
+    gap: 8px;
+}
+.adm-kv > span:first-child { color: var(--theia-descriptionForeground); flex-shrink: 0; }
+.adm-kv > *:last-child { text-align: right; }
+.adm-detail-footer {
+    display: flex; gap: 6px; padding: 10px 12px;
+    border-top: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+    flex-shrink: 0;
+}
+
+/* ── Routing condition chips ────────────────────────────────────── */
+.adm-condition-chip {
+    display: inline-flex; align-items: center;
+    background: var(--theia-badge-background);
+    color: var(--theia-badge-foreground);
+    padding: 1px 6px; border-radius: 10px;
+    font-size: 10px; margin-right: 4px;
+}
+.adm-condition-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 3px 12px; font-size: 11.5px;
+}
+.adm-condition-type  { color: var(--theia-descriptionForeground); }
+.adm-condition-op    { opacity: 0.6; }
+
+/* ── Modal ──────────────────────────────────────────────────────── */
+.adm-modal-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.55);
+    display: flex; align-items: center; justify-content: center;
+}
+.adm-modal {
+    background: var(--theia-editor-background);
+    border: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+    border-radius: 6px; width: 460px; max-width: 90vw;
+    display: flex; flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.adm-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+}
+.adm-modal-header h2 { margin: 0; font-size: 14px; }
+.adm-modal-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--theia-foreground); opacity: 0.6; font-size: 16px;
+}
+.adm-modal-close:hover { opacity: 1; }
+.adm-modal-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.adm-modal-footer {
+    display: flex; gap: 8px; justify-content: flex-end;
+    padding: 12px 16px;
+    border-top: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+}
+.adm-form-row {
+    display: flex; flex-direction: column; gap: 4px;
+}
+.adm-form-row label { font-size: 11.5px; font-weight: 600; color: var(--theia-descriptionForeground); }
+.adm-hint-text { font-size: 10.5px; color: var(--theia-descriptionForeground); opacity: 0.7; }
+
+/* ── Status bar ─────────────────────────────────────────────────── */
+.adm-statusbar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 3px 12px; font-size: 11px;
+    background: var(--theia-statusBar-background);
+    color: var(--theia-statusBar-foreground);
+    border-top: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+    flex-shrink: 0;
+}
+.adm-sep { opacity: 0.4; }
+
+/* ── Code ───────────────────────────────────────────────────────── */
+.adm-code {
+    font-family: var(--theia-code-font-family, monospace);
+    font-size: 10.5px;
+    background: var(--theia-textBlockQuote-background);
+    padding: 1px 4px; border-radius: 2px;
+}
+
+/* ── Form body (settings panels) ────────────────────────────────── */
+.adm-form-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 20px;
+}
+.adm-form-section {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--theia-descriptionForeground);
+    padding: 14px 0 6px;
+    border-bottom: 1px solid var(--theia-widget-border, var(--theia-contrastBorder));
+    margin-bottom: 8px;
+}
+.adm-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 10px;
+}
+.adm-form-row label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--theia-descriptionForeground);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.adm-form-row .adm-input,
+.adm-form-row .adm-select,
+.adm-form-row textarea.adm-input {
+    width: 320px;
+    max-width: 100%;
+}
+textarea.adm-input {
+    resize: vertical;
+    font-family: var(--theia-ui-font-family);
+    min-height: 40px;
+}
+
+/* ================================================================
+   MT5 Admin Groups Module Layout additions
+   ================================================================ */
+
+/* ── Split navigation tree pane ────────────────────────────────── */
+.adm-tree-pane {
+    background: var(--theia-sideBar-background);
+    flex-shrink: 0;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.adm-tree-pane-row {
+    display: flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin: 2px 0;
+    font-size: 12px;
+    color: var(--theia-foreground);
+    transition: background 0.1s ease;
+    gap: 4px;
+}
+
+.adm-tree-pane-row:hover {
+    background: var(--theia-list-hoverBackground);
+}
+
+.adm-tree-pane-row.active {
+    background: var(--theia-list-activeSelectionBackground);
+    color: var(--theia-list-activeSelectionForeground);
+}
+
+/* ── Context Menu ──────────────────────────────────────────────── */
+.adm-context-menu {
+    position: fixed;
+    z-index: 1200;
+    background: var(--theia-menu-background);
+    border: 1px solid var(--theia-menu-border, var(--theia-widget-border));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    padding: 4px 0;
+    border-radius: 4px;
+    min-width: 160px;
+    font-family: var(--theia-ui-font-family);
+    user-select: none;
+}
+
+.adm-context-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: var(--theia-menu-foreground);
+    padding: 6px 12px;
+    font-size: 11.5px;
+    text-align: left;
+    cursor: pointer;
+    gap: 8px;
+}
+
+.adm-context-item:hover {
+    background: var(--theia-menu-selectionBackground);
+    color: var(--theia-menu-selectionForeground);
+}
+
+.adm-context-item:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.adm-context-item-danger {
+    color: var(--theia-errorForeground);
+}
+
+.adm-context-sep {
+    height: 1px;
+    background: var(--theia-widget-border, var(--theia-contrastBorder));
+    margin: 4px 0;
+}
+
+/* ── Modal tab badges & validations ────────────────────────────── */
+.adm-tab-error-dot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    background: var(--theia-errorForeground);
+    border-radius: 50%;
+}
+
+.adm-tab.tab-error {
+    border-bottom: 2px solid var(--theia-errorForeground) !important;
+}
+
+/* ── Specific row states ───────────────────────────────────────── */
+.adm-row-disabled {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+.adm-row-warning {
+    background: rgba(240, 173, 78, 0.08) !important;
+}
+
+.adm-row-warning:hover {
+    background: rgba(240, 173, 78, 0.15) !important;
+}
+
+.adm-input-error-text {
+    font-size: 10.5px;
+    color: var(--theia-errorForeground);
+    margin-top: 3px;
+    font-weight: 500;
+}
+
+.adm-form-row .adm-input.error,
+.adm-form-row .adm-select.error {
+    border-color: var(--theia-errorForeground) !important;
+    background: var(--theia-inputValidation-errorBackground) !important;
+}
+
+
+

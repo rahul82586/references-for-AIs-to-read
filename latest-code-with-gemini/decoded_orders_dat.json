@@ -1,0 +1,17 @@
+[
+  {
+    "record_index": 0,
+    "byte_offset": 512,
+    "login": 0,
+    "symbol": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u4010",
+    "order_type": "BUY",
+    "state": "STARTED",
+    "volume_initial": 0.0,
+    "volume_current": 0.0,
+    "price_order": 0.0,
+    "price_trigger": 0.0,
+    "sl": 0.0,
+    "tp": 0.0,
+    "time_setup": "2242-03-16T12:56:32+00:00"
+  }
+]

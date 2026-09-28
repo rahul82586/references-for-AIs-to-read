@@ -1,0 +1,761 @@
+/* Trade Panel Debug Terminal Styles */
+
+.tp-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background-color: var(--vscode-editor-background, #1e1e1e);
+    color: var(--vscode-foreground, #cccccc);
+    font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    font-size: 13px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Header */
+.tp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background-color: var(--vscode-sideBar-background, #252526);
+    border-bottom: 1px solid var(--vscode-panel-border, #333);
+    flex-shrink: 0;
+}
+
+.tp-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #0e639c, #1177bb);
+    color: #fff;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.tp-instance-id {
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground, #888);
+    background: var(--vscode-badge-background, rgba(255, 255, 255, 0.05));
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tp-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Subbar */
+.tp-subbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 8px 16px;
+    background-color: var(--vscode-editorGroupHeader-tabsBackground, #2d2d2d);
+    border-bottom: 1px solid var(--vscode-panel-border, #333);
+    flex-shrink: 0;
+}
+
+.tp-field-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tp-field-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--vscode-descriptionForeground, #aaa);
+    white-space: nowrap;
+}
+
+.tp-account-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tp-chip {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background-color: var(--vscode-badge-background, #3a3d41);
+    color: var(--vscode-badge-foreground, #fff);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.tp-chip.group {
+    background-color: #264f78;
+    color: #9cdcfe;
+    font-weight: 600;
+}
+
+.tp-symbol-pills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tp-pill {
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid var(--vscode-button-secondaryBorder, #3c3c3c);
+    background: transparent;
+    color: var(--vscode-foreground, #ccc);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tp-pill:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.tp-pill.active {
+    background: #0e639c;
+    border-color: #1177bb;
+    color: #fff;
+    box-shadow: 0 0 8px rgba(14, 99, 156, 0.4);
+}
+
+/* Main Grid Layout */
+.tp-main-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 16px;
+    padding: 16px;
+    flex: 1;
+    min-height: 0;
+}
+
+@media (max-width: 950px) {
+    .tp-main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Order Execution Card */
+.tp-order-card {
+    background-color: var(--vscode-sideBar-background, #252526);
+    border: 1px solid var(--vscode-panel-border, #333);
+    border-radius: 6px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: fit-content;
+}
+
+.tp-ticker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--vscode-panel-border, #333);
+}
+
+.tp-ticker-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tp-ticker-title h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #fff;
+}
+
+.tp-spread-badge {
+    font-size: 11px;
+    color: #4ec9b0;
+    font-weight: 600;
+    font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.tp-live-quotes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tp-quote-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 4px 8px;
+    border-radius: 4px;
+    min-width: 75px;
+}
+
+.tp-quote-badge.bid {
+    background: rgba(229, 20, 0, 0.1);
+    border: 1px solid rgba(229, 20, 0, 0.3);
+}
+
+.tp-quote-badge.ask {
+    background: rgba(16, 137, 62, 0.1);
+    border: 1px solid rgba(16, 137, 62, 0.3);
+}
+
+.tp-quote-badge .label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.tp-quote-badge.bid .label { color: #f48771; }
+.tp-quote-badge.ask .label { color: #89d185; }
+
+.tp-quote-badge .val {
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.tp-quote-badge.bid .val { color: #f48771; }
+.tp-quote-badge.ask .val { color: #89d185; }
+
+/* One Click Trading Box */
+.tp-one-click-box {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.tp-btn-trade {
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 10px;
+    transition: all 0.15s ease;
+}
+
+.tp-btn-trade.sell {
+    background: linear-gradient(180deg, #c72c2c, #a81e1e);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(199, 44, 44, 0.3);
+}
+
+.tp-btn-trade.sell:hover:not(:disabled) {
+    background: linear-gradient(180deg, #db3636, #ba2222);
+    box-shadow: 0 4px 12px rgba(199, 44, 44, 0.5);
+    transform: translateY(-1px);
+}
+
+.tp-btn-trade.buy {
+    background: linear-gradient(180deg, #10893e, #0c6b30);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(16, 137, 62, 0.3);
+}
+
+.tp-btn-trade.buy:hover:not(:disabled) {
+    background: linear-gradient(180deg, #15a54c, #0e803a);
+    box-shadow: 0 4px 12px rgba(16, 137, 62, 0.5);
+    transform: translateY(-1px);
+}
+
+.tp-btn-trade:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.tp-btn-trade .action {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.tp-btn-trade .price {
+    font-size: 12px;
+    margin-top: 4px;
+    font-family: var(--vscode-editor-font-family, monospace);
+    opacity: 0.9;
+}
+
+.tp-volume-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.tp-input.volume-input {
+    width: 76px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--vscode-editor-font-family, monospace);
+    background-color: var(--vscode-input-background, #3c3c3c);
+    color: var(--vscode-input-foreground, #fff);
+    border: 1px solid var(--vscode-input-border, #555);
+    border-radius: 4px;
+    padding: 6px 2px;
+}
+
+.tp-volume-presets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+}
+
+.tp-vol-btn {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 5px;
+    background: var(--vscode-button-secondaryBackground, #3a3d41);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--vscode-foreground, #ccc);
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.tp-vol-btn:hover {
+    background: var(--vscode-button-secondaryHoverBackground, #45494e);
+    color: #fff;
+}
+
+/* Advanced trade form toggle */
+.tp-advanced-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--vscode-panel-border, #333);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--vscode-foreground, #ccc);
+    transition: background 0.15s ease;
+}
+
+.tp-advanced-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.tp-advanced-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 4px;
+}
+
+.tp-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.tp-form-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tp-form-col label {
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground, #aaa);
+    font-weight: 500;
+}
+
+/* Tables Container */
+.tp-tables-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+/* Common Card */
+.tp-card {
+    background-color: var(--vscode-sideBar-background, #252526);
+    border: 1px solid var(--vscode-panel-border, #333);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.tp-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background-color: var(--vscode-editorGroupHeader-tabsBackground, #2d2d2d);
+    border-bottom: 1px solid var(--vscode-panel-border, #333);
+}
+
+.tp-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.tp-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tp-table-wrap {
+    overflow-x: auto;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.tp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    text-align: left;
+}
+
+.tp-table th {
+    background-color: rgba(255, 255, 255, 0.03);
+    color: var(--vscode-descriptionForeground, #aaa);
+    font-weight: 600;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--vscode-panel-border, #333);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.tp-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    white-space: nowrap;
+}
+
+.tp-table tr:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.tp-table .mono {
+    font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.tp-table .bold {
+    font-weight: 600;
+}
+
+.tp-table .tp-empty {
+    text-align: center;
+    padding: 24px;
+    color: var(--vscode-descriptionForeground, #777);
+    font-style: italic;
+}
+
+.tp-type-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.tp-type-badge.buy {
+    background-color: rgba(16, 137, 62, 0.2);
+    color: #89d185;
+    border: 1px solid rgba(16, 137, 62, 0.4);
+}
+
+.tp-type-badge.sell {
+    background-color: rgba(229, 20, 0, 0.2);
+    color: #f48771;
+    border: 1px solid rgba(229, 20, 0, 0.4);
+}
+
+.tp-type-badge.pending {
+    background-color: rgba(218, 165, 32, 0.2);
+    color: #cca700;
+    border: 1px solid rgba(218, 165, 32, 0.4);
+}
+
+.text-green { color: #89d185; font-family: var(--vscode-editor-font-family, monospace); }
+.text-red { color: #f48771; font-family: var(--vscode-editor-font-family, monospace); }
+
+.tp-actions-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tp-action-btn {
+    border: none;
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.tp-action-btn:hover {
+    opacity: 0.85;
+}
+
+.tp-action-btn.close {
+    background-color: #c72c2c;
+    color: #fff;
+}
+
+.tp-action-btn.partial {
+    background-color: #d7ba7d;
+    color: #1e1e1e;
+}
+
+.tp-action-btn.modify {
+    background-color: #0e639c;
+    color: #fff;
+}
+
+/* Debug Log Terminal */
+.tp-log-card {
+    min-height: 180px;
+}
+
+.tp-log-wrap {
+    padding: 10px 14px;
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 11px;
+    background-color: #181818;
+    max-height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse; /* Newest log entries on top */
+    gap: 6px;
+}
+
+.tp-log-entry {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    line-height: 1.4;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    padding-bottom: 4px;
+}
+
+.tp-log-entry .time {
+    color: #666;
+}
+
+.tp-log-entry .action {
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.tp-log-entry.success .action { color: #89d185; }
+.tp-log-entry.error .action { color: #f48771; }
+
+.tp-log-entry .msg {
+    color: #ddd;
+}
+
+.tp-log-entry .data {
+    color: #9cdcfe;
+    word-break: break-all;
+    font-size: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* Common Form Controls */
+.tp-input, .tp-select {
+    background-color: var(--vscode-input-background, #3c3c3c);
+    color: var(--vscode-input-foreground, #cccccc);
+    border: 1px solid var(--vscode-input-border, #555);
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 12px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.tp-input:focus, .tp-select:focus {
+    border-color: var(--vscode-focusBorder, #007acc);
+}
+
+.tp-short-input {
+    width: 80px;
+}
+
+.tp-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--vscode-foreground, #ccc);
+    user-select: none;
+}
+
+/* Buttons */
+.tp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    white-space: nowrap;
+}
+
+.tp-btn.primary {
+    background-color: var(--vscode-button-background, #0e639c);
+    color: var(--vscode-button-foreground, #ffffff);
+}
+.tp-btn.primary:hover:not(:disabled) {
+    background-color: var(--vscode-button-hoverBackground, #1177bb);
+}
+
+.tp-btn.secondary {
+    background-color: var(--vscode-button-secondaryBackground, #3a3d41);
+    color: var(--vscode-button-secondaryForeground, #ffffff);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+.tp-btn.secondary:hover:not(:disabled) {
+    background-color: var(--vscode-button-secondaryHoverBackground, #45494e);
+}
+
+.tp-btn.danger {
+    background-color: #c72c2c;
+    color: #fff;
+}
+.tp-btn.danger:hover:not(:disabled) {
+    background-color: #db3636;
+}
+
+.tp-btn.small {
+    padding: 3px 8px;
+    font-size: 11px;
+}
+
+.tp-btn.full {
+    width: 100%;
+}
+
+.tp-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modals */
+.tp-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.tp-modal-box {
+    background-color: var(--vscode-sideBar-background, #252526);
+    border: 1px solid var(--vscode-panel-border, #454545);
+    border-radius: 6px;
+    width: 380px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+.tp-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--vscode-panel-border, #333);
+}
+
+.tp-modal-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.tp-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--vscode-foreground, #aaa);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.tp-modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tp-field-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tp-field-row label {
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground, #aaa);
+}
+
+.tp-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--vscode-panel-border, #333);
+    background-color: rgba(0, 0, 0, 0.15);
+}

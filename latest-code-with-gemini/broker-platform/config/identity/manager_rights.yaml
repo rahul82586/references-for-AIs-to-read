@@ -1,0 +1,395 @@
+# MT5 IMTConManager::EnManagerRights - GENERATED FILE, do not edit by hand.
+# Regenerate: python3 scripts/dev/extract_identity_yaml.py <repo_root> <decoded_fixtures>
+# Source: the MT5 SDK, Configuration-Interfaces.md. The index IS the position in the
+# ConfigManagers Rights array (128 entries, "0"/"1" strings). RIGHT_LAST (128) is the
+# enum terminator: it is listed for completeness and must never be granted.
+rights:
+  - index: 0
+    name: RIGHT_ADMIN
+    plane: connection
+    description: "Connection using the administrator terminal."
+  - index: 1
+    name: RIGHT_MANAGER
+    plane: connection
+    description: "Connection using the manager terminal."
+  - index: 10
+    name: RIGHT_CFG_SERVERS
+    plane: configuration
+    description: "Network configuration"
+  - index: 11
+    name: RIGHT_CFG_ACCESS
+    plane: configuration
+    description: "Configuration of the list of IP access."
+  - index: 12
+    name: RIGHT_CFG_TIME
+    plane: configuration
+    description: "Configuration of the server working time."
+  - index: 13
+    name: RIGHT_CFG_HOLIDAYS
+    plane: configuration
+    description: "Configuration of holidays."
+  - index: 14
+    name: RIGHT_CFG_HST_SYNC
+    plane: configuration
+    description: "Configuration of synchronization."
+  - index: 15
+    name: RIGHT_CFG_SYMBOLS
+    plane: configuration
+    description: "Configuration of symbols."
+  - index: 16
+    name: RIGHT_CFG_GROUPS
+    plane: configuration
+    description: "Configuration of groups."
+  - index: 17
+    name: RIGHT_CFG_MANAGERS
+    plane: configuration
+    description: "Configuration of manager rights."
+  - index: 18
+    name: RIGHT_CFG_DATAFEEDS
+    plane: configuration
+    description: "Configuration of data feeds."
+  - index: 19
+    name: RIGHT_CFG_REQUESTS
+    plane: configuration
+    description: "Configuration of the routing table."
+  - index: 20
+    name: RIGHT_SRV_JOURNALS
+    plane: server
+    description: "Access to server journals."
+  - index: 21
+    name: RIGHT_SRV_REPORTS
+    plane: server
+    description: "Receive automatic server reports."
+  - index: 22
+    name: RIGHT_CHARTS
+    plane: history
+    description: "Editing history data on the server. The RIGHT_CFG_SYMBOLS permission is additionally required to access the data."
+  - index: 23
+    name: RIGHT_EMAIL
+    plane: mail
+    description: "Sending internal emails."
+  - index: 24
+    name: RIGHT_ACCOUNTANT
+    plane: funds
+    description: "The permission to work with funds on accounts."
+  - index: 25
+    name: RIGHT_ACC_READ
+    plane: accounts
+    description: "Access to accounts."
+  - index: 26
+    name: RIGHT_ACC_DETAILS_NAME
+    plane: accounts
+    description: "Access to name details in accounts."
+  - index: 27
+    name: RIGHT_ACC_MANAGER
+    plane: accounts
+    description: "Editing accounts."
+  - index: 28
+    name: RIGHT_ACC_ONLINE
+    plane: accounts
+    description: "Getting the current client connections."
+  - index: 29
+    name: RIGHT_TRADES_READ
+    plane: trades
+    description: "Viewing trading orders, deals and positions. This permission affects the possibility of including rights and RIGHT_TRADES_MANAGER RIGHT_TRADES_DEALER."
+  - index: 30
+    name: RIGHT_TRADES_MANAGER
+    plane: trades
+    description: "Permission to edit any fields of orders, deals and positions in the administrator terminal and position open price in the the manager terminal."
+  - index: 31
+    name: RIGHT_QUOTES
+    plane: quotes
+    description: "A permission to add quotes to the stream."
+  - index: 32
+    name: RIGHT_RISK_MANAGER
+    plane: risk
+    description: "A permission to receive information about client's aggregate positions and company's coverage positions."
+  - index: 33
+    name: RIGHT_REPORTS
+    plane: reports
+    description: "A permission to request and receive various reports on client operations."
+  - index: 34
+    name: RIGHT_NEWS
+    plane: news
+    description: "Sending news. A manager/administrator is able to send news only if their account belongs to a group created at the main trade server."
+  - index: 35
+    name: RIGHT_CFG_GATEWAYS
+    plane: configuration
+    description: "Configuring gateways."
+  - index: 36
+    name: RIGHT_CFG_PLUGINS
+    plane: configuration
+    description: "Configuring plugins."
+  - index: 37
+    name: RIGHT_TRADES_DEALER
+    plane: trades
+    description: "Trading and dealing activities in the manager terminal. See \"Trading Activities\" (#dealer-supervisor) for more information."
+  - index: 38
+    name: RIGHT_CFG_REPORTS
+    plane: configuration
+    description: "Configuration of reports."
+  - index: 39
+    name: RIGHT_EXPORT
+    plane: export
+    description: "Permission to export data (orders, accounts, etc.) to external files from administrator and manager terminals. The permission does not affect the ability to export server configurations from the administrator terminal."
+  - index: 40
+    name: RIGHT_SYMBOL_DETAILS
+    plane: symbols
+    description: "Permission to change spread and execution mode."
+  - index: 41
+    name: RIGHT_TECHSUPPORT
+    plane: support
+    description: "Access to the Technical Support tab in the administrator and managerial terminals. The permission is no longer used due to being obsolete."
+  - index: 42
+    name: RIGHT_TRADES_SUPERVISOR
+    plane: trades
+    description: "This right allows a manager to view the entire queue of requests forwarded to him or her from available client groups, and track the process of request processing by other dealers in the manager terminal. The manager works in the Supervisor mode without connecting as a dealer in the manager terminal. After connecting as a dealer, the manager will only see the requests that are forwarded to the dealer for processing in accordance with the routing rules. See  \"Trading Activities\" (#dealer-supervisor) for more details about this mode."
+  - index: 43
+    name: RIGHT_QUOTES_RAW
+    plane: quotes
+    description: "When this permission is enabled, the context menu command \"Show raw quotes\" will appear in the Market Watch window of the manager terminal. This command allows viewing quotes without spread markup set for the manager group."
+  - index: 44
+    name: RIGHT_MARKET
+    plane: market
+    description: "Permission to access the Market of applications in MetaTrader 5 Administrator. The permission is no longer used due to being obsolete."
+  - index: 45
+    name: RIGHT_GRP_DETAILS_MARGIN
+    plane: groups
+    description: "Permission to change margin settings of groups (IMTConGroupSymbol::Margin*) via MetaTrader 5 Manager."
+  - index: 46
+    name: RIGHT_NOTIFICATIONS
+    plane: notifications
+    description: "A right to send push notifications to clients' mobile devices using the manager terminal. Messages are sent based on MetaQuotes ID, which is a unique user identifier. To obtain the ID, a user needs to install MetaTrader 5 Mobile for iPhone and Android. More details are provided in the manager terminal user guide."
+  - index: 47
+    name: RIGHT_ACC_DELETE
+    plane: accounts
+    description: "Deleting client accounts via the administrator and manager terminals, as well as via the Manager API. The RIGHT_ACC_MANAGER permission is also required in order to be able to delete accounts."
+  - index: 48
+    name: RIGHT_TRADES_DELETE
+    plane: trades
+    description: "Deleting any orders, accounts and positions via the administrator and manager terminals, as well as via the Manager API. The RIGHT_TRADES_MANAGER permission is also required in order to be able to delete accounts."
+  - index: 49
+    name: RIGHT_CONFIRM_ACTIONS
+    plane: connection
+    description: "By default the manager terminal displays a confirmation dialog when performing balance operations on client accounts and closing multiple orders. A manager needs to enter a randomly generated sequence of characters in order to confirm the appropriate action. If this permission is disabled, the above actions will be performed immediately without any confirmation."
+  - index: 50
+    name: RIGHT_CFG_ECN
+    plane: configuration
+    description: "ECN settings."
+  - index: 51
+    name: RIGHT_GRP_DETAILS_COMMISSION
+    plane: groups
+    description: "Permission to change commission settings of groups (IMTConCommission) via MetaTrader 5 Manager."
+  - index: 52
+    name: RIGHT_SUBSCRIPTIONS_VIEW
+    plane: subscriptions
+    description: "Viewing existing settings in the Subscriptions section in the Administrator terminal, as well as statistics on using subscriptions."
+  - index: 53
+    name: RIGHT_SUBSCRIPTIONS_EDIT
+    plane: subscriptions
+    description: "Creating, changing and removing settings in the Subscriptions section of the Administrator terminal."
+  - index: 54
+    name: RIGHT_CFG_FUNDS
+    plane: configuration
+    description: "Configuring investment funds in the Administrator terminal"
+  - index: 55
+    name: RIGHT_CFG_MAILS
+    plane: configuration
+    description: "Configuring integration with email services in the Administrator terminal"
+  - index: 56
+    name: RIGHT_CFG_MESSENGERS
+    plane: configuration
+    description: "Configuring integration with SMS providers and messengers in the Administrator terminal"
+  - index: 57
+    name: RIGHT_CFG_KYC
+    plane: configuration
+    description: "Configuring integration with KYC services in the Administrator terminal"
+  - index: 58
+    name: RIGHT_CFG_AUTOMATIONS
+    plane: configuration
+    description: "Configuring automatic actions for specified scenarios in the Administrator terminal."
+  - index: 59
+    name: RIGHT_CFG_ALLOCATIONS
+    plane: configuration
+    description: "Accessing the Allocations section of the Administrator terminal. The section allows configuring groups, in which traders are able to open demo and preliminary real accounts directly from client terminals."
+  - index: 60
+    name: RIGHT_CFG_VPS
+    plane: configuration
+    description: "Configuring Sponsored VPS for traders."
+  - index: 61
+    name: RIGHT_CFG_PAYMENTS
+    plane: configuration
+    description: "Configuring integration with payment systems (in development)."
+  - index: 62
+    name: RIGHT_ADMIN_COMPUTER
+    plane: server
+    description: "Access to the server machine administration menu in the \"Network\" section of the Administrator terminal"
+  - index: 63
+    name: RIGHT_CFG_WEB_SERVICES
+    plane: configuration
+    description: "Configuring integration with web services: SSL certificates and addresses for callback requests."
+  - index: 64
+    name: RIGHT_FINTEZA_ACCESS
+    plane: analytics
+    description: "Access the the \"Finteza Analytics\" section in MetaTrader 5 Administrator."
+  - index: 65
+    name: RIGHT_FINTEZA_WEBSITES
+    plane: analytics
+    description: "Viewing Finteza data relating to websites in the \"Analytics\" section of the Manager terminal."
+  - index: 66
+    name: RIGHT_FINTEZA_CAMPAIGNS
+    plane: analytics
+    description: "Viewing Finteza data relating to marketing campaigns in the \"Analytics\" section of the Manager terminal."
+  - index: 67
+    name: RIGHT_FINTEZA_REPORTS
+    plane: analytics
+    description: "The permission is currently not used."
+  - index: 70
+    name: RIGHT_ACC_TECHNICAL
+    plane: accounts
+    description: "When combined with the IMTUsers::USER_RIGHT_TECHNICAL (#enusersrights) permission, provides greater convenience in working with various testing and technical accounts. Disable the IMTUsers::USER_RIGHT_TECHNICAL permission for all technical accounts, and then disable access to technical accounts for the managers who do not configure the platform. Otherwise, such technical accounts can be confusing for managers working with clients."
+  - index: 71
+    name: RIGHT_ACC_TECHNICAL_MODIFY
+    plane: accounts
+    description: "Allows enabling and disabling the IMTUsers::USER_RIGHT_TECHNICAL (#enusersrights) and IMTUser::USER_RIGHT_EXCLUDE_REPORTS (#enusersrights) options for a trading account. Without this permission, the manager can only see the states of the relevant options, without the ability to change them (read-only)."
+  - index: 72
+    name: RIGHT_PAYMENTS_PROCESS
+    plane: funds
+    description: "Permission to confirm and reject payments processed manually via the Manager terminal."
+  - index: 73
+    name: RIGHT_CFG_CORPORATES
+    plane: configuration
+    description: "Access to corporate link settings."
+  - index: 74
+    name: RIGHT_CFG_LEVERAGES
+    plane: configuration
+    description: "Configuration of floating leverage."
+  - index: 75
+    name: RIGHT_CFG_STREAMING
+    plane: configuration
+    description: "Configuring integrations with streaming data processing services."
+  - index: 76
+    name: RIGHT_ACC_DETAILS_LOCATION
+    plane: accounts
+    description: "Access to location data in accounts: country, city, region, zip code."
+  - index: 77
+    name: RIGHT_ACC_DETAILS_ADDRESS
+    plane: accounts
+    description: "Access to address details in accounts."
+  - index: 78
+    name: RIGHT_ACC_DETAILS_ID
+    plane: accounts
+    description: "Access to data on document numbers in accounts."
+  - index: 79
+    name: RIGHT_ACC_DETAILS_EMAIL
+    plane: accounts
+    description: "Access to email details in accounts."
+  - index: 80
+    name: RIGHT_ACC_DETAILS_PHONE
+    plane: accounts
+    description: "Access to phone details in accounts."
+  - index: 81
+    name: RIGHT_ACC_DETAILS_GENERAL
+    plane: accounts
+    description: "Access to other data in accounts (language, status, comment, MetaQuotes ID, etc.)."
+  - index: 82
+    name: RIGHT_CLIENTS_DETAILS_NAME
+    plane: clients
+    description: "Access to name details in clients."
+  - index: 83
+    name: RIGHT_CLIENTS_DETAILS_LOCATION
+    plane: clients
+    description: "Access to location data in clients: country, city, region, zip code."
+  - index: 84
+    name: RIGHT_CLIENTS_DETAILS_ADDRESS
+    plane: clients
+    description: "Access to address details in clients."
+  - index: 85
+    name: RIGHT_CLIENTS_DETAILS_ID
+    plane: clients
+    description: "Access to data on document numbers in clients."
+  - index: 86
+    name: RIGHT_CLIENTS_DETAILS_EMAIL
+    plane: clients
+    description: "Access to email details in clients."
+  - index: 87
+    name: RIGHT_CLIENTS_DETAILS_PHONE
+    plane: clients
+    description: "Access to phone details in clients."
+  - index: 88
+    name: RIGHT_CLIENTS_DETAILS_GENERAL
+    plane: clients
+    description: "Access to other data in clients (language, status, Lead Source, Lead Campaign, etc.)."
+  - index: 96
+    name: RIGHT_CLIENTS_ACCESS
+    plane: clients
+    description: "Access to the \"Clients\" section in the Administrator and Manager terminals."
+  - index: 97
+    name: RIGHT_CLIENTS_CREATE
+    plane: clients
+    description: "Permission to create new client entries manually."
+  - index: 98
+    name: RIGHT_CLIENTS_EDIT
+    plane: clients
+    description: "Permission to edit client data, except for documents."
+  - index: 99
+    name: RIGHT_CLIENTS_DELETE
+    plane: clients
+    description: "Permission to delete client entries."
+  - index: 100
+    name: RIGHT_DOCUMENTS_ACCESS
+    plane: documents
+    description: "Permission to view client documents."
+  - index: 101
+    name: RIGHT_DOCUMENTS_CREATE
+    plane: documents
+    description: "Permission to add general information about documents in client entries."
+  - index: 102
+    name: RIGHT_DOCUMENTS_EDIT
+    plane: documents
+    description: "Permission to edit general information about documents in client entries."
+  - index: 103
+    name: RIGHT_DOCUMENTS_DELETE
+    plane: documents
+    description: "Permission to delete general information about documents from client entries."
+  - index: 104
+    name: RIGHT_DOCUMENTS_FILES_ADD
+    plane: documents
+    description: "Permission to add document files in client entries."
+  - index: 105
+    name: RIGHT_DOCUMENTS_FILES_DELETE
+    plane: documents
+    description: "Permission to delete document files from client entries."
+  - index: 106
+    name: RIGHT_COMMENTS_ACCESS
+    plane: comments
+    description: "Permission to read comments to clients and their documents."
+  - index: 107
+    name: RIGHT_COMMENTS_CREATE
+    plane: comments
+    description: "Permission to write comments to clients and their documents."
+  - index: 108
+    name: RIGHT_COMMENTS_DELETE
+    plane: comments
+    description: "Permission to delete comments to clients and their documents."
+  - index: 109
+    name: RIGHT_CLIENTS_KYC
+    plane: clients
+    description: "Permission to launch automated validation of client data via integrated KYC services. The permission affects the launching of verification from Manager and Administrator terminals, as well as the IMTAdminAPI::KYCStart and IMTServerAPI::KYCStart methods."
+  - index: 110
+    name: RIGHT_PAYMENTS_ACCESS
+    plane: payments
+    description: "Permission to view current and processed payments and payment accounts."
+  - index: 111
+    name: RIGHT_PAYMENTS_EDIT
+    plane: payments
+    description: "Permission to edit current and processed payments and payment accounts."
+  - index: 112
+    name: RIGHT_PAYMENTS_DELETE
+    plane: payments
+    description: "Permission to delete current and processed payments and payment accounts."
+  - index: 128
+    name: RIGHT_LAST
+    plane: sentinel
+    sentinel: true
+    description: "End of enumeration."
