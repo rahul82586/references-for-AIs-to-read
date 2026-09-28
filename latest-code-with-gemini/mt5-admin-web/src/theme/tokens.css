@@ -1,0 +1,92 @@
+/*
+ * Theme tokens — VS Code "Dark+" values exposed under the --theia-* names the
+ * ported pages already consume. Keeping the original variable names means the
+ * 13k lines of ported UI render correctly with zero page-level CSS changes.
+ * A light theme later is just a second copy of this file with different values.
+ */
+:root,
+.vscode-dark {
+    /* fonts */
+    --theia-ui-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu,
+        'Helvetica Neue', sans-serif;
+    --theia-code-font-family: 'Cascadia Code', 'Fira Code', Consolas, 'Courier New', monospace;
+    --theia-ui-font-size1: 13px;
+
+    /* base chrome */
+    --theia-editor-background: #1e1e1e;
+    --theia-sideBar-background: #252526;
+    --theia-sideBar-foreground: #cccccc;
+    --theia-foreground: #cccccc;
+    --theia-descriptionForeground: #9d9d9d;
+    --theia-focusBorder: #007fd4;
+    --theia-accentColor: #007acc;
+    --theia-border: #454545;
+    --theia-contrastBorder: transparent;
+    --theia-widget-border: #454545;
+    --theia-panel-border: rgba(128, 128, 128, 0.35);
+
+    /* semantic */
+    --theia-errorForeground: #f48771;
+    --theia-successForeground: #89d185;
+    --theia-warningForeground: #cca700;
+
+    /* inputs */
+    --theia-input-background: #3c3c3c;
+    --theia-input-border: #3c3c3c;
+    --theia-input-foreground: #cccccc;
+    --theia-input-placeholderForeground: #a6a6a6;
+    --theia-dropdown-background: #3c3c3c;
+    --theia-dropdown-border: #3c3c3c;
+    --theia-dropdown-foreground: #cccccc;
+    --theia-inputValidation-errorBackground: #5a1d1d;
+    --theia-inputValidation-errorBorder: #be1100;
+    --theia-inputValidation-infoBackground: #063b49;
+    --theia-inputValidation-infoBorder: #007acc;
+    --theia-inputValidation-infoForeground: #ffffff;
+    --theia-inputValidation-warningBackground: #352a05;
+
+    /* buttons */
+    --theia-button-background: #0e639c;
+    --theia-button-foreground: #ffffff;
+    --theia-button-border: transparent;
+    --theia-button-hoverBackground: #1177bb;
+    --theia-button-secondaryBackground: #3a3d41;
+    --theia-button-secondaryForeground: #ffffff;
+    --theia-button-secondaryHoverBackground: #45494e;
+
+    /* lists & trees */
+    --theia-list-hoverBackground: #2a2d2e;
+    --theia-list-activeSelectionBackground: #094771;
+    --theia-list-activeSelectionForeground: #ffffff;
+    --theia-list-inactiveSelectionBackground: #37373d;
+
+    /* badges */
+    --theia-badge-background: #4d4d4d;
+    --theia-badge-foreground: #ffffff;
+
+    /* sidebar sections */
+    --theia-sideBarSectionHeader-background: rgba(128, 128, 128, 0.35);
+    --theia-sideBarSectionHeader-foreground: #cccccc;
+    --theia-sideBarSectionHeader-border: transparent;
+
+    /* tabs & groups */
+    --theia-editorGroupHeader-tabsBackground: #252526;
+    --theia-tab-activeForeground: #ffffff;
+
+    /* menus */
+    --theia-menu-background: #252526;
+    --theia-menu-foreground: #cccccc;
+    --theia-menu-border: #454545;
+    --theia-menu-selectionBackground: #094771;
+    --theia-menu-selectionForeground: #ffffff;
+
+    /* status bar */
+    --theia-statusBar-background: #007acc;
+    --theia-statusBar-foreground: #ffffff;
+
+    /* misc */
+    --theia-scrollbarSlider-background: rgba(121, 121, 121, 0.4);
+    --theia-textBlockQuote-background: rgba(127, 127, 127, 0.1);
+    --theia-gitDecoration-addedResourceForeground: #81b88b;
+    --theia-symbolIcon-variableForeground: #74b0df;
+}

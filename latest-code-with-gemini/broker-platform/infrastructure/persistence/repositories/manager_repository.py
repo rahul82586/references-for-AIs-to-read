@@ -1,0 +1,100 @@
+"""
+Repositories for the Manager (administrator/dealer) and Client planes.
+
+MT5's model, which these follow: a Manager has a login, a positional 128-element rights
+array, and a Groups scope limiting which client groups it may administer. A Client is
+the person or company (MT5 IMTUser) and owns one or more trading Accounts (IMTAccount).
+Keeping those two apart is what lets one person hold a demo, a real and a contest
+account without duplicating their KYC data.
+"""
+from typing import List, Optional
+
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from core.domains.accounts.client import Client
+from core.domains.identity.models import ManagerAccount
+from core.ports.interfaces import IManagerRepository
+
+from ..account_models import (
+    client_to_db,
+    db_to_client,
+    db_to_manager,
+    manager_to_db,
+)
+from ..manager_models import ClientModel, ManagerModel
+
+
+class SqlManagerRepository(IManagerRepository):
+    """PostgreSQL implementation of IManagerRepository."""
+
+    def __init__(self, session_factory):
+        self.session_factory = session_factory
+
+    async def find_by_login(self, login: str) -> Optional[ManagerAccount]:
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(ManagerModel).where(ManagerModel.login == int(login))
+            )
+            model = result.scalar_one_or_none()
+            return db_to_manager(model) if model else None
+
+    async def save(self, manager: ManagerAccount, session=None) -> ManagerAccount:
+        """Persist a manager. Pass `session` to join a caller's transaction.
+
+        CreateManagerHandler writes the manager row and the account's password
+        hash together: the account is the one writer of the credential and the
+        manager row mirrors it, so a crash between the two would leave a login
+        that works on one plane and fails on the other.
+        """
+        model = manager_to_db(
+            manager,
+            mt5_extra=getattr(manager, "mt5_extra", None),
+            mt5_source=getattr(manager, "mt5_source", None),
+        )
+        if session is not None:
+            await session.merge(model)
+            return manager
+        async with self.session_factory() as own:
+            await own.merge(model)
+            await own.commit()
+            return manager
+
+    async def save_model(self, model: ManagerModel) -> None:
+        """Persist a ManagerModel row directly, preserving imported MT5 metadata."""
+        async with self.session_factory() as session:
+            await session.merge(model)
+            await session.commit()
+
+    async def find_page(self, limit: int = 100, offset: int = 0, **filters):
+        """Paged manager list, ordered by login. No filters yet: the manager
+        plane lists staff, it does not search them (MT5's own manager table
+        filters client-side). An unknown filter is refused, not ignored."""
+        if filters:
+            raise ValueError(f"SqlManagerRepository.find_page: unknown filter(s) {sorted(filters)}")
+        async def _page(sess: AsyncSession):
+            total = (await sess.execute(select(func.count()).select_from(ManagerModel))).scalar() or 0
+            stmt = select(ManagerModel).order_by(ManagerModel.login).limit(limit).offset(offset)
+            models = (await sess.execute(stmt)).scalars().all()
+            return [db_to_manager(m) for m in models], int(total)
+        async with self.session_factory() as sess:
+            return await _page(sess)
+
+    async def find_all(self) -> List[ManagerAccount]:
+        async with self.session_factory() as session:
+            result = await session.execute(select(ManagerModel))
+            return [db_to_manager(m) for m in result.scalars().all()]
+
+    async def count(self) -> int:
+        """How many managers exist. `seed` uses this to decide on first-admin bootstrap."""
+        async with self.session_factory() as session:
+            result = await session.execute(select(ManagerModel))
+            return len(result.scalars().all())
+
+
+# The legacy SqlClientRepository that lived here was DELETED in M18: step 6
+# promoted it to identity_repository.py WITH the IClientRepository port, and
+# keeping a second, portless copy in this file is exactly the drift that hid
+# D18 (two builders of one shape). This re-export keeps every existing import
+# path resolving to the ONE live class.
+from .identity_repository import SqlClientRepository  # noqa: F401,E402

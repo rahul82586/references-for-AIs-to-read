@@ -1,0 +1,95 @@
+# Manager field descriptors - what the admin UI renders its Manager form FROM.
+#
+# Authority: Include.md `IMTConManager` + `IMTConManagerAccess`, the
+# Administrator guide Managers/{Common, Permissions, Reports, IP Access List},
+# and the live TCTrader-Live ConfigManagers export (9 records).
+#
+# NOTE the SDK/wire mismatch this file documents rather than papers over:
+# `IMTConManager` has NO Name() and NO Rights() accessor - it exposes
+# `Right(index)` one bit at a time. The export's `Name` field and its 128-element
+# `Rights` array of "0"/"1" strings are EXPORT-FORMAT artefacts. So the wire
+# names below are the export's, and `mt5` cites the SDK accessor where one exists.
+#
+# Column meanings: as group_fields.yaml / account_fields.yaml.
+
+object: manager
+wire_section: ConfigManagers
+fields:
+  # ---- Common tab ----------------------------------------------------------
+  - {field: login, mt5: Login, type: int, tab: common, right: RIGHT_CFG_MANAGERS,
+     column: login, modelled: true, writable: false, required: true,
+     description: "An EXISTING account's login. There is no allocation: MT5 creates a manager only on the basis of an account, and that account must sit in a group whose name contains 'manager'."}
+  - {field: name, mt5: Name, type: string, tab: common, right: RIGHT_CFG_MANAGERS,
+     column: name, modelled: true, writable: true, max_length: 256,
+     description: "Export-format field; IMTConManager has no Name() accessor. Defaults to the account's composed IMTUser::Name."}
+  - {field: mailbox, mt5: Mailbox, type: string, tab: common, right: RIGHT_CFG_MANAGERS,
+     column: mailbox, modelled: true, writable: true,
+     description: "Internal-mail mailbox. Empty means the manager CANNOT send email via the internal mailing system."}
+  - {field: server_id, mt5: Server, type: int, tab: common, right: RIGHT_CFG_MANAGERS,
+     column: server_id, modelled: true, writable: false,
+     description: "DERIVED from the account's group, never from the request: 'a manager can service only those accounts that belong to the server, to which the group the manager is included to refers.'"}
+  - {field: group_scope, mt5: Groups, type: nested, tab: common, right: RIGHT_CFG_MANAGERS,
+     column: group_scope_json, modelled: true, writable: true,
+     description: "MT5 mask list, ORDER SIGNIFICANT (first match wins). '*' wildcard, '!' negation. A prohibition-only list ('!demo*') is REFUSED; '!demo*,real*' is valid. Rules after a bare '*' are reported unreachable - MT5 accepts them but they can never fire."}
+
+  # ---- Permissions tab -----------------------------------------------------
+  - {field: rights, mt5: Right(index), type: rights, tab: permissions, right: RIGHT_CFG_MANAGERS,
+     column: rights_json + rights_mask_0/1/2, modelled: true, writable: true,
+     description: "The 128-position mask - the ONLY authorisation truth. Accepted as NAMED rights, never indices: 2-9, 68-69, 89-95 and 113-127 are unassigned in the SDK and 128 is the never-grantable RIGHT_LAST sentinel. Stored as both the wire array (export fidelity) and three 43-bit words (queryable)."}
+  - {field: role_preset, mt5: Role, type: string, tab: permissions, right: RIGHT_CFG_MANAGERS,
+     column: null, modelled: true, writable: true,
+     description: "The Role picker. A LABEL: applying a preset loads its bits into the mask via apply_preset, and the mask stays the truth. Administrator (110 bits) and Manager (39 bits) are decoded from the live export's logins 1000 and 208011."}
+  - {field: role_label, mt5: null, type: enum, enum: ManagerRole, tab: permissions,
+     right: RIGHT_CFG_MANAGERS, column: role, modelled: true, writable: true,
+     description: "COSMETIC and deprecated as an authorisation input. MT5 has no role enum - 'admin/manager/dealer/accountant' are saved preset files over the mask. Nothing may authorise against this."}
+  - {field: request_limit_logs, mt5: LimitLogs, type: enum, enum: ManagerLimit, tab: permissions,
+     right: RIGHT_CFG_MANAGERS, column: request_limit_logs, modelled: true, writable: true,
+     description: "'Available logs' period. EnManagerLimit: 0 unlimited, 1 = 1 month ... 6 = 3 years."}
+  - {field: request_limit_reports, mt5: LimitReports, type: enum, enum: ManagerLimit, tab: permissions,
+     right: RIGHT_CFG_MANAGERS, column: request_limit_reports, modelled: true, writable: true,
+     description: "'Available reports' period. THE STRICTEST LIMIT ALWAYS APPLIES: if this is 6 months and a specific report is limited to 90 days, the manager gets 90 days. See ManagerAccount.effective_report_window."}
+
+  # ---- Reports tab ---------------------------------------------------------
+  # Per-report path + view/export permissions + depth limit. NOT modelled: it
+  # needs its own table (one row per report path per manager). Declared here so
+  # the UI can show the tab as present-but-unwired rather than inventing it.
+  - {field: report_access, mt5: null, type: nested, tab: reports, right: RIGHT_CFG_MANAGERS,
+     column: null, modelled: false, writable: false,
+     description: "Per-report access rows (path, may view, may export, depth limit). Not modelled yet - the guide's rule that the strictest of this and 'Available reports' applies is implemented for the global limit only."}
+
+  # ---- IP Access List tab --------------------------------------------------
+  - {field: allowed_ips, mt5: Access, type: nested, tab: ip_access, right: RIGHT_CFG_MANAGERS,
+     column: allowed_ips_json, modelled: true, writable: true,
+     description: "IMTConManagerAccess is a From/To RANGE, so three spellings are accepted: {\"From\":..,\"To\":..} (the wire shape), \"10.0.0.5-10.0.0.9\", and CIDR/single-address. Empty means unrestricted - which is what all nine live managers carry (Access: []). Enforced by require_right (MT_RET_AUTH_MANAGER_IPBLOCK, 1012); an unparseable entry grants NOTHING."}
+
+  # ---- Security ------------------------------------------------------------
+  - {field: password, mt5: null, type: string, tab: security, right: RIGHT_CFG_MANAGERS,
+     column: password_hash, modelled: true, writable: true, write_only: true,
+     description: "The ACCOUNT owns the credential; managers.password_hash is a MIRROR written only here, in the same transaction. Omit to copy the account's existing hash (no new plaintext is invented). Supply one and it is validated against the GROUP's AuthPasswordMin, written to the account, mirrored, and returned exactly once."}
+  - {field: must_change_password, mt5: null, type: bool, tab: security, right: RIGHT_CFG_MANAGERS,
+     column: must_change_password, modelled: true, writable: true,
+     description: "Defaults to True when THIS call generated the credential, False when the operator supplied one - MT5's own behaviour (the auto-created administrator is forced to change on first connect). Login still succeeds with it set, because a manager who cannot authenticate cannot change their password; require_right blocks privileged actions until it is changed."}
+  - {field: is_2fa_enabled, mt5: null, type: bool, tab: security, right: RIGHT_CFG_MANAGERS,
+     column: is_2fa_enabled, modelled: true, writable: true}
+  - {field: totp_secret, mt5: null, type: string, tab: security, right: RIGHT_CFG_MANAGERS,
+     column: totp_secret, modelled: true, writable: true, write_only: true}
+  - {field: certificate_fingerprint, mt5: null, type: string, tab: security, right: RIGHT_CFG_MANAGERS,
+     column: certificate_fingerprint, modelled: true, writable: false,
+     description: "Extended authentication. An unconfirmed certificate means a manager/admin CANNOT connect (a client connects investor-only)."}
+  - {field: is_active, mt5: null, type: bool, tab: security, right: RIGHT_CFG_MANAGERS,
+     column: is_active, modelled: true, writable: true,
+     description: "An unknown or inactive manager is a 401 from require_right, never a fabricated identity (the anti-F2 rule)."}
+
+  # ---- server-maintained ---------------------------------------------------
+  - {field: last_login, mt5: null, type: datetime, tab: overview, right: RIGHT_CFG_MANAGERS,
+     column: last_login, modelled: true, writable: false}
+  - {field: created_at, mt5: null, type: datetime, tab: overview, right: RIGHT_CFG_MANAGERS,
+     column: created_at, modelled: true, writable: false}
+
+  # ---- export fidelity -----------------------------------------------------
+  - {field: mt5_extra, mt5: null, type: nested, tab: null, right: null,
+     column: mt5_extra, modelled: false, writable: false,
+     description: "Wire fields no entity models, quarantined so an imported manager re-exports byte-identically."}
+  - {field: mt5_source, mt5: null, type: nested, tab: null, right: null,
+     column: mt5_source, modelled: false, writable: false,
+     description: "The original ConfigManagers record for an imported manager. Only an import can write it; save() carries it forward (the D18 lesson)."}

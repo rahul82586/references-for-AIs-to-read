@@ -1,0 +1,219 @@
+# Symbol definitions.
+#
+# VALUES ARE TAKEN FROM A REAL MT5 SERVER EXPORT (mt5-format-structure/Symbols
+# TCTrader-Live.json), not invented. Where the previous version of this file guessed,
+# the guess is noted - because each one would have produced wrong margin, wrong swaps
+# or wrong lot stepping in production.
+#
+# SCHEMA. Flat, matching the domain Symbol entity. The loader rejects unknown keys and
+# rejects the pre-M1 fields outright (precision, category, margins, trading_hours,
+# spreads, margin_initial_percent, fill_mode, sessions) with a message saying so.
+#
+# tick_size IS MT5's "Point" - the price-precision step, and what price quantisation
+# must use. MT5 has a SEPARATE field also called TickSize which is the tick alignment
+# step and is frequently ZERO (every crypto symbol in the reference export). The two
+# differ on all 362 symbols there. The loader rejects tick_size <= 0 for exactly that
+# reason: quantising to zero destroys every price.
+#
+# VOLUME UNITS. MT5 stores VolumeMin/Max/Step/Limit as integers scaled by 10^8 in the
+# *Ext fields; the plain fields on this server are scaled by 10^4, so VolumeMin "100"
+# means 0.01 lots and VolumeStep "100" means 0.01. The values below are already
+# converted to lots. Do not "fix" them back to 100.
+#
+# SESSIONS are Sunday-first, minutes from midnight, 0..1440 - MT5's own indexing. An
+# empty day means closed. Note this is NOT Python's weekday(), where 0 is Monday.
+
+forex_majors:
+  EURUSD:
+    name: EURUSD
+    path: "FX\\Forex\\EURUSD"
+    description: "Euro vs US Dollar"
+    base_currency: EUR
+    quote_currency: USD
+    digits: 5
+    tick_size: 0.00001            # MT5 Point
+    tick_value: 0                 # the real server has 0 here; it derives tick value
+    contract_size: 100000
+    calc_mode: FOREX              # MT5 CalcMode 0
+    trade_mode: FULL              # MT5 TradeMode 4
+    exec_mode: MARKET             # MT5 ExecMode 2
+    gtc_mode: GTC                 # MT5 GTCMode 0
+    fill_flags: IOC               # MT5 FillFlags 2
+    order_flags: 127              # all seven: MARKET|LIMIT|STOP|STOP_LIMIT|SL|TP|CLOSEBY
+    spread: 0
+    volume_min: 0.01              # MT5 VolumeMin "100" at 10^4 scale
+    volume_max: 10                # MT5 VolumeMax "100000"
+    volume_step: 0.01             # MT5 VolumeStep "100"
+    volume_limit: 0
+    stops_level: 0
+    freeze_level: 0
+    swap_mode: POINTS             # MT5 SwapMode 1
+    swap_long: -7.9               # real value; the old file said -2.5
+    swap_short: -0.83             # real value; the old file said 0.8 (wrong SIGN)
+    swap_3day: 5                  # MT5 Swap3Day 5 = Friday on a Sunday-first index
+    swap_year_days: 0
+    margin_rates:
+      initial_buy: 1.0
+      initial_sell: 1.0
+      maintenance_buy: 1.0
+      maintenance_sell: 1.0
+    trade_sessions:
+      Monday:    [{open: 0, close: 1440}]
+      Tuesday:   [{open: 0, close: 1440}]
+      Wednesday: [{open: 0, close: 1440}]
+      Thursday:  [{open: 0, close: 1440}]
+      Friday:    [{open: 0, close: 1440}]
+    quote_sessions:
+      Monday:    [{open: 0, close: 1440}]
+      Tuesday:   [{open: 0, close: 1440}]
+      Wednesday: [{open: 0, close: 1440}]
+      Thursday:  [{open: 0, close: 1440}]
+      Friday:    [{open: 0, close: 1440}]
+    is_trade_allowed: true
+
+  GBPUSD:
+    name: GBPUSD
+    path: "FX\\Forex\\GBPUSD"
+    description: "Great British Pound vs US Dollar"
+    base_currency: GBP
+    quote_currency: USD
+    digits: 5
+    tick_size: 0.00001
+    tick_value: 0
+    contract_size: 100000
+    calc_mode: FOREX
+    trade_mode: FULL
+    exec_mode: MARKET
+    fill_flags: IOC
+    order_flags: 127
+    volume_min: 0.01
+    volume_max: 10
+    volume_step: 0.01
+    swap_mode: POINTS
+    swap_long: -5.06
+    swap_short: -9.71
+    swap_3day: 5
+    margin_rates:
+      initial_buy: 1.0
+      initial_sell: 1.0
+      maintenance_buy: 1.0
+      maintenance_sell: 1.0
+    trade_sessions:
+      Monday:    [{open: 0, close: 1440}]
+      Tuesday:   [{open: 0, close: 1440}]
+      Wednesday: [{open: 0, close: 1440}]
+      Thursday:  [{open: 0, close: 1440}]
+      Friday:    [{open: 0, close: 1440}]
+    is_trade_allowed: true
+
+  USDJPY:
+    name: USDJPY
+    path: "FX\\Forex\\USDJPY"
+    description: "US Dollar vs Japanese Yen"
+    base_currency: USD
+    quote_currency: JPY
+    digits: 3                     # JPY pairs are 3 digits, not 5
+    tick_size: 0.001              # MT5 Point for a 3-digit pair
+    tick_value: 0
+    contract_size: 100000
+    calc_mode: FOREX
+    trade_mode: FULL
+    exec_mode: MARKET
+    fill_flags: IOC
+    order_flags: 127
+    volume_min: 0.01
+    volume_max: 100               # MT5 VolumeMax "1000000" at 10^4 scale
+    volume_step: 0.01
+    swap_mode: POINTS
+    swap_long: -8.73
+    swap_short: -27.96
+    swap_3day: 5
+    margin_rates:
+      initial_buy: 1.0
+      initial_sell: 1.0
+      maintenance_buy: 1.0
+      maintenance_sell: 1.0
+    trade_sessions:
+      Monday:    [{open: 0, close: 1440}]
+      Tuesday:   [{open: 0, close: 1440}]
+      Wednesday: [{open: 0, close: 1440}]
+      Thursday:  [{open: 0, close: 1440}]
+      Friday:    [{open: 0, close: 1440}]
+    is_trade_allowed: true
+
+metals:
+  XAUUSD:
+    name: XAUUSD
+    path: "Metals\\Spot Metals\\XAUUSD"
+    description: "Gold vs US Dollar"
+    base_currency: XAU
+    quote_currency: USD           # the old file said base USD, which is backwards
+    digits: 2
+    tick_size: 0.01
+    tick_value: 0
+    contract_size: 100            # 100 oz, not 100000
+    calc_mode: CFD                # MT5 CalcMode 2
+    trade_mode: FULL
+    exec_mode: MARKET
+    fill_flags: IOC
+    order_flags: 127
+    volume_min: 0.01
+    volume_max: 5                 # MT5 VolumeMax "50000"
+    volume_step: 0.01
+    swap_mode: POINTS
+    swap_long: -38.11
+    swap_short: -17.54
+    swap_3day: 5
+    # Metals carry a real margin rate rather than 1.0: 0.02 on this server.
+    margin_rates:
+      initial_buy: 0.02
+      initial_sell: 0.02
+      maintenance_buy: 0.02
+      maintenance_sell: 0.02
+    trade_sessions:
+      Monday:    [{open: 60, close: 1435}]
+      Tuesday:   [{open: 60, close: 1435}]
+      Wednesday: [{open: 60, close: 1435}]
+      Thursday:  [{open: 60, close: 1435}]
+      Friday:    [{open: 60, close: 1435}]
+    is_trade_allowed: true
+
+crypto:
+  BTCUSD:
+    name: BTCUSD
+    path: "Crypto-Currency\\Crypto Majors\\BTCUSD"
+    description: "Bitcoin vs US Dollar"
+    base_currency: BTC
+    quote_currency: USD
+    digits: 0
+    tick_size: 1                  # MT5 Point 1.00000000 for a 0-digit symbol
+    tick_value: 0
+    contract_size: 1              # 1 BTC, not 100000
+    calc_mode: FOREX_NO_LEVERAGE  # MT5 CalcMode 5. The old enum would have read this
+                                  # as STOCKS, which is why the enums were corrected.
+    trade_mode: FULL
+    exec_mode: MARKET
+    fill_flags: IOC
+    order_flags: 127
+    volume_min: 0.01
+    volume_max: 1000              # MT5 VolumeMax "10000000"
+    volume_step: 0.01
+    swap_mode: POINTS
+    swap_long: -27734.36
+    swap_short: -27734.36
+    swap_3day: 5
+    margin_rates:
+      initial_buy: 0.1
+      initial_sell: 0.1
+      maintenance_buy: 0.1
+      maintenance_sell: 0.1
+    # Crypto trades 24/7 on this server: all seven days open, including the weekend.
+    trade_sessions:
+      Sunday:    [{open: 0, close: 1440}]
+      Monday:    [{open: 0, close: 1440}]
+      Tuesday:   [{open: 0, close: 1440}]
+      Wednesday: [{open: 0, close: 1440}]
+      Thursday:  [{open: 0, close: 1440}]
+      Friday:    [{open: 0, close: 1440}]
+      Saturday:  [{open: 0, close: 1440}]
+    is_trade_allowed: true

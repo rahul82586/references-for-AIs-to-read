@@ -1,0 +1,17 @@
+# TLS terminator for the broker API (M5).
+#
+# Default: https://localhost with Caddy's internal CA (`curl -k` or trust the
+# root in /data/caddy/pki). Set SITE_ADDRESS=broker.example.com in the
+# environment for automatic public Let's Encrypt certificates.
+{$SITE_ADDRESS:localhost} {
+	tls internal
+	reverse_proxy api:8000 {
+		# WebSocket upgrade for /ws and the manager subscriptions router
+		header_up X-Real-IP {remote_host}
+	}
+	encode zstd gzip
+	log {
+		output stdout
+		format json
+	}
+}

@@ -1,0 +1,196 @@
+# Account field descriptors - what the admin UI renders its Account form FROM.
+#
+# Authority: Include.md `IMTUser` (the 67 SDK members), the Administrator guide
+# Accounts/Creating-Account.md and Accounts/Editing-Account.md (the six tabs and
+# which rights bit gates each), and migration 009_identity_plane (the columns).
+#
+# The lever (IDENTITY-BUILD-PLAN rule 6): the UI renders forms from this list, so
+# no field list is hardcoded in TypeScript and - critically - the two INVERTED
+# permission bits never reach the browser as a raw 0/1. `inverted: true` tells the
+# UI to render USER_RIGHT_TRADE_DISABLED as "Enable trading" and
+# USER_RIGHT_TECHNICAL as "Show to regular managers", which is how MT5's own
+# Limits tab words them.
+#
+# Column meanings:
+#   field     - our snake_case name (the JSON key on GET /admin/accounts/{login})
+#   mt5       - the exact IMTUser accessor name, or null for our own additions
+#   type      - string | int | decimal | bool | datetime | enum | flags | rights
+#   tab       - create | overview | personal | account | limits | subscriptions | security
+#   right     - the EnManagerRights name that gates EDITING it
+#   column    - accounts-table column (all of these exist after migration 009)
+#   modelled  - true when the Account ENTITY declares it
+#   writable  - true when POST/PUT /api/v1/admin/accounts accepts it TODAY
+#   bit       - for rights-mask members only: the USER_RIGHT_* hex value
+#   inverted  - the SDK bit's sense is opposite to the UI label's
+#
+# The three password fields are write-only and appear in NO response: the
+# plaintext exists once, in the create response, and the database holds Argon2.
+
+object: account
+wire_section: IMTUser
+fields:
+  # ---- identity / linkage --------------------------------------------------
+  - {field: login, mt5: Login, type: int, tab: create, right: RIGHT_ACC_MANAGER,
+     column: login, modelled: true, writable: false, required: false,
+     description: "The account number. Omit for MT5's 'Next' - the closest free number above the scope floor. Never reuse a deleted account's login."}
+  - {field: group_name, mt5: Group, type: string, tab: create, right: RIGHT_ACC_MANAGER,
+     column: group_name, modelled: true, writable: true, required: true,
+     description: "The group this account is created in. Its NAME decides account_type and its Currency decides the denomination of every balance - neither is accepted from the request body."}
+  - {field: client_id, mt5: ClientID, type: string, tab: create, right: RIGHT_ACC_MANAGER,
+     column: client_id, modelled: true, writable: true,
+     description: "The person/company this login belongs to. One client owns many accounts without duplicating their passport or address."}
+  - {field: account_type, mt5: null, type: enum, enum: AccountType, tab: overview, right: RIGHT_ACC_READ,
+     column: account_type, modelled: true, writable: false,
+     description: "DERIVED from the group name by the case-sensitive substring rule in Group-Types.md. Read-only: a caller cannot make a real account in demo\\Standard."}
+  - {field: currency, mt5: null, type: string, tab: overview, right: RIGHT_ACC_READ,
+     column: currency, modelled: true, writable: false,
+     description: "Taken from the group. MT5 forbids moving an account to a different-currency group unless its balance is zero and it has no open positions."}
+  - {field: currency_digits, mt5: null, type: int, tab: overview, right: RIGHT_ACC_READ,
+     column: currency_digits, modelled: true, writable: false}
+
+  # ---- Personal tab (Backoffice / KYC) ------------------------------------
+  - {field: first_name, mt5: FirstName, type: string, tab: personal, right: RIGHT_ACC_DETAILS_NAME,
+     column: first_name, modelled: true, writable: true, max_length: 128}
+  - {field: last_name, mt5: LastName, type: string, tab: personal, right: RIGHT_ACC_DETAILS_NAME,
+     column: last_name, modelled: true, writable: true, max_length: 128}
+  - {field: middle_name, mt5: MiddleName, type: string, tab: personal, right: RIGHT_ACC_DETAILS_NAME,
+     column: middle_name, modelled: true, writable: true, max_length: 128}
+  - {field: display_name, mt5: Name, type: string, tab: overview, right: RIGHT_ACC_READ,
+     column: null, modelled: true, writable: false,
+     description: "COMPOSED from the three parts - IMTUser::Name is not a fourth stored field."}
+  - {field: company, mt5: Company, type: string, tab: personal, right: RIGHT_ACC_DETAILS_GENERAL,
+     column: company, modelled: true, writable: true, max_length: 256}
+  - {field: country, mt5: Country, type: string, tab: personal, right: RIGHT_ACC_DETAILS_LOCATION,
+     column: country, modelled: true, writable: true, max_length: 64}
+  - {field: state, mt5: State, type: string, tab: personal, right: RIGHT_ACC_DETAILS_LOCATION,
+     column: state, modelled: true, writable: true, max_length: 64}
+  - {field: city, mt5: City, type: string, tab: personal, right: RIGHT_ACC_DETAILS_LOCATION,
+     column: city, modelled: true, writable: true, max_length: 128}
+  - {field: zip_code, mt5: ZIPCode, type: string, tab: personal, right: RIGHT_ACC_DETAILS_ADDRESS,
+     column: zip_code, modelled: true, writable: true, max_length: 32}
+  - {field: address, mt5: Address, type: string, tab: personal, right: RIGHT_ACC_DETAILS_ADDRESS,
+     column: address, modelled: true, writable: true}
+  - {field: phone, mt5: Phone, type: string, tab: personal, right: RIGHT_ACC_DETAILS_PHONE,
+     column: phone, modelled: true, writable: true, max_length: 64}
+  - {field: email, mt5: EMail, type: string, tab: personal, right: RIGHT_ACC_DETAILS_EMAIL,
+     column: email, modelled: true, writable: true, max_length: 256,
+     description: "Comma-separated list, 63 characters total in MT5."}
+  - {field: language, mt5: Language, type: string, tab: personal, right: RIGHT_ACC_DETAILS_GENERAL,
+     column: language, modelled: true, writable: true,
+     description: "A WinAPI LANGID on the MT5 wire; stored as a language tag here."}
+  - {field: residency_status, mt5: Status, type: enum, enum: ResidencyStatus, tab: personal,
+     right: RIGHT_ACC_DETAILS_GENERAL, column: residency_status, modelled: true, writable: true,
+     description: "RE resident / NR non-resident. A STRING on the wire (LPCWSTR), not an int."}
+  - {field: id_number, mt5: ID, type: string, tab: personal, right: RIGHT_ACC_DETAILS_ID,
+     column: id_number, modelled: true, writable: true,
+     description: "'Additional ID' - passport / TIN / national id."}
+  - {field: lead_source, mt5: LeadSource, type: string, tab: personal, right: RIGHT_ACC_DETAILS_GENERAL,
+     column: lead_source, modelled: true, writable: true}
+  - {field: lead_campaign, mt5: LeadCampaign, type: string, tab: personal, right: RIGHT_ACC_DETAILS_GENERAL,
+     column: lead_campaign, modelled: true, writable: true}
+  - {field: mqid, mt5: MQID, type: string, tab: personal, right: RIGHT_ACC_DETAILS_GENERAL,
+     column: mqid, modelled: true, writable: true, description: "MetaQuotes ID for push notifications."}
+  - {field: comment, mt5: Comment, type: string, tab: personal, right: RIGHT_ACC_DETAILS_GENERAL,
+     column: comment, modelled: true, writable: true}
+  - {field: registration_date, mt5: Registration, type: datetime, tab: overview, right: RIGHT_ACC_READ,
+     column: registration_date, modelled: true, writable: false,
+     description: "Filled by the server. MT5 also records the creation time in Last access."}
+
+  # ---- Account tab (trading configuration) --------------------------------
+  - {field: leverage, mt5: Leverage, type: int, tab: account, right: RIGHT_ACC_MANAGER,
+     column: leverage, modelled: true, writable: true,
+     description: "NULL or 0 = inherit the group. Refused above the group's leverage_max."}
+  - {field: color, mt5: Color, type: int, tab: account, right: RIGHT_ACC_MANAGER,
+     column: color, modelled: true, writable: true,
+     description: "COLORREF as MT5 exports it: AABBGGRR. FF000000 = transparent/no colour. This is the manager terminal's ticket colour, NOT the free-form dealer color_tag."}
+  - {field: agent_login, mt5: Agent, type: int, tab: account, right: RIGHT_ACC_MANAGER,
+     column: agent_login, modelled: true, writable: true,
+     description: "The agent (IB) account that earns agent commission on this account's deals."}
+  - {field: bank_account, mt5: Account, type: string, tab: account, right: RIGHT_ACC_MANAGER,
+     column: bank_account, modelled: true, writable: true,
+     description: "IMTUser::Account - the external system account (exchange, ECN, bank). The Account tab labels it 'Bank account'."}
+  - {field: interest_rate, mt5: InterestRate, type: decimal, tab: account, right: RIGHT_ACC_MANAGER,
+     column: interest_rate, modelled: true, writable: true, description: "Accumulated interest rate."}
+
+  # ---- Limits tab (RMS) ----------------------------------------------------
+  - {field: limit_orders, mt5: LimitOrders, type: int, tab: limits, right: RIGHT_ACC_MANAGER,
+     column: limit_orders, modelled: true, writable: true,
+     description: "NULL = inherit the group; 0 = no orders allowed. Those are different facts and are never collapsed. When both are set the STRICTER wins."}
+  - {field: limit_positions_value, mt5: LimitPositionsValue, type: decimal, tab: limits,
+     right: RIGHT_ACC_MANAGER, column: limit_positions_value, modelled: true, writable: true,
+     description: "Per symbol: total buy value minus total sell value, summed over instruments, converted to the deposit currency. See ACCOUNT-GROUP-CREATION-SPEC 2c for the exact algorithm."}
+
+  # ---- the rights mask, member by member ----------------------------------
+  # Rendered by the UI as the Limits + Account tab checkboxes. The mask is the
+  # ONLY stored fact; these are views of it (see Account.is_enabled).
+  - {field: rights, mt5: Rights, type: rights, tab: limits, right: RIGHT_ACC_MANAGER,
+     column: rights, modelled: true, writable: true,
+     description: "The whole IMTUser::EnUsersRights mask as an int. Individual members below."}
+  - {field: is_enabled, mt5: USER_RIGHT_ENABLED, type: bool, tab: account, bit: "0x1",
+     right: RIGHT_ACC_MANAGER, column: is_enabled, modelled: true, writable: true,
+     description: "'Enable this account'. DERIVED from the mask - a stored mirror, not a second fact."}
+  - {field: trading_enabled, mt5: USER_RIGHT_TRADE_DISABLED, type: bool, tab: limits, bit: "0x4",
+     inverted: true, right: RIGHT_ACC_MANAGER, column: null, modelled: true, writable: true,
+     description: "INVERTED: the SDK bit means trading is DISABLED. The guide: disabling does NOT cancel pending orders or SL/TP, but Stop Out is skipped for a disabled account."}
+  - {field: may_change_password, mt5: USER_RIGHT_PASSWORD, type: bool, tab: account, bit: "0x2",
+     right: RIGHT_ACC_MANAGER, column: null, modelled: true, writable: true}
+  - {field: trailing_enabled, mt5: USER_RIGHT_TRAILING, type: bool, tab: limits, bit: "0x20",
+     right: RIGHT_ACC_MANAGER, column: null, modelled: true, writable: true, description: "'Enable trailing stops'."}
+  - {field: experts_enabled, mt5: USER_RIGHT_EXPERT, type: bool, tab: limits, bit: "0x40",
+     right: RIGHT_ACC_MANAGER, column: null, modelled: true, writable: true, description: "'Enable algo trading by Expert Advisors'."}
+  - {field: reports_enabled, mt5: USER_RIGHT_REPORTS, type: bool, tab: limits, bit: "0x100",
+     right: RIGHT_ACC_MANAGER, column: null, modelled: true, writable: true, description: "'Enable daily reports'."}
+  - {field: otp_enabled, mt5: USER_RIGHT_OTP_ENABLED, type: bool, tab: limits, bit: "0x800",
+     right: RIGHT_ACC_MANAGER, column: null, modelled: true, writable: true, description: "'Enable one-time password'."}
+  - {field: show_to_regular_managers, mt5: USER_RIGHT_TECHNICAL, type: bool, tab: limits, bit: "0x10000",
+     inverted: true, right: RIGHT_ACC_TECHNICAL, column: null, modelled: true, writable: true,
+     description: "INVERTED: the SDK bit marks a TECHNICAL account, hidden from regular managers. Migration 009's partial index exposes exactly this bit."}
+  - {field: include_in_server_reports, mt5: USER_RIGHT_EXCLUDE_REPORTS, type: bool, tab: limits,
+     bit: "0x20000", inverted: true, right: RIGHT_ACC_MANAGER, column: null, modelled: true, writable: true}
+  - {field: must_change_password, mt5: USER_RIGHT_RESET_PASS, type: bool, tab: account, bit: "0x400",
+     right: RIGHT_ACC_MANAGER, column: null, modelled: true, writable: true,
+     description: "'Change password at next login'. Enforced by require_right() since M15."}
+  - {field: sponsored_hosting, mt5: USER_RIGHT_SPONSORED_HOSTING, type: bool, tab: limits, bit: "0x2000",
+     right: RIGHT_ACC_MANAGER, column: null, modelled: true, writable: false,
+     description: "Broker-sponsored MetaTrader VPS. Not writable until the subscriptions plane exists."}
+  - {field: push_notifications, mt5: USER_RIGHT_PUSH_NOTIFICATION, type: bool, tab: limits, bit: "0x8000",
+     right: RIGHT_ACC_MANAGER, column: null, modelled: true, writable: false}
+
+  # ---- Security tab (write-only, never in a response) ---------------------
+  - {field: master_password, mt5: PasswordHash(USER_PASS_MAIN), type: string, tab: security,
+     right: RIGHT_ACC_MANAGER, column: password_hash, modelled: true, writable: true,
+     write_only: true, min_length: 8, max_length: 16,
+     description: "Generated when omitted. Four character classes, minimum from the GROUP's AuthPasswordMin (floor 8), maximum 16. Argon2 in the database; the plaintext is returned exactly once. Changing it resets the account's connection to the trade server."}
+  - {field: investor_password, mt5: PasswordHash(USER_PASS_INVESTOR), type: string, tab: security,
+     right: RIGHT_ACC_MANAGER, column: investor_password_hash, modelled: true, writable: true,
+     write_only: true,
+     description: "Read-only session: cannot trade. Enforced by the mask, not by the UI."}
+  - {field: phone_password, mt5: PhonePassword, type: string, tab: security,
+     right: RIGHT_ACC_MANAGER, column: phone_password_hash, modelled: true, writable: true,
+     write_only: true, description: "For identifying the account owner on a voice desk call."}
+  - {field: webapi_password, mt5: PasswordHash(USER_PASS_API), type: string, tab: security,
+     right: RIGHT_ACC_MANAGER, column: webapi_password_hash, modelled: true, writable: false,
+     write_only: true, description: "Provisioned by the Web API plane, not by this form."}
+  - {field: otp_secret, mt5: OTPSecret, type: string, tab: security, right: RIGHT_ACC_MANAGER,
+     column: otp_secret, modelled: true, writable: false, write_only: true,
+     description: "16 characters, binds exactly one generator; rebinding needs a code from the old one."}
+  - {field: cert_serial_number, mt5: CertSerialNumber, type: int, tab: security, right: RIGHT_ACC_MANAGER,
+     column: cert_serial_number, modelled: true, writable: false,
+     description: "Set by the certificate plane. An unconfirmed certificate means the client connects investor-only."}
+
+  # ---- server-maintained (read-only) --------------------------------------
+  - {field: last_ip, mt5: LastIP, type: string, tab: overview, right: RIGHT_ACC_READ,
+     column: last_ip, modelled: true, writable: false,
+     description: "MT5 updates last access time and address once per hour."}
+  - {field: last_pass_change, mt5: LastPassChange, type: datetime, tab: overview, right: RIGHT_ACC_READ,
+     column: last_pass_change, modelled: true, writable: false}
+  - {field: last_login, mt5: LastAccess, type: datetime, tab: overview, right: RIGHT_ACC_READ,
+     column: last_login, modelled: true, writable: false}
+  - {field: balance, mt5: Balance, type: decimal, tab: overview, right: RIGHT_ACC_READ,
+     column: balance, modelled: true, writable: false,
+     description: "Changed only by a balance operation, which always writes a ledger row. Never by this form."}
+  - {field: equity, mt5: null, type: decimal, tab: overview, right: RIGHT_ACC_READ,
+     column: equity, modelled: true, writable: false, description: "balance + credit + floating profit."}
+  - {field: margin_level, mt5: null, type: decimal, tab: overview, right: RIGHT_ACC_READ,
+     column: margin_level, modelled: true, writable: false, unit: percent,
+     description: "PERCENT. 999999 is the no-margin-in-use sentinel, not a real level."}

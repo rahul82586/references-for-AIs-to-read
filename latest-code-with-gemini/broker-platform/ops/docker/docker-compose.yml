@@ -1,0 +1,61 @@
+# ============================================================================
+# Broker Platform — application stack (M5).
+#
+# Datastores are NOT here on purpose: point DATABASE_URL / REDIS_URL in .env at
+# whatever you run (Neon, Upstash, RDS, or the local containers from
+# docker-compose.dev.yml). The app image never changes between them.
+#
+#   cp .env.example .env   # fill in secrets + URLs
+#   docker compose -f ops/docker/docker-compose.yml up --build api
+#   docker compose -f ops/docker/docker-compose.yml --profile tls up   # + HTTPS
+# ============================================================================
+
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
+    image: broker-platform-api:latest
+    env_file:
+      - ../../.env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=5).status==200 else 1)"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+      start_period: 25s
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - broker_network
+
+  # TLS terminator. `--profile tls` keeps plain HTTP dev runs one service big.
+  # Caddyfile uses `tls internal` (self-signed) by default; set SITE_ADDRESS to
+  # a real domain for public Let's Encrypt certificates.
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["tls"]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - broker_network
+
+networks:
+  broker_network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
