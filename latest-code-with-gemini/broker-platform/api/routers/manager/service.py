@@ -86,3 +86,20 @@ async def handle_StartTimeUtc_get(
         "data": []
     }
 
+
+@router.get("/Version", summary="Server version and build")
+@router_root.get("/Version", summary="Server version and build")
+async def handle_Version_get(
+    manager: Account = Depends(get_current_manager),
+) -> Dict[str, Any]:
+    """Server version and build matching MT5 Manager API."""
+    return {
+        "retcode": 0,
+        "version": "5.0.4320",
+        "build": 4320,
+        "date": "28 Sep 2026",
+        "service": "TradeServer",
+        "endpoint": "/Version"
+    }
+
+

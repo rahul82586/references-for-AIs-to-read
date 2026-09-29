@@ -65,9 +65,15 @@ export function MarginRatesTab(): React.ReactElement {
                     </div>
 
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <span style={{ width: 90, opacity: 0.8 }}>Stops (Buy/Sell):</span>
-                        <input className="adm-input" type="number" step="0.1" style={{ flex: 1, height: 20, padding: '2px 4px', fontSize: 11 }} value={draft.rate_limit_buy_init} onChange={e => updateField('rate_limit_buy_init', parseFloat(e.target.value) || 1.0)} />
-                        <input className="adm-input" type="number" step="0.1" style={{ flex: 1, height: 20, padding: '2px 4px', fontSize: 11 }} value={draft.rate_limit_buy_maint} onChange={e => updateField('rate_limit_buy_maint', parseFloat(e.target.value) || 1.0)} />
+                        <span style={{ width: 90, opacity: 0.8 }}>Buy Stop:</span>
+                        <input className="adm-input" type="number" step="0.1" style={{ flex: 1, height: 20, padding: '2px 4px', fontSize: 11 }} value={draft.rate_stop_buy_init} onChange={e => updateField('rate_stop_buy_init', parseFloat(e.target.value) || 1.0)} />
+                        <input className="adm-input" type="number" step="0.1" style={{ flex: 1, height: 20, padding: '2px 4px', fontSize: 11 }} value={draft.rate_stop_buy_maint} onChange={e => updateField('rate_stop_buy_maint', parseFloat(e.target.value) || 1.0)} />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <span style={{ width: 90, opacity: 0.8 }}>Sell Stop:</span>
+                        <input className="adm-input" type="number" step="0.1" style={{ flex: 1, height: 20, padding: '2px 4px', fontSize: 11 }} value={draft.rate_stop_sell_init} onChange={e => updateField('rate_stop_sell_init', parseFloat(e.target.value) || 1.0)} />
+                        <input className="adm-input" type="number" step="0.1" style={{ flex: 1, height: 20, padding: '2px 4px', fontSize: 11 }} value={draft.rate_stop_sell_maint} onChange={e => updateField('rate_stop_sell_maint', parseFloat(e.target.value) || 1.0)} />
                     </div>
 
                     <div style={{ fontWeight: 'bold', fontSize: 11, borderBottom: '1px solid var(--theia-border)', paddingBottom: 2, marginTop: 4, marginBottom: 2 }}>

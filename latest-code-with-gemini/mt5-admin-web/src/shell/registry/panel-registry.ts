@@ -11,6 +11,7 @@
  * - props    → JSON-safe component props (e.g. { view: 'history' })
  */
 import type * as React from 'react';
+import { MT5_MANAGER_TREE, ManagerTreeNode, findManagerNode } from '../tree/mt5-manager-tree';
 
 export interface PanelDefinition {
     /** stable id used for serialization — must survive reloads */
@@ -96,6 +97,18 @@ function iconFor(nodeId: string): string {
  * panel with a filter prop (same behaviour as the Theia contribution).
  */
 export function resolveTreeNode(rawNodeId: string, label?: string): ResolvedPanel {
+    /* Manager section nodes resolve into the shared editor area */
+    if (rawNodeId.startsWith('manager.')) {
+        const node = findManagerNode(MT5_MANAGER_TREE, rawNodeId);
+        return {
+            panelId: rawNodeId,
+            defId: node?.panel ?? 'manager-section',
+            title: label ?? node?.label ?? rawNodeId,
+            icon: node?.icon ?? 'shield',
+            props: { nodeId: rawNodeId, sectionLabel: label ?? node?.label, api: node?.api },
+        };
+    }
+
     let nodeId = rawNodeId;
     let filterPath = '';
     if (nodeId.startsWith('groups:')) {

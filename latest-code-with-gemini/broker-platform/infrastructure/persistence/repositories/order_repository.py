@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from sqlalchemy import func, select
+from sqlalchemy import func, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.domains.oms.entities.order import Order, OrderState
 from core.ports.interfaces import IOrderRepository
@@ -58,9 +58,13 @@ class SqlOrderRepository(IOrderRepository[Order]):
         limit: int = 100,
         offset: int = 0,
         account_login: Optional[int] = None,
+        account_logins: Optional[List[int]] = None,
+        ticket: Optional[str] = None,
         symbol: Optional[str] = None,
         state: Optional[str] = None,
         history: Optional[bool] = None,
+        from_time: Optional[datetime] = None,
+        to_time: Optional[datetime] = None,
         session: Optional[AsyncSession] = None,
     ):
         """Paged cross-account order read (ENDPOINTS B2).
@@ -81,15 +85,30 @@ class SqlOrderRepository(IOrderRepository[Order]):
                 )
         async def _page(sess: AsyncSession):
             conds = []
-            if account_login is not None:
+            if account_logins:
+                conds.append(OrderModel.account_login.in_(account_logins))
+            elif account_login is not None:
                 conds.append(OrderModel.account_login == int(account_login))
-            if symbol is not None:
-                conds.append(OrderModel.symbol == symbol)
+            if ticket is not None and ticket.strip():
+                t = ticket.strip()
+                conds.append(or_(OrderModel.ticket_id == t, OrderModel.external_id == t))
+            if symbol is not None and symbol.strip() and symbol.strip() != "*":
+                sym_clean = symbol.strip()
+                if sym_clean.endswith("*"):
+                    prefix = sym_clean[:-1].replace("/", "\\")
+                    conds.append(or_(OrderModel.symbol.like(f"{prefix}%"), OrderModel.symbol.ilike(f"%\\{prefix}%")))
+                else:
+                    leaf = sym_clean.split("\\")[-1].split("/")[-1].strip()
+                    conds.append(or_(OrderModel.symbol == sym_clean, OrderModel.symbol == leaf, OrderModel.symbol.ilike(f"%\\{leaf}")))
             if state is not None:
                 conds.append(OrderModel.state == state)
             elif history is not None:
                 states = self._TERMINAL_STATES if history else self._ACTIVE_STATES
                 conds.append(OrderModel.state.in_(states))
+            if from_time is not None:
+                conds.append(OrderModel.time_setup >= from_time)
+            if to_time is not None:
+                conds.append(OrderModel.time_setup <= to_time)
             count_stmt = select(func.count()).select_from(OrderModel)
             stmt = select(OrderModel)
             for c in conds:

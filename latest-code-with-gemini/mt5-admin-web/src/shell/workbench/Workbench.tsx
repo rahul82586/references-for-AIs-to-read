@@ -4,6 +4,9 @@ import { SideBar } from './SideBar';
 import { StatusBar } from './StatusBar';
 import { LayoutHost, LayoutHostHandle } from '../layout/LayoutHost';
 import { CommandPalette } from '../command-palette/CommandPalette';
+import { useUiStore } from '../../store/uiStore';
+
+const ManagerToolbox = React.lazy(() => import('../../features/manager/Toolbox').then((m) => ({ default: m.ManagerToolbox })));
 
 /**
  * The workbench — VS Code's layout grammar applied to MT5 administration:
@@ -17,6 +20,8 @@ export function Workbench(): React.ReactElement {
     const layoutRef = React.useRef<LayoutHostHandle>(null);
     const [sidebarVisible, setSidebarVisible] = React.useState(true);
     const [paletteOpen, setPaletteOpen] = React.useState(false);
+    const section = useUiStore((s) => s.section);
+    const [toolboxVisible, setToolboxVisible] = React.useState(true);
 
     const openNode = React.useCallback((nodeId: string, label: string, extraProps?: Record<string, unknown>) => {
         layoutRef.current?.openNode(nodeId, label, extraProps);
@@ -97,6 +102,16 @@ export function Workbench(): React.ReactElement {
                     <LayoutHost ref={layoutRef} />
                 </div>
             </div>
+
+            {section === 'manager' && (
+                <React.Suspense fallback={null}>
+                    <ManagerToolbox
+                        visible={toolboxVisible}
+                        onToggle={() => setToolboxVisible((v) => !v)}
+                        onOpenNode={openNode}
+                    />
+                </React.Suspense>
+            )}
 
             <StatusBar onOpenSettings={openSettings} />
 

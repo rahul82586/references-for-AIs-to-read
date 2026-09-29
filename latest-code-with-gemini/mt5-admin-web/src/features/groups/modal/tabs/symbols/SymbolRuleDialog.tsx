@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { FloatingWindow } from '../../../../../shared/FloatingWindow';
 import { SymbolRule } from '../../GroupDraftContext';
 
 interface SymbolRuleDialogProps {
@@ -220,8 +221,8 @@ export function SymbolRuleDialog({ rule, onClose, onSave, availableSymbols }: Sy
     };
 
     return (
-        <div className="adm-modal-overlay" style={{ zIndex: 1100 }} onClick={onClose}>
-            <form className="adm-modal" style={{ width: 550, height: 500, display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()} onSubmit={handleSave}>
+        <FloatingWindow width={820} height={600} onClose={onClose}>
+            <form className="adm-modal" style={{ width: 550, height: 500, display: 'flex', flexDirection: 'column' }} onSubmit={handleSave}>
                 <div className="adm-modal-header" style={{ flexShrink: 0 }}>
                     <h2>{rule ? 'Edit Symbol Access Rule' : 'Add Symbol Access Rule'}</h2>
                     <button type="button" className="adm-modal-close" onClick={onClose}>×</button>
@@ -747,6 +748,6 @@ export function SymbolRuleDialog({ rule, onClose, onSave, availableSymbols }: Sy
                     <button type="button" className="adm-btn" onClick={onClose}>Cancel</button>
                 </div>
             </form>
-        </div>
+        </FloatingWindow>
     );
 }

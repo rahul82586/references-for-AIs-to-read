@@ -203,13 +203,36 @@ async def create_symbol(
     trade_mode = _to_mode_int(trade_mode_val, 4, _TRADE_MODES)
     exec_mode = _to_mode_int(exec_mode_val, 2, _EXEC_MODES)
 
+    fill_flags = 1  # Default FOK
+    if "fill_flags" in body or "fill_flags" in settings_dict:
+        try:
+            fill_flags = int(body.get("fill_flags", settings_dict.get("fill_flags", 1)))
+        except Exception:
+            pass
+    elif "filling_flags" in settings_dict or "filling_flags" in body:
+        ff_val = body.get("filling_flags", settings_dict.get("filling_flags"))
+        if isinstance(ff_val, list):
+            mask = 0
+            for item in ff_val:
+                s_item = str(item).lower()
+                if s_item == 'fok': mask |= 1
+                elif s_item == 'ioc': mask |= 2
+                elif s_item in ('boc', 'return'): mask |= 4
+            fill_flags = mask
+
     volume_min = Decimal(str(settings_dict.get("volume_min", body.get("volume_min", 0.01))))
     volume_max = Decimal(str(settings_dict.get("volume_max", body.get("volume_max", 100.0))))
     volume_step = Decimal(str(settings_dict.get("volume_step", body.get("volume_step", 0.01))))
+    volume_limit = Decimal(str(settings_dict.get("volume_limit", body.get("volume_limit", 0))))
     description = str(settings_dict.get("description", body.get("description", "")))
     is_trade_allowed = bool(settings_dict.get("is_trade_allowed", body.get("is_trade_allowed", True)))
 
-    point = Decimal(10) ** -digits
+    ts_input = body.get("tick_size", settings_dict.get("tick_size", body.get("point")))
+    point = Decimal(str(ts_input)) if ts_input else (Decimal(10) ** -digits)
+    tv_input = body.get("tick_value", settings_dict.get("tick_value", 1.0))
+    tick_value = Decimal(str(tv_input)) if tv_input else Decimal("1")
+    stops_level = int(body.get("stops_level", settings_dict.get("stops_level", body.get("limit_stop_level", settings_dict.get("limit_stop_level", 0)))))
+    freeze_level = int(body.get("freeze_level", settings_dict.get("freeze_level", 0)))
 
     model = SymbolModel(
         name=sym_name,
@@ -221,16 +244,20 @@ async def create_symbol(
         margin_currency=quote_currency,
         digits=digits,
         point=point,
-        mt5_tick_size=Decimal("0"),
-        tick_value=Decimal("1"),
+        mt5_tick_size=point,
+        tick_value=tick_value,
         contract_size=contract_size,
         calc_mode=calc_mode,
         trade_mode=trade_mode,
         exec_mode=exec_mode,
+        fill_flags=fill_flags,
         spread=spread,
+        stops_level=stops_level,
+        freeze_level=freeze_level,
         volume_min=volume_min,
         volume_max=volume_max,
         volume_step=volume_step,
+        volume_limit=volume_limit,
         margin_initial_buy=margin_initial,
         margin_initial_sell=margin_initial,
         margin_maintenance_buy=margin_maintenance,
@@ -287,7 +314,21 @@ async def update_symbol(
         d_val = body.get("digits") if "digits" in body else settings_dict.get("digits")
         digits = int(d_val)
         model.digits = digits
-        model.point = Decimal(10) ** -digits
+        if not ("tick_size" in body or "tick_size" in settings_dict):
+            model.point = Decimal(10) ** -digits
+            model.mt5_tick_size = model.point
+
+    if "tick_size" in body or "tick_size" in settings_dict or "point" in body:
+        ts = body.get("tick_size", settings_dict.get("tick_size", body.get("point")))
+        if ts is not None and float(ts) > 0:
+            ts_dec = Decimal(str(ts))
+            model.point = ts_dec
+            model.mt5_tick_size = ts_dec
+
+    if "tick_value" in body or "tick_value" in settings_dict:
+        tv = body.get("tick_value", settings_dict.get("tick_value"))
+        if tv is not None:
+            model.tick_value = Decimal(str(tv))
 
     if "contract_size" in body or "contract_size" in settings_dict:
         c_val = body.get("contract_size") if "contract_size" in body else settings_dict.get("contract_size")
@@ -305,25 +346,34 @@ async def update_symbol(
         sp = body.get("spread_base", body.get("spread", settings_dict.get("spread", model.spread)))
         model.spread = int(sp)
 
-    if "margin_initial" in body or "margin_initial" in settings_dict:
-        mi = Decimal(str(body.get("margin_initial", settings_dict.get("margin_initial"))))
-        model.margin_initial_buy = mi
-        model.margin_initial_sell = mi
+    if "stops_level" in body or "stops_level" in settings_dict or "limit_stop_level" in body or "limit_stop_level" in settings_dict:
+        sl = body.get("stops_level", settings_dict.get("stops_level", body.get("limit_stop_level", settings_dict.get("limit_stop_level"))))
+        if sl is not None:
+            model.stops_level = int(sl)
 
-    if "margin_maintenance" in body or "margin_maintenance" in settings_dict:
-        mm = Decimal(str(body.get("margin_maintenance", settings_dict.get("margin_maintenance"))))
-        model.margin_maintenance_buy = mm
-        model.margin_maintenance_sell = mm
+    if "freeze_level" in body or "freeze_level" in settings_dict:
+        fl = body.get("freeze_level", settings_dict.get("freeze_level"))
+        if fl is not None:
+            model.freeze_level = int(fl)
 
     if "description" in body or "description" in settings_dict:
         model.description = str(body.get("description", settings_dict.get("description", model.description)))
 
-    if "volume_min" in settings_dict:
-        model.volume_min = Decimal(str(settings_dict["volume_min"]))
-    if "volume_max" in settings_dict:
-        model.volume_max = Decimal(str(settings_dict["volume_max"]))
-    if "volume_step" in settings_dict:
-        model.volume_step = Decimal(str(settings_dict["volume_step"]))
+    if "volume_min" in settings_dict or "volume_min" in body or "min_volume" in settings_dict:
+        v_min = settings_dict.get("volume_min", body.get("volume_min", settings_dict.get("min_volume")))
+        if v_min is not None: model.volume_min = Decimal(str(v_min))
+
+    if "volume_max" in settings_dict or "volume_max" in body or "max_volume" in settings_dict:
+        v_max = settings_dict.get("volume_max", body.get("volume_max", settings_dict.get("max_volume")))
+        if v_max is not None: model.volume_max = Decimal(str(v_max))
+
+    if "volume_step" in settings_dict or "volume_step" in body or "step_volume" in settings_dict:
+        v_step = settings_dict.get("volume_step", body.get("volume_step", settings_dict.get("step_volume")))
+        if v_step is not None: model.volume_step = Decimal(str(v_step))
+
+    if "volume_limit" in settings_dict or "volume_limit" in body or "limit_volume" in settings_dict:
+        v_lim = settings_dict.get("volume_limit", body.get("volume_limit", settings_dict.get("limit_volume")))
+        if v_lim is not None: model.volume_limit = Decimal(str(v_lim))
 
     if "calc_mode" in settings_dict:
         model.calc_mode = _to_mode_int(settings_dict["calc_mode"], model.calc_mode, _CALC_MODES)
@@ -337,16 +387,92 @@ async def update_symbol(
     if "is_trade_allowed" in settings_dict:
         model.is_trade_allowed = bool(settings_dict["is_trade_allowed"])
 
-    if settings_dict:
-        extra = dict(model.mt5_extra or {})
-        extra.update(settings_dict)
-        model.mt5_extra = extra
+    # 16-way margin rate matrix
+    rate_map = {
+        "rate_market_buy_init": "margin_initial_buy",
+        "rate_market_buy_maint": "margin_maintenance_buy",
+        "rate_market_sell_init": "margin_initial_sell",
+        "rate_market_sell_maint": "margin_maintenance_sell",
+        "rate_limit_buy_init": "margin_initial_buy_limit",
+        "rate_limit_buy_maint": "margin_maintenance_buy_limit",
+        "rate_limit_sell_init": "margin_initial_sell_limit",
+        "rate_limit_sell_maint": "margin_maintenance_sell_limit",
+        "rate_stop_buy_init": "margin_initial_buy_stop",
+        "rate_stop_buy_maint": "margin_maintenance_buy_stop",
+        "rate_stop_sell_init": "margin_initial_sell_stop",
+        "rate_stop_sell_maint": "margin_maintenance_sell_stop",
+    }
+    for ui_k, db_k in rate_map.items():
+        if ui_k in settings_dict or ui_k in body:
+            v = settings_dict.get(ui_k, body.get(ui_k))
+            if v is not None:
+                setattr(model, db_k, Decimal(str(v)))
+
+    mr = body.get("margin_rates") or settings_dict.get("margin_rates")
+    if isinstance(mr, dict):
+        for k, v in mr.items():
+            db_k = f"margin_{k}" if not k.startswith("margin_") else k
+            if hasattr(model, db_k) and v is not None:
+                setattr(model, db_k, Decimal(str(v)))
+
+    if "fill_flags" in body or "fill_flags" in settings_dict:
+        try:
+            model.fill_flags = int(body.get("fill_flags", settings_dict.get("fill_flags", model.fill_flags)))
+        except Exception:
+            pass
+    elif "filling_flags" in settings_dict or "filling_flags" in body:
+        ff_val = body.get("filling_flags", settings_dict.get("filling_flags"))
+        if isinstance(ff_val, list):
+            mask = 0
+            for item in ff_val:
+                s_item = str(item).lower()
+                if s_item == 'fok': mask |= 1
+                elif s_item == 'ioc': mask |= 2
+                elif s_item in ('boc', 'return'): mask |= 4
+            model.fill_flags = mask
+
+    extra = dict(model.mt5_extra or {})
+    extra.update(settings_dict)
+    extra["fill_flags"] = model.fill_flags
+    if "margin_hedged" in body or "margin_hedged" in settings_dict:
+        extra["margin_hedged"] = str(body.get("margin_hedged", settings_dict.get("margin_hedged", 0)))
+    if "calc_hedged_larger_leg" in body or "calc_hedged_larger_leg" in settings_dict:
+        extra["calc_hedged_larger_leg"] = bool(body.get("calc_hedged_larger_leg", settings_dict.get("calc_hedged_larger_leg", False)))
+    if "margin_initial" in body or "margin_initial" in settings_dict:
+        mi = body.get("margin_initial", settings_dict.get("margin_initial"))
+        if mi is not None and float(mi) > 0:
+            extra["margin_initial"] = str(mi)
+        else:
+            extra.pop("margin_initial", None)
+    if "margin_maintenance" in body or "margin_maintenance" in settings_dict:
+        mm = body.get("margin_maintenance", settings_dict.get("margin_maintenance"))
+        if mm is not None and float(mm) > 0:
+            extra["margin_maintenance"] = str(mm)
+        else:
+            extra.pop("margin_maintenance", None)
+    model.mt5_extra = extra
 
     await symbol_repo.save_model(model)
     domain_sym = db_to_symbol(model)
     cache = get_config_cache()
     if cache:
         cache.upsert_symbol(domain_sym)
+
+    try:
+        from api.di_providers import get_account_repo, get_position_repo
+        acc_repo = get_account_repo()
+        pos_repo = get_position_repo()
+        if pos_repo and acc_repo:
+            from api.routers.manager.trading import recalculate_account_trading_state
+            open_pos = await pos_repo.get_by_symbol(model.name)
+            if not open_pos and clean_name != model.name:
+                open_pos = await pos_repo.get_by_symbol(clean_name)
+            if open_pos:
+                logins = {int(p.account_login) for p in open_pos}
+                for l in logins:
+                    await recalculate_account_trading_state(l, acc_repo, pos_repo, symbol_repo)
+    except Exception as exc:
+        logger.warning(f"update_symbol account recalculation notice: {exc}")
 
     return _symbol_summary(domain_sym)
 

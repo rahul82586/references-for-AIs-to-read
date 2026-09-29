@@ -34,6 +34,8 @@ interface PositionItem {
     tp: number;
     profit: number;
     open_time?: string;
+    close_time?: string;
+    is_closed?: boolean;
     comment?: string;
 }
 
@@ -89,7 +91,8 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
     const [sl, setSl] = React.useState<string>('');
     const [tp, setTp] = React.useState<string>('');
     const [routing, setRouting] = React.useState<string>('Auto'); // Auto, A-Book, B-Book
-    const [fillType, setFillType] = React.useState<string>('FOK'); // FOK, IOC, RETURN
+    const [fillType, setFillType] = React.useState<string>('ANY'); // ANY, FOK, IOC, RETURN
+    const [closeFillType, setCloseFillType] = React.useState<string>('ANY'); // ANY, FOK, IOC, RETURN
     const [deviation, setDeviation] = React.useState<number>(10);
     const [comment, setComment] = React.useState<string>(`Debug Trade`);
 
@@ -142,7 +145,7 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
         try {
             const [ticksData, posData, ordData] = await Promise.all([
                 API.getTicks().catch(() => ({})),
-                API.getPositions().catch(() => []),
+                API.getPositions({ openOnly: true }).catch(() => []),
                 API.getOrders({ openOnly: true }).catch(() => []),
             ]);
 
@@ -231,7 +234,7 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
 
     // Filtered Positions & Orders (only genuinely open positions & active pending orders)
     const displayedPositions = React.useMemo(() => {
-        const active = positions.filter(p => Number(p.volume) > 0);
+        const active = positions.filter(p => !p.is_closed && !p.close_time && Number(p.volume) > 0);
         if (!filterAccountOnly) return active;
         return active.filter(p => Number(p.login) === Number(selectedLogin));
     }, [positions, filterAccountOnly, selectedLogin]);
@@ -308,12 +311,13 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
     };
 
     // Close Single Position
-    const handleClosePosition = async (ticket: string | number, lots?: number) => {
+    const handleClosePosition = async (ticket: string | number, lots?: number, modeOverride?: string) => {
+        const mode = modeOverride || closeFillType || 'ANY';
         try {
-            const res = await API.closePosition(ticket, lots);
+            const res = await API.closePosition(ticket, lots, undefined, mode);
             const success = res.retcode === 0 || !res.retcode;
             addLog(
-                `OrderClose #${ticket} (${lots ? `${lots} lots` : 'Full'})`,
+                `OrderClose #${ticket} (${lots ? `${lots} lots` : 'Full'}, fill=${mode})`,
                 success,
                 res.message || 'Position closed successfully',
                 res
@@ -342,15 +346,15 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
 
     // Bulk Close Positions
     const handleCloseAll = async () => {
-        if (!confirm(`Close all open positions for account ${selectedLogin}?`)) return;
+        if (!confirm(`Close all open positions for account ${selectedLogin} using ${closeFillType} mode?`)) return;
         try {
             for (const p of displayedPositions) {
                 const posId = p.position_id ?? p.ticket;
                 if (posId !== undefined) {
-                    await API.closePosition(posId);
+                    await API.closePosition(posId, undefined, undefined, closeFillType);
                 }
             }
-            addLog(`CloseAllPositions`, true, `Requested closure of ${displayedPositions.length} positions`);
+            addLog(`CloseAllPositions`, true, `Requested closure of ${displayedPositions.length} positions (fill=${closeFillType})`);
             await refreshData();
         } catch (err: any) {
             addLog(`CloseAllPositions FAILED`, false, err.message || 'Bulk close failed');
@@ -573,6 +577,25 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
                         </button>
                     </div>
 
+                    {/* Quick Fill Mode Selector */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', margin: '4px 0 10px 0', fontSize: '11px' }}>
+                        <span style={{ color: 'var(--vscode-descriptionForeground, #aaa)', fontWeight: 600 }}>Fill Mode:</span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                            {['ANY', 'FOK', 'IOC', 'RETURN'].map(f => (
+                                <button
+                                    key={f}
+                                    type="button"
+                                    className={`tp-pill ${fillType === f ? 'active' : ''}`}
+                                    style={{ padding: '2px 8px', fontSize: '11px', height: 'auto' }}
+                                    onClick={() => setFillType(f)}
+                                    title={`Execute orders using ${f} filling mode`}
+                                >
+                                    {f === 'ANY' ? '⚡ ANY' : f}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Advanced Parameters Toggle */}
                     <div className="tp-advanced-toggle" onClick={() => setAdvancedOpen(!advancedOpen)}>
                         <span>
@@ -631,9 +654,10 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
                                 <div className="tp-form-col">
                                     <label>Fill Policy:</label>
                                     <select className="tp-select" value={fillType} onChange={e => setFillType(e.target.value)}>
+                                        <option value="ANY">ANY (Auto - Try All Supported)</option>
                                         <option value="FOK">FOK (Fill Or Kill)</option>
                                         <option value="IOC">IOC (Immediate Or Cancel)</option>
-                                        <option value="RETURN">RETURN (Partial Fill)</option>
+                                        <option value="RETURN">RETURN / BOC (Book Or Cancel)</option>
                                     </select>
                                 </div>
                             </div>
@@ -667,6 +691,21 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
                                 <span>Open Positions ({displayedPositions.length})</span>
                             </div>
                             <div className="tp-card-actions">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px' }}>
+                                    <label style={{ color: 'var(--vscode-descriptionForeground, #aaa)', fontWeight: 600 }}>Close Mode:</label>
+                                    <select
+                                        className="tp-select"
+                                        style={{ height: '24px', padding: '1px 6px', fontSize: '11px', width: 'auto' }}
+                                        value={closeFillType}
+                                        onChange={e => setCloseFillType(e.target.value)}
+                                        title="Select filling mode to use when closing positions"
+                                    >
+                                        <option value="ANY">⚡ ANY (Auto)</option>
+                                        <option value="FOK">FOK</option>
+                                        <option value="IOC">IOC</option>
+                                        <option value="RETURN">RETURN / BOC</option>
+                                    </select>
+                                </div>
                                 <label className="tp-checkbox-label">
                                     <input
                                         type="checkbox"
@@ -676,8 +715,8 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
                                     Login #{selectedLogin} only
                                 </label>
                                 {displayedPositions.length > 0 && (
-                                    <button className="tp-btn danger small" onClick={handleCloseAll}>
-                                        Close All
+                                    <button className="tp-btn danger small" onClick={handleCloseAll} title={`Close all open positions with ${closeFillType} mode`}>
+                                        Close All ({closeFillType})
                                     </button>
                                 )}
                             </div>
@@ -733,10 +772,10 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
                                                     <td className="tp-actions-cell">
                                                         <button
                                                             className="tp-action-btn close"
-                                                            title="Close at market price"
-                                                            onClick={() => handleClosePosition(ticket)}
+                                                            title={`Close at market price (Mode: ${closeFillType})`}
+                                                            onClick={() => handleClosePosition(ticket, undefined, closeFillType)}
                                                         >
-                                                            ⚡ Close
+                                                            ⚡ Close ({closeFillType})
                                                         </button>
                                                         <button
                                                             className="tp-action-btn partial"
@@ -923,6 +962,19 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
                                     onChange={e => setPartialLots(parseFloat(e.target.value) || 0.01)}
                                 />
                             </div>
+                            <div className="tp-field-row">
+                                <label>Fill Mode:</label>
+                                <select
+                                    className="tp-select"
+                                    value={closeFillType}
+                                    onChange={e => setCloseFillType(e.target.value)}
+                                >
+                                    <option value="ANY">⚡ ANY (Auto)</option>
+                                    <option value="FOK">FOK (Fill Or Kill)</option>
+                                    <option value="IOC">IOC (Immediate Or Cancel)</option>
+                                    <option value="RETURN">RETURN / BOC</option>
+                                </select>
+                            </div>
                         </div>
                         <div className="tp-modal-footer">
                             <button className="tp-btn secondary" onClick={() => setPartialItem(null)}>Cancel</button>
@@ -930,11 +982,11 @@ export function TradePanel({ instanceId, setTitle }: Props): React.ReactElement 
                                 className="tp-btn danger"
                                 onClick={() => {
                                     const t = partialItem.position_id ?? partialItem.ticket ?? 0;
-                                    handleClosePosition(t, partialLots);
+                                    handleClosePosition(t, partialLots, closeFillType);
                                     setPartialItem(null);
                                 }}
                             >
-                                Close {partialLots} Lots
+                                Close {partialLots} Lots ({closeFillType})
                             </button>
                         </div>
                     </div>

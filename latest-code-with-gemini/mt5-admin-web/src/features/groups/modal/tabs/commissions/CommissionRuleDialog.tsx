@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { FloatingWindow } from '../../../../../shared/FloatingWindow';
 import { CommissionRule } from '../../GroupDraftContext';
 
 interface CommissionRuleDialogProps {
@@ -38,8 +39,8 @@ export function CommissionRuleDialog({ rule, onClose, onSave }: CommissionRuleDi
     };
 
     return (
-        <div className="adm-modal-overlay" style={{ zIndex: 1100 }} onClick={onClose}>
-            <form className="adm-modal" style={{ width: 360 }} onClick={e => e.stopPropagation()} onSubmit={handleSave}>
+        <FloatingWindow width={760} height={560} onClose={onClose}>
+            <form className="adm-modal" style={{ width: 360 }} onSubmit={handleSave}>
                 <div className="adm-modal-header">
                     <h2>{rule ? 'Edit Commission Rule' : 'Add Commission Rule'}</h2>
                     <button type="button" className="adm-modal-close" onClick={onClose}>×</button>
@@ -80,6 +81,6 @@ export function CommissionRuleDialog({ rule, onClose, onSave }: CommissionRuleDi
                     <button type="button" className="adm-btn" onClick={onClose}>Cancel</button>
                 </div>
             </form>
-        </div>
+        </FloatingWindow>
     );
 }

@@ -1416,3 +1416,110 @@ button.wb-status-item:hover {
 
 .op-journal-row { display: flex; gap: 10px; }
 .op-journal-server { color: var(--theia-symbolIcon-variableForeground); min-width: 130px; }
+
+/* activity bar: planned sections */
+.wb-activity-item.planned { opacity: 0.45; }
+.wb-activity-item.planned:hover { opacity: 0.75; }
+
+/* ══ Manager toolbox (docked bottom window) ══════════════════════════ */
+.mg-toolbox {
+    flex: 0 0 210px;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--theia-border);
+    background: var(--theia-sideBar-background);
+    min-height: 0;
+}
+
+.mg-toolbox-head {
+    flex: 0 0 30px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 8px;
+    background: var(--theia-sideBarSectionHeader-background);
+    overflow-x: auto;
+}
+
+.mg-toolbox-tab {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--theia-descriptionForeground);
+    font-size: 11px;
+    font-family: inherit;
+    padding: 7px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.mg-toolbox-tab.active {
+    color: var(--theia-tab-activeForeground);
+    border-bottom-color: var(--theia-focusBorder);
+}
+
+.mg-toolbox-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 4px 8px;
+}
+
+.mg-toolbox-toggle {
+    flex: 0 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--theia-sideBar-background);
+    border: none;
+    border-top: 1px solid var(--theia-border);
+    color: var(--theia-descriptionForeground);
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0 10px;
+}
+
+.mg-list { display: flex; flex-direction: column; gap: 3px; padding: 4px 2px; }
+.mg-list-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.mg-search { display: flex; flex-direction: column; gap: 6px; }
+.mg-search .adm-input { height: 26px; }
+.ca-queue-actions { display: inline-flex; gap: 4px; }
+.ca-queue-actions .wb-btn { padding: 2px 8px; font-size: 11px; }
+
+/* ══ Floating windows ════════════════════════════════════════════════ */
+.fw-layer { position: fixed; inset: 0; pointer-events: none; z-index: 900; }
+.fw-window {
+    position: absolute;
+    pointer-events: auto;
+    background: var(--theia-editor-background);
+    border: 1px solid var(--theia-widget-border);
+    border-radius: 6px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+    display: flex;
+    overflow: hidden;
+}
+.fw-content { flex: 1; min-width: 0; display: flex; }
+.fw-content > .adm-modal { box-shadow: none !important; border: none !important; border-radius: 0 !important; }
+.fw-resize-grip {
+    position: absolute; right: 0; bottom: 0; width: 18px; height: 18px;
+    cursor: nwse-resize; display: flex; align-items: center; justify-content: center;
+    color: var(--theia-descriptionForeground); font-size: 12px; opacity: 0.7;
+}
+.fw-close {
+    position: absolute; top: 6px; right: 8px; background: transparent; border: none;
+    color: var(--theia-descriptionForeground); cursor: pointer; padding: 2px; z-index: 20;
+}
+.fw-close:hover { color: var(--theia-foreground); }
+.adm-modal-header { cursor: move; }
+
+/* manager connect row */
+.ca-connect-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px; }
+.ca-connect-row label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--theia-descriptionForeground); }
+.ca-connect-row .adm-input { height: 26px; width: 180px; }
+
+/* ported modals carried their own inline sizes — the floating frame owns sizing now */
+.fw-content > .adm-modal { width: 100% !important; height: 100% !important; max-height: none !important; max-width: none !important; }

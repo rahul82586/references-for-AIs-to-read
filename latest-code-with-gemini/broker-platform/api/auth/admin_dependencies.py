@@ -247,13 +247,15 @@ def require_right(right_name: str):
         if authorization and authorization.lower().startswith("bearer "):
             token = authorization.split(" ", 1)[1].strip()
             try:
-                payload = verify_manager_token(token)
+                from api.auth.jwt_handler import verify_token
+                payload = verify_token(token)
             except Exception:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Could not validate credentials",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
+
             if not payload.get("is_manager"):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,

@@ -32,8 +32,8 @@ export function TradeTab(): React.ReactElement {
         setDraft(prev => ({ ...prev, [field]: val }));
     };
 
-    const handleCheckboxArrayChange = (field: 'expiration_flags' | 'orders_allowed', value: string, checked: boolean) => {
-        const current = draft[field] || [];
+    const handleCheckboxArrayChange = (field: 'expiration_flags' | 'orders_allowed' | 'filling_flags', value: string, checked: boolean) => {
+        const current = (draft[field] as string[]) || [];
         const next = checked ? [...current, value] : current.filter(item => item !== value);
         updateField(field, next);
     };
@@ -64,12 +64,12 @@ export function TradeTab(): React.ReactElement {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ width: 100, textAlign: 'right', opacity: 0.8 }}>Tick size:</span>
-                        <input className="adm-input" type="number" step="0.00001" style={{ flex: 1, height: 20, padding: '2px 6px', fontSize: 11 }} value={draft.margin_initial} onChange={e => updateField('margin_initial', parseFloat(e.target.value) || 1.0)} />
+                        <input className="adm-input" type="number" step="0.00001" style={{ flex: 1, height: 20, padding: '2px 6px', fontSize: 11 }} value={draft.tick_size} onChange={e => updateField('tick_size', parseFloat(e.target.value) || 0.00001)} />
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ width: 100, textAlign: 'right', opacity: 0.8 }}>Tick value:</span>
-                        <input className="adm-input" type="number" step="0.01" style={{ flex: 1, height: 20, padding: '2px 6px', fontSize: 11 }} value={draft.margin_maintenance} onChange={e => updateField('margin_maintenance', parseFloat(e.target.value) || 1.0)} />
+                        <input className="adm-input" type="number" step="0.01" style={{ flex: 1, height: 20, padding: '2px 6px', fontSize: 11 }} value={draft.tick_value} onChange={e => updateField('tick_value', parseFloat(e.target.value) || 1.0)} />
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -88,7 +88,11 @@ export function TradeTab(): React.ReactElement {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ width: 100, textAlign: 'right', opacity: 0.8 }}>Limit/Stop level:</span>
-                        <input className="adm-input" type="number" style={{ flex: 1, height: 20, padding: '2px 6px', fontSize: 11 }} value={draft.limit_stop_level} onChange={e => updateField('limit_stop_level', parseInt(e.target.value) || 0)} />
+                        <input className="adm-input" type="number" style={{ flex: 1, height: 20, padding: '2px 6px', fontSize: 11 }} value={draft.stops_level ?? draft.limit_stop_level} onChange={e => {
+                            const val = parseInt(e.target.value) || 0;
+                            updateField('stops_level', val);
+                            updateField('limit_stop_level', val);
+                        }} />
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -116,9 +120,27 @@ export function TradeTab(): React.ReactElement {
                     <div style={{ display: 'flex', gap: 8 }}>
                         <span style={{ width: 100, textAlign: 'right', opacity: 0.8 }}>Filling flags:</span>
                         <div style={{ display: 'flex', gap: 8, fontSize: 10 }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: 2 }}><input type="checkbox" checked={draft.orders_allowed.includes('fok')} onChange={e => handleCheckboxArrayChange('orders_allowed', 'fok', e.target.checked)} /> FOK</label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: 2 }}><input type="checkbox" checked={draft.orders_allowed.includes('ioc')} onChange={e => handleCheckboxArrayChange('orders_allowed', 'ioc', e.target.checked)} /> IOC</label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: 2 }}><input type="checkbox" checked={draft.orders_allowed.includes('boc')} onChange={e => handleCheckboxArrayChange('orders_allowed', 'boc', e.target.checked)} /> BOC</label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <input
+                                    type="checkbox"
+                                    checked={(draft.filling_flags || []).includes('fok')}
+                                    onChange={e => handleCheckboxArrayChange('filling_flags', 'fok', e.target.checked)}
+                                /> FOK
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <input
+                                    type="checkbox"
+                                    checked={(draft.filling_flags || []).includes('ioc')}
+                                    onChange={e => handleCheckboxArrayChange('filling_flags', 'ioc', e.target.checked)}
+                                /> IOC
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <input
+                                    type="checkbox"
+                                    checked={(draft.filling_flags || []).includes('boc')}
+                                    onChange={e => handleCheckboxArrayChange('filling_flags', 'boc', e.target.checked)}
+                                /> BOC / Return
+                            </label>
                         </div>
                     </div>
 

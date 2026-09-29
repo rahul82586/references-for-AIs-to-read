@@ -15,6 +15,11 @@ from infrastructure.persistence.database import Base
 # autogenerate silently drops that table from the migration.
 import infrastructure.persistence.db_models  # noqa: F401,E402
 import infrastructure.persistence.config_models  # noqa: F401,E402
+import infrastructure.persistence.account_models  # noqa: F401,E402
+import infrastructure.persistence.identity_models  # noqa: F401,E402
+import infrastructure.persistence.manager_models  # noqa: F401,E402
+import infrastructure.persistence.reconciliation_models  # noqa: F401,E402
+import infrastructure.persistence.routing_models  # noqa: F401,E402
 
 from dotenv import load_dotenv
 from infrastructure.config.env import normalize_database_url

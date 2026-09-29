@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
-from sqlalchemy import func, select
+from sqlalchemy import func, select, or_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.domains.oms.entities.position import Position
 from core.ports.interfaces import IPositionRepository
@@ -13,6 +13,21 @@ class SqlPositionRepository(IPositionRepository[Position]):
 
     def __init__(self, session_factory):
         self.session_factory = session_factory
+
+    async def delete(self, position_id: str, session: Optional[AsyncSession] = None) -> bool:
+        """Physically remove closed position from positions storage (MT5 strict protocol)."""
+        async def _del(sess: AsyncSession):
+            res = await sess.execute(
+                delete(PositionModel).where(PositionModel.position_id == str(position_id))
+            )
+            return res.rowcount > 0
+
+        if session:
+            return await _del(session)
+        async with self.session_factory() as sess:
+            res = await _del(sess)
+            await sess.commit()
+            return res
 
     async def save(self, position: Position, session: Optional[AsyncSession] = None) -> Position:
         async def _save(sess: AsyncSession):
@@ -90,8 +105,12 @@ class SqlPositionRepository(IPositionRepository[Position]):
         limit: int = 100,
         offset: int = 0,
         account_login: Optional[int] = None,
+        account_logins: Optional[List[int]] = None,
+        ticket: Optional[str] = None,
         symbol: Optional[str] = None,
         include_closed: bool = False,
+        from_time: Optional[datetime] = None,
+        to_time: Optional[datetime] = None,
         session: Optional[AsyncSession] = None,
     ):
         """Paged cross-account position read (step 8's admin plane; the manager
@@ -105,10 +124,25 @@ class SqlPositionRepository(IPositionRepository[Position]):
             conds = []
             if not include_closed:
                 conds.append(PositionModel.time_done.is_(None))
-            if account_login is not None:
+            if account_logins:
+                conds.append(PositionModel.account_login.in_(account_logins))
+            elif account_login is not None:
                 conds.append(PositionModel.account_login == int(account_login))
-            if symbol is not None:
-                conds.append(PositionModel.symbol == symbol)
+            if ticket is not None and ticket.strip():
+                t = ticket.strip()
+                conds.append(or_(PositionModel.position_id == t, PositionModel.external_id == t))
+            if symbol is not None and symbol.strip() and symbol.strip() != "*":
+                sym_clean = symbol.strip()
+                if sym_clean.endswith("*"):
+                    prefix = sym_clean[:-1].replace("/", "\\")
+                    conds.append(or_(PositionModel.symbol.like(f"{prefix}%"), PositionModel.symbol.ilike(f"%\\{prefix}%")))
+                else:
+                    leaf = sym_clean.split("\\")[-1].split("/")[-1].strip()
+                    conds.append(or_(PositionModel.symbol == sym_clean, PositionModel.symbol == leaf, PositionModel.symbol.ilike(f"%\\{leaf}")))
+            if from_time is not None:
+                conds.append(or_(PositionModel.time_create >= from_time, PositionModel.time_done >= from_time))
+            if to_time is not None:
+                conds.append(PositionModel.time_create <= to_time)
             count_stmt = select(func.count()).select_from(PositionModel)
             stmt = select(PositionModel)
             for c in conds:
@@ -208,11 +242,12 @@ class SqlPositionRepository(IPositionRepository[Position]):
             return out
 
     async def get_by_account_and_symbol(self, account_login: int, symbol: str) -> List[Position]:
+        leaf = symbol.split("\\")[-1].split("/")[-1].strip()
         async with self.session_factory() as session:
             result = await session.execute(
                 select(PositionModel).where(
                     (PositionModel.account_login == account_login) &
-                    (PositionModel.symbol == symbol) &
+                    (or_(PositionModel.symbol == symbol, PositionModel.symbol == leaf, PositionModel.symbol.ilike(f"%\\{leaf}"))) &
                     (PositionModel.time_done.is_(None))
                 )
             )
@@ -220,10 +255,11 @@ class SqlPositionRepository(IPositionRepository[Position]):
             return [db_to_position(m) for m in models]
 
     async def get_by_symbol(self, symbol: str) -> List[Position]:
+        leaf = symbol.split("\\")[-1].split("/")[-1].strip()
         async with self.session_factory() as session:
             result = await session.execute(
                 select(PositionModel).where(
-                    (PositionModel.symbol == symbol) &
+                    (or_(PositionModel.symbol == symbol, PositionModel.symbol == leaf, PositionModel.symbol.ilike(f"%\\{leaf}"))) &
                     (PositionModel.time_done.is_(None))
                 )
             )

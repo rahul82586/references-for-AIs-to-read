@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { FloatingWindow } from '../../../shared/FloatingWindow';
 import { GroupDraft, DEFAULT_DRAFT, GroupDraftContext } from './GroupDraftContext';
 import { CommonTab } from './tabs/CommonTab';
 import { GatewayTab } from './tabs/GatewayTab';
@@ -165,8 +166,8 @@ export function GroupSettingsModal({ groupName, initialName = '', onClose, onSav
 
     return (
         <GroupDraftContext.Provider value={{ draft, setDraft, errors, setErrors, isEditing }}>
-            <div className="adm-modal-overlay" onClick={onClose}>
-                <div className="adm-modal" style={{ width: 750, height: '65vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+            <FloatingWindow width={1000} height={640} onClose={onClose}>
+                <div className="adm-modal" style={{ width: 750, height: '65vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <div className="adm-modal-header">
                         <h2>
                             <i className="codicon codicon-organization" style={{ marginRight: 8, color: '#3498db' }} />
@@ -218,7 +219,7 @@ export function GroupSettingsModal({ groupName, initialName = '', onClose, onSav
                         </button>
                     </div>
                 </div>
-            </div>
+            </FloatingWindow>
         </GroupDraftContext.Provider>
     );
 }

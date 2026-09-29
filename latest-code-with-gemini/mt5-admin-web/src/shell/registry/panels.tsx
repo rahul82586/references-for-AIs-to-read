@@ -70,6 +70,50 @@ registerPanel({
 });
 
 registerPanel({
+    id: 'manager-server',
+    title: 'Server',
+    icon: 'server',
+    component: React.lazy(() => import('../../features/manager/ServerPanel').then((m) => ({ default: m.ServerPanel }))),
+});
+
+registerPanel({
+    id: 'manager-online',
+    title: 'Online Users',
+    icon: 'pulse',
+    component: React.lazy(() => import('../../features/manager/OnlineUsersPanel').then((m) => ({ default: m.OnlineUsersPanel }))),
+});
+
+registerPanel({
+    id: 'manager-queue',
+    title: 'Dealing / Queue',
+    icon: 'inbox',
+    component: React.lazy(() => import('../../features/manager/QueuePanel').then((m) => ({ default: m.QueuePanel }))),
+});
+
+registerPanel({
+    id: 'manager-margin-calls',
+    title: 'Margin Calls',
+    icon: 'warning',
+    component: React.lazy(() => import('../../features/manager/MarginCallsPanel').then((m) => ({ default: m.MarginCallsPanel }))),
+});
+
+registerPanel({
+    id: 'manager-accounts',
+    title: 'Trading Accounts',
+    icon: 'credit-card',
+    component: React.lazy(() => import('../../features/manager/ManagerAccountsPanel').then((m) => ({ default: m.ManagerAccountsPanel }))),
+});
+
+registerPanel({
+    id: 'manager-section',
+    title: 'Manager',
+    icon: 'shield',
+    component: React.lazy(() =>
+        import('../../features/manager/ManagerSectionPanel').then((m) => ({ default: m.ManagerSectionPanel }))
+    ),
+});
+
+registerPanel({
     id: 'settings',
     title: 'Settings',
     icon: 'settings-gear',

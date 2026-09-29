@@ -3,7 +3,7 @@ import { API, isBackendGap, TradeRequest } from '../../services/api';
 import { RequestBar } from './RequestBar';
 import { OperationDialog } from './OperationDialog';
 import type { OperationKind } from '../../services/api';
-import { ORDER_TYPE, ORDER_STATE, ORDER_ICON, fmtTime } from './tradeTypes';
+import { ORDER_TYPE, ORDER_STATE, ORDER_ICON, fmtTime } from '../../shared/tradeTypes';
 
 /**
  * Orders view — MT5 Administrator §Orders: pending + executed orders with the

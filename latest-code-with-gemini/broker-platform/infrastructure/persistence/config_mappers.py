@@ -141,6 +141,16 @@ def _dec(value: Any, default: str = "0") -> Decimal:
     return Decimal(str(value))
 
 
+def _optional_dec(value: Any) -> Optional[Decimal]:
+    if value is None or value == "" or str(value).strip() in ("", "None"):
+        return None
+    try:
+        val = Decimal(str(value))
+        return val if val > Decimal("0") else None
+    except Exception:
+        return None
+
+
 def _enum(enum_cls: Any, raw: Any, fallback: Any) -> Any:
     """Resolve an int or string from the DB to an enum member, with a safe fallback."""
     if raw is None:
@@ -1060,6 +1070,10 @@ def _symbol_domain_record(symbol: Symbol) -> Dict[str, Any]:
         "margin_rates": {
             name: getattr(symbol.margin_rates, name) for name in _MARGIN_RATE_TO_MT5
         },
+        "margin_hedged": getattr(symbol, "margin_hedged", 0),
+        "hedged_use_larger_leg": getattr(symbol, "hedged_use_larger_leg", False),
+        "margin_initial": getattr(symbol, "margin_initial", None),
+        "margin_maintenance": getattr(symbol, "margin_maintenance", None),
         # Bucketed per-day, which is what codec.render_sessions consumes.
         "quote_sessions": days_from_sessions(symbol.quote_sessions),
         "trade_sessions": days_from_sessions(symbol.trade_sessions),
@@ -1330,6 +1344,10 @@ def db_to_symbol(model: SymbolModel) -> Symbol:
         volume_step=_dec(domain.get("volume_step"), "0.01"),
         volume_limit=_dec(domain.get("volume_limit"), "0"),
         margin_rates=MarginRates(**{k: _dec(v, "1") for k, v in rates.items()}),
+        margin_initial=_optional_dec((model.mt5_extra or {}).get("margin_initial")),
+        margin_maintenance=_optional_dec((model.mt5_extra or {}).get("margin_maintenance")),
+        margin_hedged=_dec(domain.get("margin_hedged") or (model.mt5_extra or {}).get("margin_hedged"), "0"),
+        hedged_use_larger_leg=bool((model.mt5_extra or {}).get("calc_hedged_larger_leg") or (model.mt5_extra or {}).get("hedged_use_larger_leg", False)),
         trade_mode=_enum(TradeMode, domain.get("trade_mode"), TradeMode.FULL),
         exec_mode=_enum(ExecutionMode, domain.get("exec_mode"), ExecutionMode.MARKET),
         gtc_mode=_enum(GTCMode, domain.get("gtc_mode"), GTCMode.GTC),

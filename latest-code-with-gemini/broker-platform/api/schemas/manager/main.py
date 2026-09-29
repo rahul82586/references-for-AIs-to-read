@@ -83,6 +83,10 @@ class PositionInfo(BaseModel):
     comment: Optional[str] = None
     time_create: Optional[datetime] = None
     time_update: Optional[datetime] = None
+    time_done: Optional[datetime] = None
+    is_closed: bool = False
+    group: Optional[str] = None
+    digits: int = 2
 
     class Config:
         populate_by_name = True
@@ -106,7 +110,10 @@ def position_to_info(p) -> "PositionInfo":
     """
     external = getattr(p, "external_id", None)
     ticket: Optional[int] = None
-    if external is not None and str(external).lstrip("-").isdigit():
+    pos_id_str = str(getattr(p, "position_id", "") or "")
+    if pos_id_str.isdigit():
+        ticket = int(pos_id_str)
+    elif external is not None and str(external).lstrip("-").isdigit():
         ticket = int(external)
     r_mode = "A-BOOK" if external is not None else "B-BOOK"
     return PositionInfo(
@@ -129,7 +136,12 @@ def position_to_info(p) -> "PositionInfo":
         comment=p.comment or None,
         time_create=p.time_create,
         time_update=p.time_update,
+        time_done=getattr(p, "time_done", None),
+        is_closed=getattr(p, "time_done", None) is not None,
+        group=getattr(p, "group", None),
+        digits=getattr(p, "digits", 2) or 2,
     )
+
 
 
 class DealInfo(BaseModel):

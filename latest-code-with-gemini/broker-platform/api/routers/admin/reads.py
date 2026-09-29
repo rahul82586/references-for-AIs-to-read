@@ -371,12 +371,49 @@ def order_payload(o: Any) -> Dict[str, Any]:
     }
 
 
-def position_payload(p: Any) -> Dict[str, Any]:
+def position_payload(p: Any, live_quotes: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """The admin-plane position row: the manager plane's serializer, dumped -
     one builder for one shape (F8/F9)."""
     from api.schemas.manager.main import position_to_info
 
-    return position_to_info(p).model_dump(mode="json", by_alias=True)
+    info = position_to_info(p)
+    action_upper = str(info.action).upper()
+    clean_sym = info.symbol.split('\\')[-1].split('/')[-1].upper()
+    q_bid = None
+    q_ask = None
+
+    if live_quotes:
+        sym_quotes = live_quotes.get(info.symbol.upper()) or live_quotes.get(clean_sym) or {}
+        q_bid = sym_quotes.get("bid")
+        q_ask = sym_quotes.get("ask")
+
+    if q_bid is None or q_ask is None:
+        try:
+            from api.di_providers import get_market_data_engine
+            mde = get_market_data_engine()
+            if mde is not None:
+                t = mde.get_latest_tick(info.symbol.upper()) or mde.get_latest_tick(clean_sym)
+                if t is not None:
+                    q_bid = t.bid
+                    q_ask = t.ask
+        except Exception:
+            pass
+
+    live_price_str = q_bid if action_upper.startswith("BUY") else q_ask
+    if live_price_str is not None:
+        try:
+            live_price = Decimal(str(live_price_str))
+            info.price_current = live_price
+            vol = Decimal(str(info.volume))
+            price_open = Decimal(str(info.price_open))
+            c_size = Decimal(str(getattr(p, 'contract_size', None) or getattr(info, 'contract_size', None) or 100))
+            if action_upper.startswith("BUY"):
+                info.profit = (live_price - price_open) * vol * c_size
+            else:
+                info.profit = (price_open - live_price) * vol * c_size
+        except Exception:
+            pass
+    return info.model_dump(mode="json", by_alias=True)
 
 
 def _paged(response: Response, rows: List[Any], total: int) -> List[Any]:
@@ -447,6 +484,8 @@ async def get_account_detail(
     login: int,
     repo: Any = Depends(get_account_repo),
     group_repo: Any = Depends(get_group_repo),
+    position_repo: Any = Depends(get_position_repo),
+    symbol_repo: Any = Depends(get_symbol_repo),
 ) -> Dict[str, Any]:
     """The six-tab account payload in one read."""
     from application.queries.get_account_detail import (
@@ -457,6 +496,13 @@ async def get_account_detail(
 
     if repo is None:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Account repository is not wired")
+
+    try:
+        from api.routers.manager.trading import recalculate_account_trading_state
+        await recalculate_account_trading_state(login, repo, position_repo, symbol_repo)
+    except Exception as exc:
+        logger.warning(f"get_account_detail recalculate notice: {exc}")
+
     handler = GetAccountDetailQueryHandler(repo, group_repo)
     try:
         account = await handler.handle(GetAccountDetailQuery(login=login))
@@ -551,28 +597,72 @@ async def get_client_detail(
 # ---------------------------------------------------------------------------
 
 
+def _parse_mask_filters(
+    mask: Optional[str],
+    login: Optional[int],
+    logins: Optional[str],
+    ticket: Optional[str],
+) -> Tuple[Optional[int], Optional[List[int]], Optional[str]]:
+    acc_login = login
+    acc_logins = [int(x.strip()) for x in logins.split(",") if x.strip().isdigit()] if logins else None
+    tkt = ticket.strip() if ticket and ticket.strip() else None
+    if mask and mask.strip() and mask.strip() != "*":
+        m = mask.strip()
+        if m.startswith("#"):
+            tkt = m.lstrip("#").strip()
+        elif "," in m:
+            multi = [int(x.strip()) for x in m.split(",") if x.strip().isdigit()]
+            if multi:
+                acc_logins = multi
+        elif m.isdigit():
+            if acc_login is None and tkt is None:
+                tkt = m
+    return acc_login, acc_logins, tkt
+
+
 @trade_reads_router.get("/positions")
 async def list_positions(
     response: Response,
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     login: Optional[int] = Query(None),
+    logins: Optional[str] = Query(None),
+    ticket: Optional[str] = Query(None),
+    mask: Optional[str] = Query(None),
     symbol: Optional[str] = Query(None),
     include_closed: bool = Query(False),
+    from_time: Optional[datetime] = Query(None, alias="from"),
+    to_time: Optional[datetime] = Query(None, alias="to"),
     repo: Any = Depends(get_position_repo),
 ) -> List[Dict[str, Any]]:
     from application.queries.list_positions import ListPositionsQuery, ListPositionsQueryHandler
 
+    acc_login, acc_logins, tkt = _parse_mask_filters(mask, login, logins, ticket)
     handler = ListPositionsQueryHandler(repo)
     try:
         rows, total = await handler.handle(ListPositionsQuery(
-            limit=limit, offset=offset, account_login=login,
+            limit=limit, offset=offset, account_login=acc_login,
+            account_logins=acc_logins, ticket=tkt,
             symbol=symbol, include_closed=include_closed,
+            from_time=from_time, to_time=to_time,
         ))
     except Exception:
         logger.exception("list_positions failed")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Could not read positions")
-    return _paged(response, [position_payload(p) for p in rows], total)
+
+    live_quotes = {}
+    try:
+        from api.routers.manager.trading import get_live_quotes_map
+        unique_syms = list({
+            s for p in rows if getattr(p, "symbol", None)
+            for s in (p.symbol.upper(), p.symbol.split('\\')[-1].split('/')[-1].upper())
+        })
+        if unique_syms:
+            live_quotes = await get_live_quotes_map(unique_syms)
+    except Exception:
+        pass
+
+    return _paged(response, [position_payload(p, live_quotes) for p in rows], total)
 
 
 @trade_reads_router.get("/deals")
@@ -581,18 +671,27 @@ async def list_deals(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     login: Optional[int] = Query(None),
+    logins: Optional[str] = Query(None),
+    ticket: Optional[str] = Query(None),
+    mask: Optional[str] = Query(None),
     symbol: Optional[str] = Query(None),
     entry: Optional[str] = Query(None, description="IN | OUT | INOUT | OUT_BY"),
+    from_time: Optional[datetime] = Query(None, alias="from"),
+    to_time: Optional[datetime] = Query(None, alias="to"),
     repo: Any = Depends(get_deal_repo),
 ) -> List[Dict[str, Any]]:
     from application.queries.list_deals import ListDealsQuery, ListDealsQueryHandler
 
     if repo is None:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Deal repository is not wired")
+    acc_login, acc_logins, tkt = _parse_mask_filters(mask, login, logins, ticket)
     handler = ListDealsQueryHandler(repo)
     try:
         rows, total = await handler.handle(ListDealsQuery(
-            limit=limit, offset=offset, account_login=login, symbol=symbol, entry=entry,
+            limit=limit, offset=offset, account_login=acc_login,
+            account_logins=acc_logins, ticket=tkt,
+            symbol=symbol, entry=entry,
+            from_time=from_time, to_time=to_time,
         ))
     except Exception:
         logger.exception("list_deals failed")
@@ -606,8 +705,13 @@ async def list_order_history(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     login: Optional[int] = Query(None),
+    logins: Optional[str] = Query(None),
+    ticket: Optional[str] = Query(None),
+    mask: Optional[str] = Query(None),
     symbol: Optional[str] = Query(None),
     state: Optional[str] = Query(None, description="A terminal state; contradicts nothing here"),
+    from_time: Optional[datetime] = Query(None, alias="from"),
+    to_time: Optional[datetime] = Query(None, alias="to"),
     repo: Any = Depends(get_order_repo),
 ) -> List[Dict[str, Any]]:
     """Terminal-state orders (CANCELLED/FILLED/REJECTED/EXPIRED). Declared
@@ -617,11 +721,14 @@ async def list_order_history(
 
     if repo is None:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Order repository is not wired")
+    acc_login, acc_logins, tkt = _parse_mask_filters(mask, login, logins, ticket)
     handler = ListOrdersQueryHandler(repo)
     try:
         rows, total = await handler.handle(ListOrdersQuery(
-            limit=limit, offset=offset, account_login=login, symbol=symbol,
-            state=state, history=True,
+            limit=limit, offset=offset, account_login=acc_login,
+            account_logins=acc_logins, ticket=tkt,
+            symbol=symbol, state=state, history=True,
+            from_time=from_time, to_time=to_time,
         ))
     except ValueError as exc:      # state contradicting history=True
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))
@@ -637,20 +744,28 @@ async def list_orders(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     login: Optional[int] = Query(None),
+    logins: Optional[str] = Query(None),
+    ticket: Optional[str] = Query(None),
+    mask: Optional[str] = Query(None),
     symbol: Optional[str] = Query(None),
     state: Optional[str] = Query(None),
     history: Optional[bool] = Query(None, description="false = active book, true = terminal, omit = all"),
+    from_time: Optional[datetime] = Query(None, alias="from"),
+    to_time: Optional[datetime] = Query(None, alias="to"),
     repo: Any = Depends(get_order_repo),
 ) -> List[Dict[str, Any]]:
     from application.queries.list_orders import ListOrdersQuery, ListOrdersQueryHandler
 
     if repo is None:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Order repository is not wired")
+    acc_login, acc_logins, tkt = _parse_mask_filters(mask, login, logins, ticket)
     handler = ListOrdersQueryHandler(repo)
     try:
         rows, total = await handler.handle(ListOrdersQuery(
-            limit=limit, offset=offset, account_login=login, symbol=symbol,
-            state=state, history=history,
+            limit=limit, offset=offset, account_login=acc_login,
+            account_logins=acc_logins, ticket=tkt,
+            symbol=symbol, state=state, history=history,
+            from_time=from_time, to_time=to_time,
         ))
     except ValueError as exc:      # state contradicting history
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))
@@ -711,11 +826,107 @@ risk_reads_router = APIRouter(
     dependencies=[Depends(require_right("RIGHT_RISK_MANAGER"))],
 )
 
+
+@risk_reads_router.get("/summary")
+async def get_risk_summary(
+    account_repo: Any = Depends(get_account_repo),
+    position_repo: Any = Depends(get_position_repo),
+) -> Dict[str, Any]:
+    total_accs = 0
+    at_risk = 0
+    open_pos_count = 0
+    total_margin = Decimal("0")
+    total_profit = Decimal("0")
+    total_equity = Decimal("0")
+    
+    if account_repo is not None:
+        try:
+            accounts = await account_repo.find_all()
+            total_accs = len(accounts)
+            for a in accounts:
+                eq = a.equity.amount if hasattr(a.equity, "amount") else Decimal(str(a.equity))
+                total_equity += eq
+                lvl = float(getattr(a, 'margin_level', 0) or 0)
+                if 0 < lvl < 300:
+                    at_risk += 1
+        except Exception:
+            pass
+
+    if position_repo is not None:
+        try:
+            positions = await position_repo.get_open_positions()
+            open_pos_count = len(positions)
+            for p in positions:
+                prof = p.profit.amount if hasattr(p.profit, "amount") else Decimal(str(p.profit))
+                total_profit += prof
+                vol = p.volume.value if hasattr(p.volume, "value") else Decimal(str(p.volume))
+                total_margin += vol * Decimal("100")
+        except Exception:
+            pass
+
+    margin_lvl_avg = round(float(total_equity / total_margin * 100), 2) if total_margin > 0 else 0.0
+
+    return {
+        "total_accounts": total_accs,
+        "open_positions": open_pos_count,
+        "total_margin": float(total_margin),
+        "total_profit": float(total_profit),
+        "margin_level_avg": margin_lvl_avg,
+        "at_risk_accounts": at_risk,
+    }
+
+
+@risk_reads_router.get("/exposure")
+async def get_risk_exposure(
+    position_repo: Any = Depends(get_position_repo),
+) -> List[Dict[str, Any]]:
+    if position_repo is None:
+        return []
+    try:
+        positions = await position_repo.get_open_positions()
+        by_sym: Dict[str, Dict[str, Any]] = {}
+        for p in positions:
+            sym = p.symbol
+            if sym not in by_sym:
+                by_sym[sym] = {"symbol": sym, "net_volume": 0.0, "count": 0}
+            vol = float(p.volume.value if hasattr(p.volume, "value") else p.volume)
+            action_str = str(getattr(p.action, 'value', p.action)).upper()
+            by_sym[sym]["net_volume"] += (vol if action_str.startswith("BUY") else -vol)
+            by_sym[sym]["count"] += 1
+        return list(by_sym.values())
+    except Exception:
+        return []
+
+
+@risk_reads_router.get("/margin-calls")
+async def get_risk_margin_calls(
+    account_repo: Any = Depends(get_account_repo),
+) -> List[Dict[str, Any]]:
+    if account_repo is None:
+        return []
+    try:
+        accounts = await account_repo.find_all()
+        res = []
+        for a in accounts:
+            lvl = float(getattr(a, 'margin_level', 0) or 0)
+            if 0 < lvl < 300:
+                res.append({
+                    "login": int(a.login),
+                    "group": getattr(a, "group_name", getattr(a, "group", "")),
+                    "margin_level": lvl,
+                    "state": "STOP_OUT_PENDING" if lvl < 150 else "MARGIN_CALL",
+                })
+        return res
+    except Exception:
+        return []
+
+
 calc_router = APIRouter(
     prefix="/api/v1/admin/trade",
     tags=["Admin - Trade calculators"],
     dependencies=[Depends(require_right("RIGHT_RISK_MANAGER"))],
 )
+
 
 funds_router = APIRouter(
     prefix="/api/v1/admin/accounts",
@@ -788,14 +999,15 @@ async def ticks_snapshot(
     now = datetime.now(_tz.utc)
     out = []
     for sym in symbols:
-        tick = engine.get_latest_tick(sym.name)
+        clean_name = sym.name.split('\\')[-1].split('/')[-1].upper()
+        tick = engine.get_latest_tick(sym.name) or engine.get_latest_tick(clean_name)
         if tick is None:
             out.append({"symbol": sym.name, "bid": None, "ask": None, "spread": None,
                         "source": None, "timestamp": None, "age_seconds": None})
             continue
         age = (now - tick.timestamp).total_seconds() if tick.timestamp else None
         out.append({
-            "symbol": tick.symbol, "bid": str(tick.bid), "ask": str(tick.ask),
+            "symbol": sym.name, "bid": str(tick.bid), "ask": str(tick.ask),
             "spread": str(tick.spread), "source": tick.source,
             "timestamp": tick.timestamp.isoformat() if tick.timestamp else None,
             "age_seconds": round(age, 1) if age is not None else None,
@@ -995,11 +1207,9 @@ async def balance_operation(
     body: BalanceRequest,
     account_repo: Any = Depends(get_account_repo),
     ledger_repo: Any = Depends(get_ledger_repo),
+    deal_repo: Any = Depends(get_deal_repo),
 ) -> Dict[str, Any]:
-    """Deposit/withdraw/correct/bonus with a ledger row - or refuse. The
-    system-generated types (COMMISSION, SWAP, DEAL_PROFIT) are refused here:
-    they belong to the engines that book them, and a manager typing SWAP into
-    a deposit form is how a ledger stops being evidence."""
+    """Deposit/withdraw/correct/bonus/credit/charge with a ledger row and MT5 deal record."""
     from application.commands.balance_operation import (
         BalanceOperationCommand,
         BalanceOperationCommandHandler,
@@ -1008,14 +1218,23 @@ async def balance_operation(
     from core.domains.ledger.engine import LedgerEngine
     from core.domains.ledger.models import BalanceOperationType
 
-    allowed = {"DEPOSIT", "WITHDRAWAL", "CORRECTION", "BONUS"}
-    op = body.operation.upper()
-    if op not in allowed:
+    raw_op = body.operation.upper()
+    allowed = {"DEPOSIT", "WITHDRAWAL", "CORRECTION", "BONUS", "CREDIT", "CHARGE", "BALANCE"}
+    if raw_op not in allowed:
         raise HTTPException(status.HTTP_400_BAD_REQUEST,
-                            f"operation must be one of {sorted(allowed)}; {op!r} is system-generated")
+                            f"operation must be one of {sorted(allowed)}; {raw_op!r} is invalid")
     if body.amount <= 0:
         raise HTTPException(status.HTTP_400_BAD_REQUEST,
-                            "amount must be positive; a negative deposit is a withdrawal - say which")
+                            "amount must be positive")
+    
+    # Normalize op to domain BalanceOperationType
+    if raw_op == "BALANCE":
+        op = "DEPOSIT"
+    elif raw_op == "CHARGE":
+        op = "CHARGE"
+    else:
+        op = raw_op
+
     if account_repo is None or ledger_repo is None:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
                             "Balance operations need the account and ledger repositories wired")
@@ -1038,19 +1257,58 @@ async def balance_operation(
             comment=body.comment,
         ))
     except ValueError as exc:
-        # the domain refused (insufficient balance for a withdrawal, etc.) -
-        # a 400 with the reason, never a 500 and never a silent no-op
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))
+
+    # In MT5, every balance operation writes an immutable deal to the deals ledger
+    deal_ticket: Optional[int] = None
+    if deal_repo is not None:
+        try:
+            from api.routers.manager.trading import get_next_deal_ticket
+            from core.domains.oms.entities.deal import Deal
+            from core.domains.oms.enums import DealType, DealEntry, DealReason
+            from core.domains.common.value_objects import Money, Price, Volume
+            from datetime import timezone
+
+            new_ticket = await get_next_deal_ticket(deal_repo)
+            d_type = DealType[raw_op] if raw_op in DealType.__members__ else DealType.BALANCE
+            delta_profit = body.amount if op in ("DEPOSIT", "BONUS", "CREDIT") else -abs(body.amount)
+            deal_obj = Deal(
+                deal_id=str(new_ticket),
+                account_login=int(account.login),
+                order_id="0",
+                position_id=None,
+                symbol="",
+                deal_type=d_type,
+                entry=DealEntry.IN,
+                reason=DealReason.DEALER,
+                volume=Volume(Decimal("0.0")),
+                price=Price(Decimal("0.0")),
+                profit=Money(delta_profit, "USD"),
+                swap=Money(Decimal("0.0"), "USD"),
+                commission=Money(Decimal("0.0"), "USD"),
+                comment=body.comment or f"Balance operation ({raw_op.lower()})",
+                created_at=datetime.now(timezone.utc),
+            )
+
+            await deal_repo.save(deal_obj)
+            deal_ticket = new_ticket
+        except Exception as deal_err:
+            logger.warning(f"Could not record deal for balance operation: {deal_err}")
+
+
+
     return {
         "operation_id": result.operation_id,
+        "deal_ticket": deal_ticket,
         "login": int(account.login),
-        "operation": result.operation_type.value,
+        "operation": raw_op,
         "amount": str(result.amount.amount),
         "currency": result.amount.currency,
         "balance_after": str(result.balance_after.amount),
         "comment": result.comment,
         "created_at": result.created_at.isoformat(),
     }
+
 
 
 # ---------------------------------------------------------------------------

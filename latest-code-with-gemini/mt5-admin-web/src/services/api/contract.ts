@@ -13,7 +13,7 @@
  */
 import type { BackendGapError } from './errors';
 
-export type Ticks = Record<string, { bid: number; ask: number; age: number }>;
+export type Ticks = Record<string, { bid: number; ask: number; age: number; spread?: number }>;
 
 /**
  * Trade-history request (doc §Orders/§Deals/§Positions "Requesting…"):
@@ -21,9 +21,11 @@ export type Ticks = Record<string, { bid: number; ask: number; age: number }>;
  * masks · openOnly (orders) · from/to (execution time) · db (current|backup).
  */
 export interface TradeRequest {
+    login?: number | string;
     mask?: string;
     symbols?: string;
     openOnly?: boolean;
+    include_closed?: boolean;
     from?: string;
     to?: string;
     db?: string;
@@ -131,14 +133,20 @@ export interface AdminApi {
     cancelOrder(ticket: number | string, force?: boolean): Promise<any>;
     placeOrder(data: any): Promise<any>;
     reopenOrder(ticket: number | string): Promise<any>;
-    closePosition(ticket: number | string, lots?: number, price?: number): Promise<any>;
+    closePosition(ticket: number | string, lots?: number, price?: number, type_filling?: string): Promise<any>;
     modifyPosition(ticket: number | string, sl?: number, tp?: number, price?: number): Promise<any>;
     modifyOrder(ticket: number | string, price?: number, sl?: number, tp?: number): Promise<any>;
-    closeAllPositions(logins?: string): Promise<any>;
+    closeAllPositions(logins?: string, type_filling?: string): Promise<any>;
 
     // Trading operation dialog (doc §Viewing an Order/Deal/Position)
     getTradeOperation(kind: OperationKind, id: number | string): Promise<TradeOperationView>;
     updateTradeOperation(kind: OperationKind, id: number | string, patch: Record<string, any>): Promise<any>;
+
+    // Trade Calculators (MT5 trade/calc-* family)
+    calcMargin(params: { group_name: string; symbol: string; side: 'BUY' | 'SELL' | string; volume: number; currency?: string }): Promise<any>;
+    calcProfit(params: { symbol: string; side: 'BUY' | 'SELL' | string; volume: number; open_price: number; currency?: string }): Promise<any>;
+    calcRate(params: { from_currency: string; to_currency: string; side?: string }): Promise<any>;
+    checkMargin(params: { login: number; symbol: string; side: 'BUY' | 'SELL' | string; volume: number }): Promise<any>;
 
     // Symbols
     getSymbols(): Promise<any[]>;
@@ -171,6 +179,21 @@ export interface AdminApi {
 
     // Market data
     getTicks(): Promise<Ticks>;
+
+    // Manager session (MT5 Manager API Connect family — bp M18)
+    managerConnect(server: string, login: number, password: string): Promise<any>;
+    managerDisconnect(): Promise<any>;
+    managerSessionInfo(): Promise<any>;
+    /** balance operation on an account (Manager → Balance tab) */
+    balanceOperation(login: number, type: 'balance' | 'credit' | 'correction' | 'bonus' | 'charge' | 'deposit' | 'withdrawal' | string, amount: number, comment?: string): Promise<any>;
+
+    // Manager terminal modules (MT5APIManager.h / MT5-Manager-REST-API.md)
+    getManagerServerInfo(): Promise<any>;
+    getOnlineUsers(): Promise<any[]>;
+    getDealerQueue(): Promise<any[]>;
+    answerDealer(ticket: number, action: 'confirm' | 'reject' | 'requote', price?: number): Promise<any>;
+    getManagerNews(): Promise<any[]>;
+    getManagerJournal(): Promise<any[]>;
 
     // Risk
     getRiskSummary(): Promise<any>;

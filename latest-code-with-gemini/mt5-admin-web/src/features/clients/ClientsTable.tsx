@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { money, dateTime } from './format';
+import { money, dateTime } from '../../shared/format';
 
 interface Props {
     rows: any[];

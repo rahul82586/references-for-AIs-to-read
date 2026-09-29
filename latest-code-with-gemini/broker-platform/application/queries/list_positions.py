@@ -5,6 +5,7 @@ honest values, plus SQL-level paging and an include_closed switch for the
 history view. The UI's Positions page reads this; the Exposure and
 Margin-Call pages read the same rows.
 """
+from datetime import datetime
 from dataclasses import dataclass
 from typing import Any, List, Optional, Tuple
 
@@ -14,8 +15,12 @@ class ListPositionsQuery:
     limit: int = 100
     offset: int = 0
     account_login: Optional[int] = None
+    account_logins: Optional[List[int]] = None
+    ticket: Optional[str] = None
     symbol: Optional[str] = None
     include_closed: bool = False
+    from_time: Optional[datetime] = None
+    to_time: Optional[datetime] = None
 
 
 class ListPositionsQueryHandler:
@@ -32,6 +37,10 @@ class ListPositionsQueryHandler:
             limit=query.limit,
             offset=query.offset,
             account_login=query.account_login,
+            account_logins=query.account_logins,
+            ticket=query.ticket,
             symbol=query.symbol,
             include_closed=query.include_closed,
+            from_time=query.from_time,
+            to_time=query.to_time,
         )

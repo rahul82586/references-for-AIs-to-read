@@ -1,5 +1,6 @@
 // @ts-nocheck
 import * as React from 'react';
+import { FloatingWindow } from '../../../shared/FloatingWindow';
 import { ConnectStep } from './ConnectStep';
 import { SelectSymbolsStep } from './SelectSymbolsStep';
 import { ImportSummary } from './ImportSummary';
@@ -137,8 +138,8 @@ export function ImportWizard({ activeFolder, onClose, onImported }: ImportWizard
     };
 
     return (
-        <div className="adm-modal-overlay" style={{ zIndex: 1100 }} onClick={onClose}>
-            <div className="adm-modal" style={{ width: 500 }} onClick={e => e.stopPropagation()}>
+        <FloatingWindow width={900} height={620} onClose={onClose}>
+            <div className="adm-modal" style={{ width: 500 }}>
                 <div className="adm-modal-header">
                     <h2>Import Symbols Configuration Wizard</h2>
                     <span style={{ fontSize: 11, color: 'var(--theia-descriptionForeground)' }}>
@@ -190,6 +191,6 @@ export function ImportWizard({ activeFolder, onClose, onImported }: ImportWizard
                     </button>
                 </div>
             </div>
-        </div>
+        </FloatingWindow>
     );
 }

@@ -35,15 +35,15 @@ class BalanceOperationCommandHandler:
         Validates sufficient balance for withdrawals.
         """
         amount = command.amount
-        # Validate withdrawal
-        if command.operation_type == BalanceOperationType.WITHDRAWAL:
+        # Validate withdrawal / charge
+        if command.operation_type in (BalanceOperationType.WITHDRAWAL, BalanceOperationType.CHARGE):
             account = await self.ledger_engine.account_repo.find_by_login(command.account_login)
             if not account:
                 raise ValueError(f"Account {command.account_login} not found")
             
             amount = Money(-abs(command.amount.amount), command.amount.currency)
             if account.balance.amount + amount.amount < Decimal('0'):
-                raise ValueError("Insufficient balance for withdrawal")
+                raise ValueError("Insufficient balance for withdrawal/charge")
 
         # Record operation
         operation = await self.ledger_engine.record_operation(
@@ -62,6 +62,8 @@ class BalanceOperationCommandHandler:
             BalanceOperationType.SWAP: EventType.SWAP_APPLIED,
             BalanceOperationType.CORRECTION: EventType.BALANCE_CORRECTED,
             BalanceOperationType.BONUS: EventType.BALANCE_DEPOSITED,
+            BalanceOperationType.CREDIT: EventType.BALANCE_DEPOSITED,
+            BalanceOperationType.CHARGE: EventType.BALANCE_WITHDRAWN,
             BalanceOperationType.DEAL_PROFIT: EventType.BALANCE_DEPOSITED,
             BalanceOperationType.DEAL_LOSS: EventType.BALANCE_WITHDRAWN,
         }

@@ -217,11 +217,13 @@ def _money(value: Any, currency: str) -> Money:
 
 def account_to_db(account: Account) -> AccountModel:
     """Map the domain Account onto the MT5-aligned row. Loses nothing."""
-    group_name = ""
+    group_name = getattr(account, "group_name", "") or ""
     group_id = account.group_id
     if account.group is not None:
-        group_name = account.group.name or ""
-        group_id = group_id or account.group.id
+        group_name = account.group.name or group_name
+        group_id = group_id or getattr(account.group, "id", None) or account.group.name
+    if not group_name and group_id:
+        group_name = str(group_id)
     if not group_name:
         raise ValueError(
             f"account {account.login} has no group; groups.name is a NOT NULL foreign "
@@ -340,6 +342,7 @@ def db_to_account(model: AccountModel, group: Any = None) -> Account:
         login=_int(model.login, 0),
         client_id=model.client_id or "",
         group_id=model.group_id or "",
+        group_name=getattr(model, "group_name", "") or "",
         group=group,
         account_type=_enum(AccountType, model.account_type, AccountType.REAL),
         currency=currency,

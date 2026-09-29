@@ -46,8 +46,9 @@ class Price:
     def __post_init__(self):
         if not isinstance(self.value, Decimal):
             object.__setattr__(self, 'value', Decimal(str(self.value)))
-        if self.value <= 0:
-            raise ValueError("Price must be positive")
+        if self.value < 0:
+            raise ValueError("Price cannot be negative")
+
 
 @dataclass(frozen=True)
 class Volume:

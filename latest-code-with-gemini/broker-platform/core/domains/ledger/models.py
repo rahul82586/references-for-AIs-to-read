@@ -16,6 +16,8 @@ class BalanceOperationType(Enum):
     SWAP = "SWAP"
     CORRECTION = "CORRECTION"
     BONUS = "BONUS"
+    CREDIT = "CREDIT"
+    CHARGE = "CHARGE"
     DEAL_PROFIT = "DEAL_PROFIT"
     DEAL_LOSS = "DEAL_LOSS"
 

@@ -1,6 +1,7 @@
 import * as React from 'react';
+import { FloatingWindow } from '../../shared/FloatingWindow';
 import { API, isBackendGap } from '../../services/api';
-import { money, dateTime, leverage } from './format';
+import { money, dateTime, leverage } from '../../shared/format';
 
 interface Props {
     login: number;
@@ -109,11 +110,11 @@ export function AccountEditModal({ login, onClose, onSaved, onError, onOpenClien
 
     if (error) {
         return (
-            <div className="adm-modal-overlay" onMouseDown={onClose}>
-                <div className="adm-modal ca-modal" onMouseDown={(e) => e.stopPropagation()}>
+            <FloatingWindow width={1080} height={680} onClose={onClose}>
+                <div className="adm-modal ca-modal">
                     <div className="adm-modal-body ca-gap-note"><i className="codicon codicon-warning" /> {error}</div>
                 </div>
-            </div>
+            </FloatingWindow>
         );
     }
 
@@ -149,8 +150,8 @@ export function AccountEditModal({ login, onClose, onSaved, onError, onOpenClien
     );
 
     return (
-        <div className="adm-modal-overlay" onMouseDown={onClose}>
-            <div className="adm-modal ca-modal ca-modal-xl" onMouseDown={(e) => e.stopPropagation()}>
+        <FloatingWindow width={1080} height={680} onClose={onClose}>
+            <div className="adm-modal ca-modal ca-modal-xl">
                 <div className="adm-modal-header">
                     <i className="codicon codicon-credit-card" />
                     <span>Account {login} — {data?.group ?? ''}</span>
@@ -369,7 +370,7 @@ export function AccountEditModal({ login, onClose, onSaved, onError, onOpenClien
                     )}
                 </div>
             </div>
-        </div>
+        </FloatingWindow>
     );
 }
 

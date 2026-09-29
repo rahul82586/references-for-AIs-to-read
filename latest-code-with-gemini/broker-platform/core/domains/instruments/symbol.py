@@ -143,6 +143,10 @@ class Symbol:
     
     # Margin rates (per direction)
     margin_rates: MarginRates = field(default_factory=MarginRates)
+    margin_initial: Optional[Decimal] = None
+    margin_maintenance: Optional[Decimal] = None
+    margin_hedged: Decimal = field(default_factory=lambda: Decimal('0'))
+    hedged_use_larger_leg: bool = False
     
     # Execution
     trade_mode: TradeMode = TradeMode.FULL

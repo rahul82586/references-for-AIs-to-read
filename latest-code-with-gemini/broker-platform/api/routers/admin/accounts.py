@@ -87,9 +87,11 @@ class ClientCreateRequest(BaseModel):
 class AccountCreateRequest(BaseModel):
     """MT5's New Account dialog: the Details box, the Passwords box, and the tabs."""
 
-    group_name: str = Field(..., description="MT5 group path, e.g. demo\\Standard")
+    group_name: str = Field("", description="MT5 group path, e.g. demo\\Standard")
+    group: Optional[str] = None
     #: Details box. Omit `login` for MT5's "Next".
     login: Optional[int] = None
+    name: Optional[str] = None
     first_name: str = ""
     last_name: str = ""
     middle_name: str = ""
@@ -99,11 +101,13 @@ class AccountCreateRequest(BaseModel):
     country: str = ""
     state: str = ""
     city: str = ""
+    zip: Optional[str] = None
     zip_code: str = ""
     address: str = ""
     client_id: Optional[str] = None
     client: Optional[ClientCreateRequest] = None
     #: Passwords box. Generated when omitted, returned exactly once.
+    password: Optional[str] = None
     master_password: Optional[str] = None
     investor_password: Optional[str] = None
     phone_password: Optional[str] = None
@@ -126,6 +130,7 @@ class AccountCreateRequest(BaseModel):
     limit_orders: Optional[int] = None
     limit_positions_value: Optional[Decimal] = None
     #: Money
+    initial_balance: Optional[Decimal] = None
     opening_deposit: Optional[Decimal] = None
     credit: Decimal = Decimal("0")
     #: Identity
@@ -217,6 +222,48 @@ async def create_account(body: AccountCreateRequest) -> Dict[str, Any]:
 
     handler = get_create_account_handler()
     data = body.model_dump(exclude_none=False)
+
+    # UI compatibility field normalization
+    if data.get("group") and not data.get("group_name"):
+        data["group_name"] = data["group"]
+    if not data.get("group_name"):
+        data["group_name"] = "demo"
+
+    if data.get("password") and not data.get("master_password"):
+        data["master_password"] = data["password"]
+    if data.get("zip") and not data.get("zip_code"):
+        data["zip_code"] = data["zip"]
+    if data.get("name") and not data.get("first_name"):
+        parts = data["name"].strip().split(" ", 1)
+        data["first_name"] = parts[0]
+        if len(parts) > 1 and not data.get("last_name"):
+            data["last_name"] = parts[1]
+
+    # Login normalization: 0 or non-positive treated as Next (login allocator)
+    if data.get("login") is not None:
+        try:
+            if int(data["login"]) <= 0:
+                data["login"] = None
+            else:
+                data["login"] = int(data["login"])
+        except (ValueError, TypeError):
+            data["login"] = None
+
+    # Deposit normalization: 0 is not a deposit in domain ledger, so normalize <=0 to None
+    if data.get("initial_balance") is not None and data.get("opening_deposit") is None:
+        try:
+            bal = Decimal(str(data["initial_balance"]))
+            data["opening_deposit"] = bal if bal > 0 else None
+        except Exception:
+            data["opening_deposit"] = None
+    elif data.get("opening_deposit") is not None:
+        try:
+            bal = Decimal(str(data["opening_deposit"]))
+            if bal <= 0:
+                data["opening_deposit"] = None
+        except Exception:
+            data["opening_deposit"] = None
+
     inline = data.pop("client", None)
     command = CreateAccountCommand(
         **{k: v for k, v in data.items() if k in CreateAccountCommand.__dataclass_fields__},
@@ -231,8 +278,10 @@ async def create_account(body: AccountCreateRequest) -> Dict[str, Any]:
 
     account = result.account
     return {
+        "status": "success",
         "login": result.login,
         "group": result.group_name,
+        "group_name": result.group_name,
         "account_type": result.account_type,
         "currency": result.currency,
         "client_id": result.client_id,
@@ -243,11 +292,124 @@ async def create_account(body: AccountCreateRequest) -> Dict[str, Any]:
         # THE ONLY PLACE THE PLAINTEXT EXISTS. Not logged, not stored, not
         # retrievable again - there is deliberately no endpoint that returns it.
         "passwords": result.passwords,
+        "master_password": result.passwords.get("master_password", ""),
+        "investor_password": result.passwords.get("investor_password", ""),
+        "phone_password": result.passwords.get("phone_password", ""),
         "warning": (
             "These passwords are shown exactly once and cannot be retrieved "
             "again. Save them now; use the security plane to rotate one."
         ),
     }
+
+
+class AccountUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    company: Optional[str] = None
+    country: Optional[str] = None
+    state: Optional[str] = None
+    city: Optional[str] = None
+    zip_code: Optional[str] = None
+    zip: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    group: Optional[str] = None
+    group_name: Optional[str] = None
+    leverage: Optional[int] = None
+    is_enabled: Optional[bool] = None
+    comment: Optional[str] = None
+
+
+@accounts_router.put("/{login}")
+@accounts_router.patch("/{login}")
+async def update_account_endpoint(
+    login: int,
+    body: AccountUpdateRequest,
+    repo: Any = Depends(get_account_repo),
+) -> Dict[str, Any]:
+    """Update editable details on an account."""
+    if repo is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Account repository is not wired",
+        )
+    account = await repo.find_by_login(login)
+    if account is None:
+        account = await repo.find_by_login(str(login))
+    if account is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"no account with login {login}",
+        )
+
+    # Apply updates
+    if body.name is not None:
+        parts = body.name.strip().split(" ", 1)
+        account.first_name = parts[0]
+        if len(parts) > 1:
+            account.last_name = parts[1]
+    if body.first_name is not None:
+        account.first_name = body.first_name
+    if body.last_name is not None:
+        account.last_name = body.last_name
+    if body.middle_name is not None:
+        account.middle_name = body.middle_name
+    if body.company is not None:
+        account.company = body.company
+    if body.country is not None:
+        account.country = body.country
+    if body.state is not None:
+        account.state = body.state
+    if body.city is not None:
+        account.city = body.city
+    if body.zip_code is not None:
+        account.zip_code = body.zip_code
+    elif body.zip is not None:
+        account.zip_code = body.zip
+    if body.address is not None:
+        account.address = body.address
+    if body.phone is not None:
+        account.phone = body.phone
+    if body.email is not None:
+        account.email = body.email
+    if body.leverage is not None and body.leverage > 0:
+        account.leverage = body.leverage
+    if body.is_enabled is not None:
+        account.is_enabled = body.is_enabled
+    if body.comment is not None:
+        account.comment = body.comment
+
+    await repo.save(account)
+    return {"status": "success", "login": login, "message": f"Account {login} updated"}
+
+
+@accounts_router.delete("/{login}")
+async def delete_account_endpoint(
+    login: int,
+    repo: Any = Depends(get_account_repo),
+) -> Dict[str, Any]:
+    """Delete / soft-disable an account."""
+    if repo is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Account repository is not wired",
+        )
+    account = await repo.find_by_login(login)
+    if account is None:
+        account = await repo.find_by_login(str(login))
+    if account is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"no account with login {login}",
+        )
+
+    account.is_enabled = False
+    account.comment = (account.comment or "") + " [DELETED]"
+    await repo.save(account)
+    return {"status": "success", "login": login, "message": f"Account {login} deleted"}
 
 
 class PasswordCheckRequest(BaseModel):

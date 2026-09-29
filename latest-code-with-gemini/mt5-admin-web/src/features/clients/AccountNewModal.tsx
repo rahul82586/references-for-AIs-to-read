@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { FloatingWindow } from '../../shared/FloatingWindow';
 import { API, isBackendGap } from '../../services/api';
 
 interface Props {
@@ -84,21 +85,33 @@ export function AccountNewModal({ initialGroup, onClose, onSaved, onError }: Pro
         e.preventDefault();
         setSaving(true);
         try {
-            await API.createAccount({
+            const res = await API.createAccount({
                 login: f.preferred_login && f.preferred_login !== 'Next' ? Number(f.preferred_login) : undefined,
                 group_name: f.group,
                 client_id: f.preferred_client || undefined,
                 initial_balance: 0,
                 leverage: 100,
                 name: [f.name, f.last_name].filter(Boolean).join(' '),
-                last_name: f.last_name, middle_name: f.middle_name, company: f.company,
-                email: f.email, phone: f.phone, country: f.country, state: f.state,
-                city: f.city, zip: f.zip, address: f.address,
+                first_name: f.name,
+                last_name: f.last_name,
+                middle_name: f.middle_name,
+                company: f.company,
+                email: f.email,
+                phone: f.phone,
+                country: f.country,
+                state: f.state,
+                city: f.city,
+                zip: f.zip,
+                address: f.address,
                 password: f.master || undefined,
                 investor_password: f.investor || undefined,
                 phone_password: f.phone_pwd || undefined,
             });
-            onSaved('Account created.');
+            const masterPwd = res?.master_password || res?.passwords?.master_password;
+            const pwdInfo = masterPwd
+                ? ` [Login: ${res?.login}, Master Password: ${masterPwd}]`
+                : res?.login ? ` [Login: ${res.login}]` : '';
+            onSaved(`Account created successfully!${pwdInfo}`);
         } catch (err: any) {
             onError(String(err?.message ?? err), isBackendGap(err));
         } finally {
@@ -114,8 +127,8 @@ export function AccountNewModal({ initialGroup, onClose, onSaved, onError }: Pro
     );
 
     return (
-        <div className="adm-modal-overlay" onMouseDown={onClose}>
-            <form className="adm-modal ca-modal ca-modal-xl" onSubmit={submit} onMouseDown={(e) => e.stopPropagation()}>
+        <FloatingWindow width={980} height={660} onClose={onClose}>
+            <form className="adm-modal ca-modal ca-modal-xl" onSubmit={submit}>
                 <div className="adm-modal-header">
                     <i className="codicon codicon-add" />
                     <span>New Trading Account</span>
@@ -209,6 +222,6 @@ export function AccountNewModal({ initialGroup, onClose, onSaved, onError }: Pro
                     <button type="submit" className="wb-btn" disabled={saving}>{saving ? 'Creating…' : 'OK'}</button>
                 </div>
             </form>
-        </div>
+        </FloatingWindow>
     );
 }

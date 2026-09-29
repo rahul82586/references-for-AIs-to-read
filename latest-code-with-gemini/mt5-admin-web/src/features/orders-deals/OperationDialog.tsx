@@ -1,7 +1,8 @@
 import * as React from 'react';
+import { FloatingWindow } from '../../shared/FloatingWindow';
 import { API, isBackendGap, OperationKind, TradeOperationView } from '../../services/api';
-import { fmtTime } from './tradeTypes';
-import { money } from '../clients/format';
+import { fmtTime } from '../../shared/tradeTypes';
+import { money } from '../../shared/format';
 
 interface Props {
     kind: OperationKind;
@@ -181,21 +182,21 @@ ${view.chain.map((c) => `<tr><td>${c.kind}</td><td>${c.ticket}</td><td>${c.time}
 
     if (loadError) {
         return (
-            <div className="adm-modal-overlay" onMouseDown={onClose}>
-                <div className="adm-modal op-dialog" onMouseDown={(e) => e.stopPropagation()}>
+            <FloatingWindow width={1120} height={700} onClose={onClose}>
+                <div className="adm-modal op-dialog">
                     <div className="adm-modal-body ca-gap-note"><i className="codicon codicon-warning" /> {loadError}</div>
                     <div className="adm-modal-footer"><button className="wb-btn secondary" onClick={onClose}>Close</button></div>
                 </div>
-            </div>
+            </FloatingWindow>
         );
     }
     if (!view) {
         return (
-            <div className="adm-modal-overlay" onMouseDown={onClose}>
-                <div className="adm-modal op-dialog" onMouseDown={(e) => e.stopPropagation()}>
+            <FloatingWindow width={1120} height={700} onClose={onClose}>
+                <div className="adm-modal op-dialog">
                     <div className="adm-modal-body ca-empty"><i className="codicon codicon-loading codicon-modifier-spin" /> loading operation…</div>
                 </div>
-            </div>
+            </FloatingWindow>
         );
     }
 
@@ -246,8 +247,8 @@ ${view.chain.map((c) => `<tr><td>${c.kind}</td><td>${c.ticket}</td><td>${c.time}
     const askPath = view.ticks.map((t, i) => `${i === 0 ? 'M' : 'L'}${px(i).toFixed(1)},${py(t.ask).toFixed(1)}`).join(' ');
 
     return (
-        <div className="adm-modal-overlay" onMouseDown={onClose}>
-            <div className="adm-modal op-dialog" onMouseDown={(e) => e.stopPropagation()}>
+        <FloatingWindow width={1120} height={700} onClose={onClose}>
+            <div className="adm-modal op-dialog">
                 <div className="adm-modal-header">
                     <span className="op-title">{view.title}</span>
                     <button type="button" className="adm-icon-btn" onClick={onClose}><i className="codicon codicon-close" /></button>
@@ -434,6 +435,6 @@ ${view.chain.map((c) => `<tr><td>${c.kind}</td><td>${c.ticket}</td><td>${c.time}
                     <button type="button" className="wb-btn secondary" title="MetaTrader 5 Administrator guide — Orders/Deals/Positions sections" onClick={() => onInfo('See MT5 Administrator guide: Viewing an Order/Deal/Position.')}>Help</button>
                 </div>
             </div>
-        </div>
+        </FloatingWindow>
     );
 }

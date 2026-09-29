@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { API, isBackendGap } from '../../services/api';
-import { AccountsTable } from './AccountsTable';
+import { AccountsTable } from '../../shared/AccountsTable';
 import { ClientsTable } from './ClientsTable';
 import { ManagersTable } from './ManagersTable';
 import { AllocationsPanel } from './AllocationsPanel';
@@ -9,7 +9,7 @@ import { AccountNewModal } from './AccountNewModal';
 import { ClientModal } from './ClientModal';
 import { ManagerModal } from './ManagerModal';
 import { ContextMenu, MenuItem } from './Menu';
-import { toCsv, downloadCsv } from './format';
+import { toCsv, downloadCsv } from '../../shared/format';
 
 type Tab = 'accounts' | 'clients' | 'managers' | 'allocations';
 

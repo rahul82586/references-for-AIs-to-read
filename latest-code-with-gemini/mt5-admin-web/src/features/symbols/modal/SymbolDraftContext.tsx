@@ -7,6 +7,10 @@ export interface SymbolDraft {
     currency: string;
     margin_initial: number;
     margin_maintenance: number;
+    margin_hedged: number;
+    tick_size: number;
+    tick_value: number;
+    stops_level: number;
     spread_base: number;
     session_hours: string;
     
@@ -60,6 +64,7 @@ export interface SymbolDraft {
     max_quote_delay: number;
     expiration_flags: string[]; 
     orders_allowed: string[]; 
+    filling_flags: string[]; 
     min_volume: number;
     max_volume: number;
     step_volume: number;
@@ -88,6 +93,10 @@ export interface SymbolDraft {
     rate_limit_buy_maint: number;
     rate_limit_sell_init: number;
     rate_limit_sell_maint: number;
+    rate_stop_buy_init: number;
+    rate_stop_buy_maint: number;
+    rate_stop_sell_init: number;
+    rate_stop_sell_maint: number;
 
     // Swaps tab
     enable_swaps: boolean;
@@ -117,8 +126,12 @@ export const DEFAULT_SYMBOL_DRAFT: SymbolDraft = {
     digits: 5,
     contract_size: 100000.0,
     currency: 'USD',
-    margin_initial: 1.0,
-    margin_maintenance: 1.0,
+    margin_initial: 0.0,
+    margin_maintenance: 0.0,
+    margin_hedged: 0.0,
+    tick_size: 0.00001,
+    tick_value: 1.0,
+    stops_level: 0,
     spread_base: 10,
     session_hours: 'MON,00:00-24:00;TUE,00:00-24:00;WED,00:00-24:00;THU,00:00-24:00;FRI,00:00-24:00',
 
@@ -168,6 +181,7 @@ export const DEFAULT_SYMBOL_DRAFT: SymbolDraft = {
     max_quote_delay: 15,
     expiration_flags: ['gtc', 'day'],
     orders_allowed: ['market', 'limit', 'stop', 'sltp'],
+    filling_flags: ['fok', 'ioc'],
     min_volume: 0.01,
     max_volume: 100.0,
     step_volume: 0.01,
@@ -193,6 +207,10 @@ export const DEFAULT_SYMBOL_DRAFT: SymbolDraft = {
     rate_limit_buy_maint: 1.0,
     rate_limit_sell_init: 1.0,
     rate_limit_sell_maint: 1.0,
+    rate_stop_buy_init: 1.0,
+    rate_stop_buy_maint: 1.0,
+    rate_stop_sell_init: 1.0,
+    rate_stop_sell_maint: 1.0,
 
     enable_swaps: true,
     swap_type: 'points',

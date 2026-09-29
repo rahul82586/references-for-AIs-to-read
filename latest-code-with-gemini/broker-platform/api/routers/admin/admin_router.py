@@ -121,7 +121,14 @@ def _symbol_summary(symbol: Any) -> Dict[str, Any]:
         "exec_mode": (
             symbol.exec_mode.value if hasattr(symbol.exec_mode, "value") else str(symbol.exec_mode)
         ),
-        "order_flags": int(symbol.order_flags or 0),
+        "fill_flags": int(getattr(symbol.fill_flags, "value", symbol.fill_flags) if hasattr(symbol, "fill_flags") and symbol.fill_flags is not None else 0),
+        "filling_flags": [
+            *(['fok'] if (int(getattr(symbol.fill_flags, "value", symbol.fill_flags) if hasattr(symbol, "fill_flags") and symbol.fill_flags is not None else 0) & 1) else []),
+            *(['ioc'] if (int(getattr(symbol.fill_flags, "value", symbol.fill_flags) if hasattr(symbol, "fill_flags") and symbol.fill_flags is not None else 0) & 2) else []),
+            *(['boc'] if (int(getattr(symbol.fill_flags, "value", symbol.fill_flags) if hasattr(symbol, "fill_flags") and symbol.fill_flags is not None else 0) & 4) else []),
+        ],
+        "expiration_flags": int(getattr(symbol.expiration_flags, "value", symbol.expiration_flags) if hasattr(symbol, "expiration_flags") and symbol.expiration_flags is not None else 0),
+        "order_flags": int(getattr(symbol.order_flags, "value", symbol.order_flags) if hasattr(symbol, "order_flags") and symbol.order_flags is not None else 0),
         "spread": symbol.spread,
         "volume_min": str(symbol.volume_min),
         "volume_max": str(symbol.volume_max),
@@ -132,10 +139,32 @@ def _symbol_summary(symbol: Any) -> Dict[str, Any]:
         "swap_long": str(symbol.swap_long),
         "swap_short": str(symbol.swap_short),
         "swap_3day": symbol.swap_3day,
+        "stops_level": getattr(symbol, "stops_level", 0),
+        "freeze_level": getattr(symbol, "freeze_level", 0),
+        "margin_initial": str(getattr(symbol, "margin_initial", "") or ""),
+        "margin_maintenance": str(getattr(symbol, "margin_maintenance", "") or ""),
+        "margin_hedged": str(getattr(symbol, "margin_hedged", 0)),
+        "calc_hedged_larger_leg": bool(getattr(symbol, "hedged_use_larger_leg", False)),
         "margin_initial_buy": str(symbol.margin_rates.initial_buy),
         "margin_maintenance_buy": str(symbol.margin_rates.maintenance_buy),
+        "margin_rates": {
+            "initial_buy": str(symbol.margin_rates.initial_buy),
+            "initial_sell": str(symbol.margin_rates.initial_sell),
+            "initial_buy_limit": str(symbol.margin_rates.initial_buy_limit),
+            "initial_sell_limit": str(symbol.margin_rates.initial_sell_limit),
+            "initial_buy_stop": str(symbol.margin_rates.initial_buy_stop),
+            "initial_sell_stop": str(symbol.margin_rates.initial_sell_stop),
+            "maintenance_buy": str(symbol.margin_rates.maintenance_buy),
+            "maintenance_sell": str(symbol.margin_rates.maintenance_sell),
+            "maintenance_buy_limit": str(symbol.margin_rates.maintenance_buy_limit),
+            "maintenance_sell_limit": str(symbol.margin_rates.maintenance_sell_limit),
+            "maintenance_buy_stop": str(symbol.margin_rates.maintenance_buy_stop),
+            "maintenance_sell_stop": str(symbol.margin_rates.maintenance_sell_stop),
+        },
         "trade_sessions": len(symbol.trade_sessions or []),
         "is_trade_allowed": bool(symbol.is_trade_allowed),
+        "extra": getattr(symbol, "mt5_extra", {}) or {},
+        "settings_json": json.dumps(getattr(symbol, "mt5_extra", {}) or {}) if getattr(symbol, "mt5_extra", None) else None,
     }
 
 

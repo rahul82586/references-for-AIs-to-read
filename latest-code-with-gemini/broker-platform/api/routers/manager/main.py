@@ -85,6 +85,8 @@ async def user_get(
 async def position_get(
     login: Optional[int] = Query(None, description="Filter by account login"),
     symbol: Optional[str] = Query(None, description="Filter by symbol"),
+    ticket: Optional[str] = Query(None, description="Filter by position ticket"),
+    include_closed: bool = Query(False, description="Include closed positions"),
     manager: Account = Depends(get_current_manager),
     handler: Optional[GetManagerPositionsQueryHandler] = Depends(get_manager_positions_query_handler),
 ) -> List[PositionInfo]:
@@ -92,17 +94,37 @@ async def position_get(
     if handler is None:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="manager_positions_query_handler is not wired")
     try:
-        positions = await handler.handle(GetManagerPositionsQuery(account_login=login, symbol=symbol))
+        if include_closed and hasattr(handler.position_repo, "find_page"):
+            positions, _ = await handler.position_repo.find_page(
+                account_login=login,
+                symbol=symbol,
+                ticket=ticket,
+                include_closed=True,
+                limit=1000
+            )
+        else:
+            positions = await handler.handle(GetManagerPositionsQuery(account_login=login, symbol=symbol))
+            if ticket:
+                t_str = str(ticket).strip()
+                positions = [p for p in positions if str(p.position_id) == t_str or str(getattr(p, 'external_id', '')) == t_str]
+                if not positions and hasattr(handler.position_repo, "find_by_id"):
+                    single_pos = await handler.position_repo.find_by_id(t_str)
+                    if single_pos is not None:
+                        positions = [single_pos]
         
         from api.routers.manager.trading import get_live_quotes_map
-        unique_syms = list({p.symbol.upper() for p in positions if getattr(p, "symbol", None)})
+        unique_syms = list({
+            s for p in positions if getattr(p, "symbol", None)
+            for s in (p.symbol.upper(), p.symbol.split('\\')[-1].split('/')[-1].upper())
+        })
         live_quotes = await get_live_quotes_map(unique_syms) if unique_syms else {}
         
         result = []
         for p in positions:
             info = position_to_info(p)
             action_upper = str(info.action).upper()
-            sym_quotes = live_quotes.get(info.symbol.upper(), {})
+            clean_sym = info.symbol.split('\\')[-1].split('/')[-1].upper()
+            sym_quotes = live_quotes.get(info.symbol.upper()) or live_quotes.get(clean_sym) or {}
             
             q_bid = sym_quotes.get("bid")
             q_ask = sym_quotes.get("ask")
@@ -115,10 +137,11 @@ async def position_get(
                     info.price_current = live_price
                     vol = Decimal(str(info.volume))
                     price_open = Decimal(str(info.price_open))
+                    c_size = Decimal(str(getattr(p, 'contract_size', None) or getattr(info, 'contract_size', None) or 1))
                     if action_upper.startswith("BUY"):
-                        info.profit = (live_price - price_open) * vol * Decimal("1.0")
+                        info.profit = (live_price - price_open) * vol * c_size
                     else:
-                        info.profit = (price_open - live_price) * vol * Decimal("1.0")
+                        info.profit = (price_open - live_price) * vol * c_size
                 except Exception:
                     pass
             result.append(info)

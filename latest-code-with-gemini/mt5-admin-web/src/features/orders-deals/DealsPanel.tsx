@@ -3,8 +3,8 @@ import { API, isBackendGap, TradeRequest } from '../../services/api';
 import { RequestBar } from './RequestBar';
 import { OperationDialog } from './OperationDialog';
 import type { OperationKind } from '../../services/api';
-import { DEAL_ICON, fmtTime } from './tradeTypes';
-import { money } from '../clients/format';
+import { DEAL_ICON, fmtTime } from '../../shared/tradeTypes';
+import { money } from '../../shared/format';
 
 /**
  * Deals view — MT5 Administrator §Deals: full deal history incl. balance

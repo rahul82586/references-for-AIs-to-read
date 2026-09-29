@@ -3,8 +3,8 @@ import { API, isBackendGap, TradeRequest } from '../../services/api';
 import { RequestBar } from './RequestBar';
 import { OperationDialog } from './OperationDialog';
 import type { OperationKind } from '../../services/api';
-import { POSITION_ICON, fmtTime } from './tradeTypes';
-import { money } from '../clients/format';
+import { POSITION_ICON, fmtTime } from '../../shared/tradeTypes';
+import { money } from '../../shared/format';
 
 /**
  * Positions view — MT5 Administrator §Positions: all current positions of all
@@ -19,6 +19,9 @@ export function PositionsPanel(): React.ReactElement {
     const [op, setOp] = React.useState<{ kind: OperationKind; id: number | string } | null>(null);
     const [mask, setMask] = React.useState('*');
     const [symbol, setSymbol] = React.useState('');
+    const [openOnly, setOpenOnly] = React.useState(true);
+    const [from, setFrom] = React.useState('');
+    const [to, setTo] = React.useState('');
 
     React.useEffect(() => {
         API.getSymbols().then((s) => setSymbols(s.map((x: any) => x.symbol ?? x.name))).catch(() => setSymbols([]));
@@ -27,7 +30,13 @@ export function PositionsPanel(): React.ReactElement {
     const request = React.useCallback(async () => {
         setLoading(true);
         setBanner(null);
-        const req: TradeRequest = { mask, symbols: symbol };
+        const req: TradeRequest = {
+            mask,
+            symbols: symbol,
+            openOnly,
+            from: from ? new Date(from).toISOString() : undefined,
+            to: to ? new Date(to).toISOString() : undefined,
+        };
         try {
             setRows(await API.getPositions(req));
         } catch (e: any) {
@@ -36,7 +45,7 @@ export function PositionsPanel(): React.ReactElement {
         } finally {
             setLoading(false);
         }
-    }, [mask, symbol]);
+    }, [mask, symbol, openOnly, from, to]);
 
     React.useEffect(() => {
         void request();
@@ -56,10 +65,10 @@ export function PositionsPanel(): React.ReactElement {
                     <table className="adm-table ca-table">
                         <thead>
                             <tr>
-                                <th>Login</th><th>Position</th><th>Open Time</th><th>Update Time</th>
+                                <th>Status</th><th>Login</th><th>Position</th><th>Open Time</th><th>Close Time</th>
                                 <th>Type</th><th>Symbol</th><th className="num">Volume</th><th>Reason</th>
-                                <th className="num">Price</th><th className="num">S/L</th><th className="num">T/P</th>
-                                <th className="num">Price</th><th className="num">Swap</th><th className="num">Profit</th>
+                                <th className="num">Price Open</th><th className="num">S/L</th><th className="num">T/P</th>
+                                <th className="num">Price Current</th><th className="num">Swap</th><th className="num">Profit</th>
                                 <th>Comment</th>
                             </tr>
                         </thead>
@@ -68,10 +77,15 @@ export function PositionsPanel(): React.ReactElement {
                                 const ic = POSITION_ICON[p.type] ?? { icon: 'circle-outline', cls: '' };
                                 return (
                                     <tr onDoubleClick={(e) => { e.stopPropagation(); setOp({ kind: 'position', id: p.position_id }); }} key={p.position_id}>
+                                        <td>
+                                            <span className={`ca-pill ${p.is_closed ? 'off' : 'ok'}`}>
+                                                {p.is_closed ? 'CLOSED' : 'OPEN'}
+                                            </span>
+                                        </td>
                                         <td><code className="adm-code">{p.login}</code></td>
                                         <td><code className="adm-code">{p.position_id}</code></td>
                                         <td className="ca-dim">{fmtTime(p.open_time)}</td>
-                                        <td className="ca-dim">{fmtTime(p.update_time)}</td>
+                                        <td className="ca-dim">{p.close_time ? fmtTime(p.close_time) : '—'}</td>
                                         <td>
                                             <i className={`codicon codicon-${ic.icon} ${ic.cls}`} style={{ marginRight: 5 }} />
                                             {p.type === 0 ? 'buy' : 'sell'}
@@ -90,7 +104,7 @@ export function PositionsPanel(): React.ReactElement {
                                 );
                             })}
                             {!loading && rows.length === 0 && (
-                                <tr><td colSpan={15} className="ca-empty"><i className="codicon codicon-graph-scatter" /> No positions for this request</td></tr>
+                                <tr><td colSpan={16} className="ca-empty"><i className="codicon codicon-graph-scatter" /> No positions for this request</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -99,7 +113,8 @@ export function PositionsPanel(): React.ReactElement {
             <RequestBar
                 mask={mask} onMask={setMask}
                 symbols={symbols} symbol={symbol} onSymbol={setSymbol}
-                from="" to="" onFrom={() => undefined} onTo={() => undefined}
+                showOpenOnly openOnly={openOnly} onOpenOnly={setOpenOnly}
+                showPeriod from={from} to={to} onFrom={setFrom} onTo={setTo}
                 requesting={loading} onRequest={() => void request()}
             />
             {op && (

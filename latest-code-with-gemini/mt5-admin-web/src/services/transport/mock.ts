@@ -53,7 +53,7 @@ let accounts = [
     { login: 50002, name: 'Bob Verhoeven', group: 'real\\real', currency: 'USD', balance: 25000, credit: 0, equity: 24780.55, profit: -219.45, margin: 1893.2, margin_free: 22887.35, margin_level: 1309, leverage: 100, is_enabled: true, account_type: 'REAL', so_activation: 'PERCENT', email: 'bob@example.com', phone: '+31 600 000002' },
     { login: 50003, name: 'Chen Wei', group: 'real\\real-A', currency: 'USD', balance: 8200, credit: 0, equity: 8244.9, profit: 44.9, margin: 96.4, margin_free: 8148.5, margin_level: 8552, leverage: 200, is_enabled: true, account_type: 'REAL', so_activation: 'PERCENT', email: 'chen@example.com', phone: '+86 138 0000 0003' },
     { login: 50004, name: 'Dana Ivanova', group: 'real\\IB', currency: 'EUR', balance: 15300, credit: 0, equity: 15233.1, profit: -66.9, margin: 2210.0, margin_free: 13023.1, margin_level: 689, leverage: 50, is_enabled: true, account_type: 'REAL', so_activation: 'PERCENT', email: 'dana@example.com', phone: '+359 88 000 0004' },
-    { login: 50005, name: 'Erik Lindqvist', group: 'demo\\demo-pro', currency: 'USD', balance: 1000, credit: 0, equity: 977.4, profit: -22.6, margin: 431.9, margin_free: 545.5, margin_level: 226, leverage: 100, is_enabled: false, account_type: 'DEMO', so_activation: 'PERCENT', email: 'erik@example.com', phone: '+46 70 000 0005' },
+    { login: 50005, name: 'Erik Lindqvist', group: 'demo\\demo-pro', currency: 'USD', balance: 1000, credit: 0, equity: 177.4, profit: -822.6, margin: 431.9, margin_free: -254.5, margin_level: 41, leverage: 100, is_enabled: false, account_type: 'DEMO', so_activation: 'PERCENT', email: 'erik@example.com', phone: '+46 70 000 0005' },
 ];
 
 let symbols = [
@@ -73,6 +73,8 @@ let orders: any[] = [
     { ticket: 459000602, login: 50003, symbol: 'XAUUSD', type: 4, volume: 0.1, volume_current: 0.1, price_order: 2466.100, price_sl: 0, price_tp: 2540, state: 0, reason: 'Client', time_setup: isoMinutesAgo(15) },
     { ticket: 459000603, login: 50004, symbol: 'USDJPY', type: 2, volume: 1.0, volume_current: 1.0, price_order: 155.016, price_sl: 156.2, price_tp: 0, state: 0, reason: 'Expert', time_setup: isoMinutesAgo(4) },
     { ticket: 459000604, login: 50001, symbol: 'GBPUSD', type: 5, volume: 0.2, volume_current: 0.2, price_order: 1.3005, price_sl: 0, price_tp: 0, state: 0, reason: 'Client', time_setup: isoMinutesAgo(120) },
+    { ticket: 459000605, login: 50002, symbol: 'EURUSD', type: 0, volume: 25, volume_current: 25, price_order: 0, price_sl: 0, price_tp: 0, state: 6, reason: 'Client', time_setup: isoMinutesAgo(9) },
+    { ticket: 459000606, login: 50004, symbol: 'XAUUSD', type: 1, volume: 5, volume_current: 5, price_order: 0, price_sl: 0, price_tp: 0, state: 6, reason: 'Expert', time_setup: isoMinutesAgo(4) },
 ];
 
 const orderHistory: any[] = [
@@ -514,6 +516,8 @@ function inPeriod(from: string | undefined, to: string | undefined, time: string
     return true;
 }
 
+let managerSession: any = null;
+
 /* ------------------------------------------------------------------ */
 /* transport                                                           */
 /* ------------------------------------------------------------------ */
@@ -709,7 +713,7 @@ export const mockApi: AdminApi = {
         return { status: 'success', retcode: 10009, order: ticket, price: fillPrice, volume: data.volume };
     },
 
-    async closePosition(ticket: number | string, lots?: number, _price?: number) {
+    async closePosition(ticket: number | string, lots?: number, _price?: number, _type_filling?: string) {
         await delay();
         const id = Number(ticket);
         const p = positions.find((x) => x.position_id === id);
@@ -740,7 +744,7 @@ export const mockApi: AdminApi = {
         if (tp !== undefined) o.price_tp = tp;
         return { status: 'success' };
     },
-    async closeAllPositions() {
+    async closeAllPositions(_logins?: string, _type_filling?: string) {
         await delay();
         positions = [];
         return { status: 'success' };
@@ -864,6 +868,47 @@ export const mockApi: AdminApi = {
         }
         return { status: 'success' };
     },
+
+    // Trade Calculators (MT5 trade/calc-* family)
+    async calcMargin(params) {
+        await delay(30);
+        const lots = params.volume || 1.0;
+        return {
+            margin_required: String(lots * 1000),
+            symbol: params.symbol,
+            side: params.side,
+            volume: String(lots),
+            price_used: '1.08500',
+            currency: params.currency || 'USD',
+        };
+    },
+    async calcProfit(params) {
+        await delay(30);
+        const lots = params.volume || 1.0;
+        return {
+            profit: '0.00',
+            symbol: params.symbol,
+            side: params.side,
+            volume: String(lots),
+            open_price: String(params.open_price),
+            close_price_used: '1.08500',
+            currency: params.currency || 'USD',
+        };
+    },
+    async calcRate(params) {
+        await delay(20);
+        return { rate: '1.00000', from: params.from_currency, to: params.to_currency };
+    },
+    async checkMargin(params) {
+        await delay(30);
+        return {
+            margin_required: '11.37',
+            margin_free: '1000.00',
+            margin_level: '8800.0',
+            status: 'NORMAL',
+        };
+    },
+
     /* symbols */
     async getSymbols() {
         await delay();
@@ -1031,6 +1076,102 @@ export const mockApi: AdminApi = {
         const out: Ticks = {};
         for (const sym of Object.keys(BASE_PRICES)) out[sym] = nextTick(sym);
         return out;
+    },
+
+    /* manager session */
+    async managerConnect(server: string, login: number, password: string) {
+        await delay(400);
+        if (!password || password.length < 4) throw new Error('invalid manager password');
+        managerSession = {
+            connected: true, server, session_id: `session_${login}_${Date.now()}`,
+            access_level: 'FULL', user_login: login, connected_at: new Date().toISOString(),
+            permissions: ['accounts_view', 'accounts_edit', 'trade_order_send', 'clients_view'],
+        };
+        return managerSession;
+    },
+    async managerDisconnect() {
+        await delay(80);
+        managerSession = null;
+        return { status: 'success' };
+    },
+    async managerSessionInfo() {
+        await delay(30);
+        return managerSession ?? { connected: false };
+    },
+    async balanceOperation(login: number, type: string, amount: number, comment?: string) {
+        await delay(150);
+        const a = accounts.find((x) => x.login === login);
+        if (!a) throw new Error(`account ${login} not found`);
+        const delta = (type === 'charge' || type === 'withdrawal') ? -Math.abs(amount) : Math.abs(amount);
+        a.balance = Math.round((a.balance + delta) * 100) / 100;
+        a.equity = Math.round((a.equity + delta) * 100) / 100;
+        deals.unshift({
+            deal_id: Math.max(...deals.map((d) => d.deal_id)) + 1,
+            login, order: 0, position: 0, symbol: '', action: 'in', type,
+            volume: 0, price: 0, profit: delta, swap: 0, commission: 0,
+            time: isoMinutesAgo(0), comment: comment ?? 'balance operation',
+        } as any);
+        return { status: 'success', balance: a.balance };
+    },
+
+    /* manager terminal modules */
+    async getManagerServerInfo() {
+        await delay(60);
+        return {
+            connected: true, ping_ms: 41.7, version: '5.0.4323 (M18-mock)',
+            memory_mb: 412.6, start_time: isoMinutesAgo(43200), server_time: new Date().toISOString(),
+            accounts_online: 3, pump_modes: 'users|orders|positions|groups|symbols|mail|news|clients|subscriptions',
+        };
+    },
+    async getOnlineUsers() {
+        await delay();
+        return [
+            { login: 50001, name: 'Alice Sharma', group: 'demo\\demo', ip: '103.21.58.14', terminal: 'MetaTrader 5 x64 build 4320', connected_at: isoMinutesAgo(64), ping_ms: 82 },
+            { login: 50002, name: 'Bob Verhoeven', group: 'real\\real', ip: '84.22.10.9', terminal: 'MetaTrader 5 x64 build 4320', connected_at: isoMinutesAgo(12), ping_ms: 41 },
+            { login: 50003, name: 'Chen Wei', group: 'real\\real-A', ip: '112.65.4.1', terminal: 'MetaTrader 5 iOS build 1420', connected_at: isoMinutesAgo(3), ping_ms: 133 },
+        ];
+    },
+    async getDealerQueue() {
+        await delay();
+        return orders.filter((o) => o.state === 6).map((o) => ({ ...o }));
+    },
+    async answerDealer(ticket, action, price) {
+        await delay(200);
+        const o = orders.find((x) => x.ticket === ticket);
+        if (!o) throw new Error(`order ${ticket} not in queue`);
+        if (action === 'confirm') {
+            o.state = 'filled';
+            o.price_done = price || o.price_order;
+            o.time_done = isoMinutesAgo(0);
+            orderHistory.unshift(o);
+            orders = orders.filter((x) => x.ticket !== ticket);
+        } else if (action === 'reject') {
+            o.state = 'rejected';
+            o.time_done = isoMinutesAgo(0);
+            orderHistory.unshift(o);
+            orders = orders.filter((x) => x.ticket !== ticket);
+        } else {
+            o.price_order = price ?? o.price_order; // requote: new price offered
+        }
+        return { status: 'success', action };
+    },
+    async getManagerNews() {
+        await delay();
+        return [
+            { id: 1, time: isoMinutesAgo(55), title: 'Scheduled maintenance window', body: 'Trade server restart Sunday 02:00–02:15 UTC.', lang: 'en' },
+            { id: 2, time: isoMinutesAgo(300), title: 'New symbol list: indices Q4', body: 'US500, DE40 roll dates updated.', lang: 'en' },
+            { id: 3, time: isoMinutesAgo(1500), title: 'Swap triple day reminder', body: 'Wednesday multiplier applies per symbol swaps tab.', lang: 'en' },
+        ];
+    },
+    async getManagerJournal() {
+        await delay();
+        return [
+            { time: isoMinutesAgo(2), server: 'TradeServer', message: "'50002': order #459000601 placed (sell limit 0.5 EURUSD at 1.092)" },
+            { time: isoMinutesAgo(6), server: 'TradeServer', message: "'50004': position #700003 modified by dealer (SL 157.6)" },
+            { time: isoMinutesAgo(11), server: 'DealerDesk', message: 'request #459000603 queued for dealing (volume above auto-execution limit)' },
+            { time: isoMinutesAgo(19), server: 'RiskEngine', message: "account 50005 margin level 226% — margin call threshold breached" },
+            { time: isoMinutesAgo(27), server: 'HistoryServer', message: 'tick archive rolled for 2026.09.27' },
+        ];
     },
 
     /* risk */

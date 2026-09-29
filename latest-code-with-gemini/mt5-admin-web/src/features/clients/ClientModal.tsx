@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { dateTime, money } from './format';
+import { FloatingWindow } from '../../shared/FloatingWindow';
+import { dateTime, money } from '../../shared/format';
 
 interface Props {
     client: any;
@@ -35,8 +36,8 @@ export function ClientModal({ client, onClose, onOpenAccount, onError }: Props):
     );
 
     return (
-        <div className="adm-modal-overlay" onMouseDown={onClose}>
-            <div className="adm-modal ca-modal ca-modal-xl" onMouseDown={(e) => e.stopPropagation()}>
+        <FloatingWindow width={1040} height={620} onClose={onClose}>
+            <div className="adm-modal ca-modal ca-modal-xl">
                 <div className="adm-modal-header">
                     <i className="codicon codicon-organization" />
                     <span>Client {client.id} — {client.first_name} {client.last_name}</span>
@@ -167,6 +168,6 @@ export function ClientModal({ client, onClose, onOpenAccount, onError }: Props):
                     <button type="button" className="wb-btn secondary" onClick={onClose}>Close</button>
                 </div>
             </div>
-        </div>
+        </FloatingWindow>
     );
 }

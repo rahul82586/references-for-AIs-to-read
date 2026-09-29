@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { leverage } from './format';
+import { leverage } from '../../shared/format';
 
 interface Props {
     settings: any;

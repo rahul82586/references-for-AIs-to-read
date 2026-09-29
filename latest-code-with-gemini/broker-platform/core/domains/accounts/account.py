@@ -30,6 +30,7 @@ class Account:
     login: int = 0
     client_id: str = ""
     group_id: str = ""
+    group_name: str = ""
     group: Optional[Group] = None
     
     # Type

@@ -57,6 +57,18 @@ export function MarginTab(): React.ReactElement {
                         Hedging Margin Calculation
                     </div>
 
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ width: 120, textAlign: 'right', opacity: 0.8 }}>Hedged Margin:</span>
+                        <input 
+                            className="adm-input" 
+                            type="number" 
+                            step="0.01" 
+                            style={{ flex: 1, height: 20, padding: '2px 6px', fontSize: 11 }}
+                            value={draft.margin_hedged} 
+                            onChange={e => updateField('margin_hedged', parseFloat(e.target.value) || 0.0)} 
+                        />
+                    </div>
+
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, cursor: 'pointer', height: 20 }}>
                         <input 
                             type="checkbox" 

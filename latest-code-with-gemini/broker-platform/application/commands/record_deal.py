@@ -261,8 +261,14 @@ class RecordDealHandler:
             await self._apply_deal_hedging_mode(account, deal, symbol, order=order, position_repo=pos_repo, session=session)
 
     async def _apply_deal_hedging_mode(self, account: Account, deal: Deal, symbol, order=None, position_repo=None, session=None):
-        """Hedging: Every BUY/SELL creates a NEW independent position."""
-        position_id = f"{account.login}_{deal.symbol}_{str(uuid.uuid4())[:8]}"
+        if order is not None and getattr(order, 'ticket_id', None):
+            position_id = str(order.ticket_id)
+        elif getattr(deal, 'order_id', None):
+            position_id = str(deal.order_id)
+        elif getattr(deal, 'deal_id', None) and str(deal.deal_id).isdigit():
+            position_id = str(deal.deal_id)
+        else:
+            position_id = str(getattr(deal, 'deal_ticket', None) or (uuid.uuid4().int % 900000 + 100000))
 
         new_position = Position(
             position_id=position_id,
@@ -373,7 +379,14 @@ class RecordDealHandler:
                         account, deal, opp_pos, symbol, old_vol, session=session
                     )
                     await self._mark_closed(pos_repo, opp_pos, deal, session=session)
-                    position_id = f"{account.login}_{deal.symbol}_{str(uuid.uuid4())[:8]}"
+                    if order is not None and getattr(order, 'ticket_id', None):
+                        position_id = str(order.ticket_id)
+                    elif getattr(deal, 'order_id', None):
+                        position_id = str(deal.order_id)
+                    elif getattr(deal, 'deal_id', None) and str(deal.deal_id).isdigit():
+                        position_id = str(deal.deal_id)
+                    else:
+                        position_id = str(getattr(deal, 'deal_ticket', None) or (uuid.uuid4().int % 900000 + 100000))
                     new_vol = deal.volume.value - old_vol
                     new_position = Position(
                         position_id=position_id,
@@ -393,7 +406,14 @@ class RecordDealHandler:
                         await pos_repo.save(new_position)
                     logger.debug(f"Position reversed (Netting)")
             else:
-                position_id = f"{account.login}_{deal.symbol}_{str(uuid.uuid4())[:8]}"
+                if order is not None and getattr(order, 'ticket_id', None):
+                    position_id = str(order.ticket_id)
+                elif getattr(deal, 'order_id', None):
+                    position_id = str(deal.order_id)
+                elif getattr(deal, 'deal_id', None) and str(deal.deal_id).isdigit():
+                    position_id = str(deal.deal_id)
+                else:
+                    position_id = str(getattr(deal, 'deal_ticket', None) or (uuid.uuid4().int % 900000 + 100000))
                 new_position = Position(
                     position_id=position_id,
                     account_login=account.login,
@@ -411,21 +431,19 @@ class RecordDealHandler:
                 logger.debug(f"New Position {position_id} created (Netting)")
 
     async def _mark_closed(self, pos_repo, position: Position, deal: Deal, session=None) -> None:
-        """Close a position the way every other closing path does: keep the row.
-
-        Volume to zero, time_done stamped, deal_close linked, saved. The previous
-        `if hasattr(pos_repo, 'delete')` probe skipped silently on any repository
-        without delete (the in-memory double has none), leaving a ghost position
-        that kept being margined. Closed rows are history; deleting them is not
-        what ClosePositionHandler or the LiquidationWorker do either.
-        """
-        position.volume = Volume(0)
-        position.time_done = datetime.now(timezone.utc)
-        position.deal_close = deal.deal_id
-        if hasattr(pos_repo, 'save') and _accepts_session(pos_repo.save):
-            await pos_repo.save(position, session=session)
+        """Close a position: physically remove from active positions (MT5 strict protocol)."""
+        if hasattr(pos_repo, 'delete') and _accepts_session(pos_repo.delete):
+            await pos_repo.delete(position.position_id, session=session)
+        elif hasattr(pos_repo, 'delete'):
+            await pos_repo.delete(position.position_id)
         else:
-            await pos_repo.save(position)
+            position.volume = Volume(0)
+            position.time_done = datetime.now(timezone.utc)
+            position.deal_close = deal.deal_id
+            if hasattr(pos_repo, 'save') and _accepts_session(pos_repo.save):
+                await pos_repo.save(position, session=session)
+            else:
+                await pos_repo.save(position)
 
     async def _release_order_reservation(self, order, account, session=None) -> None:
         """Release the margin this order reserved at approval (M6).

@@ -431,12 +431,12 @@ class TradeServerLiquidityGateway(ILiquidityGateway):
         return None
 
     async def close_position(self, symbol: str, ticket: Any, volume: Decimal,
-                             side: str) -> dict:
+                             side: str, filling: Optional[str] = "ANY") -> dict:
         """Close a hedge at the terminal. Not part of ILiquidityGateway, but an
         A-Book position has to be unwound somehow, and this is the only adapter
         that can reach the terminal that holds it."""
         payload = {"symbol": str(symbol).upper(), "ticket": str(ticket),
-                   "volume": float(volume), "side": side}
+                   "volume": float(volume), "side": side, "type_filling": filling or "ANY"}
         status, body = await self._request("POST", "/api/v1/close-position", payload)
         if status == 200 and isinstance(body, dict) and (body.get("data") or {}).get("success"):
             return {"status": "CLOSED", "venue": self.name, "raw": body.get("data")}

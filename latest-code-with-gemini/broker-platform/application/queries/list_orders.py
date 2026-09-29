@@ -7,6 +7,7 @@ FILLED/REJECTED/EXPIRED) - and a `state` that contradicts `history` is
 refused by the repository, not silently intersected into a confusing empty
 page.
 """
+from datetime import datetime
 from dataclasses import dataclass
 from typing import Any, List, Optional, Tuple
 
@@ -16,9 +17,13 @@ class ListOrdersQuery:
     limit: int = 100
     offset: int = 0
     account_login: Optional[int] = None
+    account_logins: Optional[List[int]] = None
+    ticket: Optional[str] = None
     symbol: Optional[str] = None
     state: Optional[str] = None
     history: Optional[bool] = None
+    from_time: Optional[datetime] = None
+    to_time: Optional[datetime] = None
 
 
 class ListOrdersQueryHandler:
@@ -35,7 +40,11 @@ class ListOrdersQueryHandler:
             limit=query.limit,
             offset=query.offset,
             account_login=query.account_login,
+            account_logins=query.account_logins,
+            ticket=query.ticket,
             symbol=query.symbol,
             state=query.state,
             history=query.history,
+            from_time=query.from_time,
+            to_time=query.to_time,
         )

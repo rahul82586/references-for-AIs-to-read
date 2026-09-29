@@ -1,5 +1,6 @@
 // @ts-nocheck
 import * as React from 'react';
+import { FloatingWindow } from '../../../shared/FloatingWindow';
 import { SymbolDraft, DEFAULT_SYMBOL_DRAFT, SymbolDraftContext } from './SymbolDraftContext';
 import { BulkEditBanner } from './BulkEditBanner';
 import { CommonTab } from './tabs/CommonTab';
@@ -59,17 +60,33 @@ export function SymbolSettingsModal({ symbolName, initialPath = '', onClose, onS
                     }
                     parsedSettings.calculation = calcMode;
 
+                    const fillingFlags = parsedSettings.filling_flags ?? (
+                        data.fill_flags !== undefined ? (
+                            [
+                                (Number(data.fill_flags) & 1) ? 'fok' : null,
+                                (Number(data.fill_flags) & 2) ? 'ioc' : null,
+                                (Number(data.fill_flags) & 4) ? 'boc' : null,
+                            ].filter(Boolean)
+                        ) : DEFAULT_SYMBOL_DRAFT.filling_flags
+                    );
+
                     setDraft({
                         ...DEFAULT_SYMBOL_DRAFT,
                         symbol: data.symbol,
                         digits: data.digits,
                         contract_size: data.contract_size,
                         currency: data.currency,
-                        margin_initial: data.margin_initial,
-                        margin_maintenance: data.margin_maintenance,
+                        margin_initial: data.margin_initial ?? 0,
+                        margin_maintenance: data.margin_maintenance ?? 0,
+                        margin_hedged: data.margin_hedged ?? 0,
+                        tick_size: data.tick_size ?? data.point ?? 0.00001,
+                        tick_value: data.tick_value ?? 1.0,
+                        stops_level: data.stops_level ?? data.limit_stop_level ?? 0,
+                        limit_stop_level: data.stops_level ?? data.limit_stop_level ?? 0,
                         spread_base: data.spread_base,
                         session_hours: data.session_hours,
-                        ...parsedSettings
+                        ...parsedSettings,
+                        filling_flags: fillingFlags
                     } as any);
                 })
                 .catch(err => {
@@ -136,6 +153,17 @@ export function SymbolSettingsModal({ symbolName, initialPath = '', onClose, onS
             // Trim name
             const trimmedSymbolName = draft.symbol.trim();
 
+            const computeFillFlags = (flags?: string[]) => {
+                let mask = 0;
+                if (!flags) return mask;
+                if (flags.includes('fok')) mask |= 1;
+                if (flags.includes('ioc')) mask |= 2;
+                if (flags.includes('boc') || flags.includes('return')) mask |= 4;
+                return mask;
+            };
+
+            const fill_flags = computeFillFlags(draft.filling_flags);
+
             if (isBulk) {
                 // If postfix copy is active (postfix starting with .)
                 const isPostfixCopy = trimmedSymbolName.startsWith('.');
@@ -144,6 +172,12 @@ export function SymbolSettingsModal({ symbolName, initialPath = '', onClose, onS
                     if (isPostfixCopy) {
                         // Create copy EURUSD -> EURUSD.x
                         const copyName = name + trimmedSymbolName;
+                        const copySettings = {
+                            ...draft,
+                            symbol: copyName,
+                            fill_flags,
+                            filling_flags: draft.filling_flags
+                        };
                         const payload = {
                             symbol: copyName,
                             digits: draft.digits,
@@ -151,9 +185,16 @@ export function SymbolSettingsModal({ symbolName, initialPath = '', onClose, onS
                             currency: draft.currency,
                             margin_initial: draft.margin_initial,
                             margin_maintenance: draft.margin_maintenance,
+                            margin_hedged: draft.margin_hedged,
+                            tick_size: draft.tick_size,
+                            tick_value: draft.tick_value,
+                            stops_level: draft.stops_level,
+                            limit_stop_level: draft.stops_level,
                             spread_base: draft.spread_base,
                             session_hours: draft.session_hours,
-                            settings_json: JSON.stringify({ ...draft, symbol: copyName })
+                            fill_flags,
+                            filling_flags: draft.filling_flags,
+                            settings_json: JSON.stringify(copySettings)
                         };
                         await API.createSymbol(payload);
                     } else {
@@ -165,7 +206,7 @@ export function SymbolSettingsModal({ symbolName, initialPath = '', onClose, onS
                         }
 
                         // Overwrite only settings draft
-                        const mergedSettings = { ...origSettings, ...draft };
+                        const mergedSettings = { ...origSettings, ...draft, fill_flags, filling_flags: draft.filling_flags };
                         delete mergedSettings.symbol;
                         delete mergedSettings.digits;
                         delete mergedSettings.contract_size;
@@ -182,8 +223,15 @@ export function SymbolSettingsModal({ symbolName, initialPath = '', onClose, onS
                             currency: draft.currency,
                             margin_initial: draft.margin_initial,
                             margin_maintenance: draft.margin_maintenance,
+                            margin_hedged: draft.margin_hedged,
+                            tick_size: draft.tick_size,
+                            tick_value: draft.tick_value,
+                            stops_level: draft.stops_level,
+                            limit_stop_level: draft.stops_level,
                             spread_base: draft.spread_base,
                             session_hours: draft.session_hours,
+                            fill_flags,
+                            filling_flags: draft.filling_flags,
                             settings_json: JSON.stringify(mergedSettings)
                         };
                         await API.updateSymbol(name, payload);
@@ -191,7 +239,7 @@ export function SymbolSettingsModal({ symbolName, initialPath = '', onClose, onS
                 }
             } else {
                 // Single symbol add or update
-                const settingsData = { ...draft } as any;
+                const settingsData = { ...draft, fill_flags, filling_flags: draft.filling_flags } as any;
                 delete settingsData.symbol;
                 delete settingsData.digits;
                 delete settingsData.contract_size;
@@ -208,8 +256,15 @@ export function SymbolSettingsModal({ symbolName, initialPath = '', onClose, onS
                     currency: draft.currency,
                     margin_initial: draft.margin_initial,
                     margin_maintenance: draft.margin_maintenance,
+                    margin_hedged: draft.margin_hedged,
+                    tick_size: draft.tick_size,
+                    tick_value: draft.tick_value,
+                    stops_level: draft.stops_level,
+                    limit_stop_level: draft.stops_level,
                     spread_base: draft.spread_base,
                     session_hours: draft.session_hours,
+                    fill_flags,
+                    filling_flags: draft.filling_flags,
                     settings_json: JSON.stringify(settingsData)
                 };
 
@@ -249,8 +304,8 @@ export function SymbolSettingsModal({ symbolName, initialPath = '', onClose, onS
 
     return (
         <SymbolDraftContext.Provider value={{ draft, setDraft, errors, setErrors, isEditing }}>
-            <div className="adm-modal-overlay" onClick={onClose}>
-                <div className="adm-modal" style={{ width: 750, height: '65vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+            <FloatingWindow width={1000} height={640} onClose={onClose}>
+                <div className="adm-modal" style={{ width: 750, height: '65vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <div className="adm-modal-header">
                         <h2>
                             <i className="codicon codicon-graph" style={{ marginRight: 8, color: '#2ecc71' }} />
@@ -300,7 +355,7 @@ export function SymbolSettingsModal({ symbolName, initialPath = '', onClose, onS
                         </button>
                     </div>
                 </div>
-            </div>
+            </FloatingWindow>
         </SymbolDraftContext.Provider>
     );
 }

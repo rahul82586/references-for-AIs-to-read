@@ -66,12 +66,17 @@ export function MarketWatchPage(): React.ReactElement {
 
                         prevRef.current[symbol] = { bid: q.bid, ask: q.ask };
 
+                        const rawSpread = q.spread !== undefined && q.spread !== null ? q.spread : (q.ask - q.bid);
+                        const spreadVal = q.ask < 10
+                            ? Math.round(rawSpread * 100000) / 10
+                            : Math.round(rawSpread * 100) / 100;
+
                         return {
                             symbol,
                             bid: q.bid,
                             ask: q.ask,
                             age: q.age,
-                            spread: Math.round((q.ask - q.bid) * 100000) / 10,
+                            spread: spreadVal,
                             prevBid: old?.bid,
                             prevAsk: old?.ask,
                             flashBid,
@@ -204,7 +209,7 @@ export function MarketWatchPage(): React.ReactElement {
                                 <th style={thStyle}>Symbol</th>
                                 <th style={{ ...thStyle, textAlign: 'right' }}>Bid</th>
                                 <th style={{ ...thStyle, textAlign: 'right' }}>Ask</th>
-                                <th style={{ ...thStyle, textAlign: 'right' }}>Spread (pts)</th>
+                                <th style={{ ...thStyle, textAlign: 'right' }}>Spread</th>
                                 <th style={{ ...thStyle, textAlign: 'right' }}>Last Update</th>
                                 <th style={{ ...thStyle, textAlign: 'center' }}>Status</th>
                             </tr>
@@ -240,8 +245,8 @@ export function MarketWatchPage(): React.ReactElement {
                                         {row.flashAsk === 'up' ? '▲ ' : row.flashAsk === 'down' ? '▼ ' : ''}
                                         {formatPrice(row.ask)}
                                     </td>
-                                    <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--theia-descriptionForeground)' }}>
-                                        {row.spread.toFixed(1)}
+                                    <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--theia-descriptionForeground)', fontFamily: 'monospace' }}>
+                                        {row.bid > 100 ? row.spread.toFixed(2) : row.spread.toFixed(1)}
                                     </td>
                                     <td style={{ ...tdStyle, textAlign: 'right', color: ageColor(row.age), fontFamily: 'monospace' }}>
                                         {formatAge(row.age)}

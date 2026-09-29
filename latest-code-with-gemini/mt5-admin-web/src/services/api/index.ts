@@ -54,6 +54,11 @@ export const API: ApiFacade = {
     getTradeOperation: (...a) => activeTransport().getTradeOperation(...a),
     updateTradeOperation: (...a) => activeTransport().updateTradeOperation(...a),
 
+    calcMargin: (...a) => activeTransport().calcMargin(...a),
+    calcProfit: (...a) => activeTransport().calcProfit(...a),
+    calcRate: (...a) => activeTransport().calcRate(...a),
+    checkMargin: (...a) => activeTransport().checkMargin(...a),
+
     getSymbols: (...a) => activeTransport().getSymbols(...a),
     getSymbolDetail: (...a) => activeTransport().getSymbolDetail(...a),
     createSymbol: (...a) => activeTransport().createSymbol(...a),
@@ -80,6 +85,18 @@ export const API: ApiFacade = {
     testGateway: (...a) => activeTransport().testGateway(...a),
 
     getTicks: (...a) => activeTransport().getTicks(...a),
+
+    managerConnect: (...a) => activeTransport().managerConnect(...a),
+    managerDisconnect: (...a) => activeTransport().managerDisconnect(...a),
+    managerSessionInfo: (...a) => activeTransport().managerSessionInfo(...a),
+    balanceOperation: (...a) => activeTransport().balanceOperation(...a),
+
+    getManagerServerInfo: (...a) => activeTransport().getManagerServerInfo(...a),
+    getOnlineUsers: (...a) => activeTransport().getOnlineUsers(...a),
+    getDealerQueue: (...a) => activeTransport().getDealerQueue(...a),
+    answerDealer: (...a) => activeTransport().answerDealer(...a),
+    getManagerNews: (...a) => activeTransport().getManagerNews(...a),
+    getManagerJournal: (...a) => activeTransport().getManagerJournal(...a),
 
     getRiskSummary: (...a) => activeTransport().getRiskSummary(...a),
     getRiskExposure: (...a) => activeTransport().getRiskExposure(...a),

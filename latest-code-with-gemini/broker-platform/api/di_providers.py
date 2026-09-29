@@ -239,6 +239,11 @@ def get_token_blacklist() -> Any:
     return _container.get("token_blacklist")
 
 
+def get_dealer_queue() -> Optional[Any]:
+    """Provider for DealerQueueService."""
+    return _container.get("dealer_queue")
+
+
 def get_auth_service() -> Any:
     """Provider for AuthService."""
     return _container.get("auth_service")

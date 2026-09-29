@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { TreeView } from '../tree/TreeView';
+import { ManagerTreeView } from '../tree/ManagerTreeView';
+import { useUiStore } from '../../store/uiStore';
 
 interface SideBarProps {
     visible: boolean;
@@ -8,6 +10,7 @@ interface SideBarProps {
 
 /** Resizable sidebar hosting the MT5 Administrator tree. */
 export function SideBar({ visible, onOpenNode }: SideBarProps): React.ReactElement | null {
+    const section = useUiStore((s) => s.section);
     const [width, setWidth] = React.useState<number>(() => {
         const saved = Number(localStorage.getItem('mt5-admin-sidebar-width'));
         return saved >= 180 && saved <= 560 ? saved : 280;
@@ -44,7 +47,15 @@ export function SideBar({ visible, onOpenNode }: SideBarProps): React.ReactEleme
         <>
             <div className="wb-sidebar" style={{ width }}>
                 <div className="wb-sidebar-content">
-                    <TreeView onOpenNode={onOpenNode} />
+                    {section === 'admin' && <TreeView onOpenNode={onOpenNode} />}
+                    {section === 'manager' && <ManagerTreeView onOpenNode={onOpenNode} />}
+                    {(section === 'clients' || section === 'server') && (
+                        <div className="wb-placeholder" style={{ height: 'auto', padding: 24 }}>
+                            <i className={`codicon codicon-${section === 'clients' ? 'organization' : 'server'}`} />
+                            <div><strong>{section === 'clients' ? 'Clients' : 'Server'}</strong> section</div>
+                            <span className="wb-settings-hint">Planned — its navigator and panels land in a later milestone.</span>
+                        </div>
+                    )}
                 </div>
             </div>
             <div

@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { dateTime } from './format';
+import { FloatingWindow } from '../../shared/FloatingWindow';
+import { dateTime } from '../../shared/format';
 
 interface Props {
     manager: any;
@@ -33,8 +34,8 @@ export function ManagerModal({ manager, onClose, onError }: Props): React.ReactE
     );
 
     return (
-        <div className="adm-modal-overlay" onMouseDown={onClose}>
-            <div className="adm-modal ca-modal ca-modal-xl" onMouseDown={(e) => e.stopPropagation()}>
+        <FloatingWindow width={980} height={600} onClose={onClose}>
+            <div className="adm-modal ca-modal ca-modal-xl">
                 <div className="adm-modal-header">
                     <i className={`codicon codicon-${manager.role === 'ADMIN' ? 'shield' : 'account'}`} />
                     <span>Manager {manager.login} — {manager.name}</span>
@@ -108,6 +109,6 @@ export function ManagerModal({ manager, onClose, onError }: Props): React.ReactE
                     <button type="button" className="wb-btn secondary" onClick={onClose}>Close</button>
                 </div>
             </div>
-        </div>
+        </FloatingWindow>
     );
 }
