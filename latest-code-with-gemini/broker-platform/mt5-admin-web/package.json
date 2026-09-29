@@ -1,0 +1,29 @@
+{
+  "name": "mt5-admin-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "MT5 Administrator — standalone VS Code-style web admin panel for the broker platform",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.59.0",
+    "@vscode/codicons": "^0.0.36",
+    "dockview": "^4.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "typescript": "~5.6.2",
+    "vite": "^5.4.8"
+  }
+}
